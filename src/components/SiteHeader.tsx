@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import { useLanguage, BPS_LANGUAGES } from '@/context/LanguageContext'
 import type { User } from '@supabase/supabase-js'
 
 const NAV_LINKS = [
@@ -13,6 +14,75 @@ const NAV_LINKS = [
   { href: '/learn', label: 'Learn' },
   { href: '/translation', label: 'Translation' },
 ]
+
+function LanguageSelector() {
+  const { languageCode, languageName, setLanguage } = useLanguage()
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+        aria-label="Select companion language"
+      >
+        {/* Globe icon */}
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.6 9h16.8M3.6 15h16.8" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3a15 15 0 0 1 4 9 15 15 0 0 1-4 9 15 15 0 0 1-4-9 15 15 0 0 1 4-9z" />
+        </svg>
+        <span className="hidden sm:inline">{languageName}</span>
+        <svg className="w-2.5 h-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 mt-1 z-50 w-56 max-h-80 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+            <div className="px-3 py-2 border-b border-gray-100">
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                Companion Language
+              </p>
+              <p className="text-[10px] text-gray-400">
+                BPS-approved editions &middot; {BPS_LANGUAGES.length} languages
+              </p>
+            </div>
+            {BPS_LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => {
+                  if (lang.active) {
+                    setLanguage(lang.code)
+                    setOpen(false)
+                  }
+                }}
+                disabled={!lang.active}
+                className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors ${
+                  lang.active
+                    ? lang.code === languageCode
+                      ? 'bg-emerald-50 text-emerald-700 font-medium'
+                      : 'hover:bg-gray-50 text-gray-700'
+                    : 'text-gray-300 cursor-default'
+                }`}
+              >
+                <span>{lang.name}</span>
+                {lang.active && lang.code === languageCode && (
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                )}
+                {!lang.active && (
+                  <span className="text-[10px] text-gray-300 italic">Coming soon</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
 
 export default function SiteHeader() {
   const [user, setUser] = useState<User | null>(null)
@@ -88,8 +158,10 @@ export default function SiteHeader() {
           ))}
         </nav>
 
-        {/* Auth + mobile toggle */}
-        <div className="flex items-center gap-3">
+        {/* Language selector + Auth + mobile toggle */}
+        <div className="flex items-center gap-2">
+          <LanguageSelector />
+
           {/* Desktop auth */}
           <div className="hidden md:flex items-center gap-2">
             {user ? (
