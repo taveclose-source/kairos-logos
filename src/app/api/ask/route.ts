@@ -62,49 +62,78 @@ export async function POST(req: NextRequest) {
       userMessage = `Context: ${context.trim()}\n\nQuestion: ${userMessage}`
     }
 
-    // Call Claude API with theological system prompt
-    const message = await anthropic.messages.create({
+    // Stream from Claude API
+    const stream = anthropic.messages.stream({
       model: AGENT_MODEL,
       max_tokens: 2048,
       system: THEOLOGICAL_SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userMessage }],
     })
 
-    const answer =
-      message.content[0].type === 'text' ? message.content[0].text : ''
+    let fullAnswer = ''
 
-    const routed_to_queue = shouldRouteToQueue(answer)
-    const references = extractReferences(answer)
+    const readable = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder()
 
-    // If routed to queue, insert into theological_queue
-    if (routed_to_queue) {
-      try {
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
-        )
+        stream.on('text', (text) => {
+          fullAnswer += text
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', text })}\n\n`))
+        })
 
-        const userId = await getSessionUserId()
+        stream.on('end', async () => {
+          const routed_to_queue = shouldRouteToQueue(fullAnswer)
+          const references = extractReferences(fullAnswer)
 
-        const row: Record<string, string | null> = {
-          question: question.trim(),
-          ai_draft: answer,
-          status: 'pending',
-          submitted_at: new Date().toISOString(),
-        }
-        if (userId) {
-          row.user_id = userId
-        }
-        if (email && typeof email === 'string' && email.includes('@')) {
-          row.submitter_email = email.trim()
-        }
-        await supabase.from('theological_queue').insert(row)
-      } catch (queueError) {
-        console.error('Failed to insert into theological_queue:', queueError)
-      }
-    }
+          // Send final metadata
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({ type: 'done', routed_to_queue, references })}\n\n`
+            )
+          )
+          controller.close()
 
-    return NextResponse.json({ answer, routed_to_queue, references })
+          // Queue insertion (fire-and-forget after stream ends)
+          if (routed_to_queue) {
+            try {
+              const supabase = createClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.SUPABASE_SERVICE_ROLE_KEY!
+              )
+              const userId = await getSessionUserId()
+              const row: Record<string, string | null> = {
+                question: question.trim(),
+                ai_draft: fullAnswer,
+                status: 'pending',
+                submitted_at: new Date().toISOString(),
+              }
+              if (userId) row.user_id = userId
+              if (email && typeof email === 'string' && email.includes('@')) {
+                row.submitter_email = email.trim()
+              }
+              await supabase.from('theological_queue').insert(row)
+            } catch (queueError) {
+              console.error('Failed to insert into theological_queue:', queueError)
+            }
+          }
+        })
+
+        stream.on('error', (err) => {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: 'error', error: String(err) })}\n\n`)
+          )
+          controller.close()
+        })
+      },
+    })
+
+    return new Response(readable, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    })
   } catch (error) {
     console.error('Ask API error:', error)
     return NextResponse.json(

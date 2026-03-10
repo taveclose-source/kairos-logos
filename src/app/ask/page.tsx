@@ -1,20 +1,17 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
-import Link from 'next/link'
-
-interface AgentResponse {
-  answer: string
-  routed_to_queue: boolean
-  references: string[]
-}
+import { useState, useRef, FormEvent } from 'react'
 
 export default function AskPage() {
   const [question, setQuestion] = useState('')
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [response, setResponse] = useState<AgentResponse | null>(null)
+  const [streamedAnswer, setStreamedAnswer] = useState('')
+  const [routedToQueue, setRoutedToQueue] = useState(false)
+  const [references, setReferences] = useState<string[]>([])
+  const [done, setDone] = useState(false)
   const [error, setError] = useState('')
+  const abortRef = useRef<AbortController | null>(null)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -22,7 +19,13 @@ export default function AskPage() {
 
     setLoading(true)
     setError('')
-    setResponse(null)
+    setStreamedAnswer('')
+    setRoutedToQueue(false)
+    setReferences([])
+    setDone(false)
+
+    const controller = new AbortController()
+    abortRef.current = controller
 
     try {
       const body: Record<string, string> = { question: question.trim() }
@@ -32,32 +35,65 @@ export default function AskPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
+        signal: controller.signal,
       })
 
-      const data = await res.json()
-
       if (!res.ok) {
+        const data = await res.json()
         setError(data.error || 'Something went wrong.')
+        setLoading(false)
         return
       }
 
-      setResponse(data)
-    } catch {
-      setError('Failed to connect. Please try again.')
+      const reader = res.body?.getReader()
+      if (!reader) {
+        setError('Streaming not supported.')
+        setLoading(false)
+        return
+      }
+
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done: readerDone, value } = await reader.read()
+        if (readerDone) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const json = line.slice(6)
+          try {
+            const event = JSON.parse(json)
+            if (event.type === 'text') {
+              setStreamedAnswer((prev) => prev + event.text)
+            } else if (event.type === 'done') {
+              setRoutedToQueue(event.routed_to_queue)
+              setReferences(event.references || [])
+              setDone(true)
+            } else if (event.type === 'error') {
+              setError('The agent encountered an error. Please try again.')
+            }
+          } catch {
+            // skip malformed events
+          }
+        }
+      }
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') {
+        setError('Failed to connect. Please try again.')
+      }
     } finally {
       setLoading(false)
+      setDone(true)
     }
   }
 
   return (
     <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <Link
-        href="/"
-        className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
-      >
-        &larr; Home
-      </Link>
-
       <h1 className="text-3xl sm:text-4xl font-bold mt-2 mb-1">
         Ask the Word
       </h1>
@@ -101,9 +137,9 @@ export default function AskPage() {
         </div>
       )}
 
-      {response && (
+      {streamedAnswer && (
         <div className="space-y-6">
-          {response.routed_to_queue && (
+          {routedToQueue && done && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
               This question has been routed to our pastoral review queue.
               The response below is a preliminary draft.
@@ -112,17 +148,20 @@ export default function AskPage() {
 
           <div className="rounded-xl border border-gray-200 px-5 py-4">
             <div className="prose prose-sm max-w-none whitespace-pre-wrap text-gray-800 leading-relaxed">
-              {response.answer}
+              {streamedAnswer}
+              {loading && (
+                <span className="inline-block w-1.5 h-4 bg-gray-400 animate-pulse ml-0.5 align-text-bottom" />
+              )}
             </div>
           </div>
 
-          {response.references.length > 0 && (
+          {done && references.length > 0 && (
             <div className="rounded-xl border border-gray-100 bg-gray-50 px-5 py-4">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                 Scripture References
               </h3>
               <div className="flex flex-wrap gap-2">
-                {response.references.map((ref, i) => (
+                {references.map((ref, i) => (
                   <span
                     key={i}
                     className="inline-block px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-xs text-gray-700"

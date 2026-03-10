@@ -309,11 +309,32 @@ function SectionAgent({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: question.trim(), context }),
       })
-      const data = await res.json()
-      if (data.answer) {
-        setAnswer(data.answer)
-      } else {
-        setAnswer('Something went wrong. Please try again.')
+
+      const reader = res.body?.getReader()
+      if (!reader) {
+        setAnswer('Streaming not supported.')
+        setLoading(false)
+        return
+      }
+
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n\n')
+        buffer = lines.pop() || ''
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          try {
+            const event = JSON.parse(line.slice(6))
+            if (event.type === 'text') {
+              setAnswer((prev) => prev + event.text)
+            }
+          } catch { /* skip */ }
+        }
       }
     } catch {
       setAnswer('Failed to connect. Please try again.')

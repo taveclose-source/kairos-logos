@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import LastReadTracker from '@/components/LastReadTracker'
+import VerseDisplay from '@/components/VerseDisplay'
 
 interface Verse {
   verse: number
@@ -92,6 +93,7 @@ export default async function ChapterPage({
   const { book_name, maxChapter, verses } = data
   const hasPrev = chapter > 1
   const hasNext = chapter < maxChapter
+  const chapterHasTwi = verses.some((v) => v.twi_text !== null)
 
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
@@ -108,53 +110,7 @@ export default async function ChapterPage({
         <h2 className="text-xl text-gray-500">Chapter {chapter}</h2>
       </div>
 
-      {/* Column Headers */}
-      <div className="hidden md:grid md:grid-cols-2 gap-8 mb-4 border-b pb-2">
-        <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-          King James Version
-        </p>
-        <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-          Asante Twi
-        </p>
-      </div>
-
-      {/* Verses */}
-      {verses.length > 0 ? (
-        <div className="space-y-4 sm:space-y-2">
-          {verses.map((v) => (
-            <div
-              key={v.verse}
-              className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-8 py-2 border-b border-gray-100"
-            >
-              {/* KJV Column */}
-              <p className="text-base sm:text-lg leading-relaxed">
-                <span className="font-semibold text-gray-400 mr-2 text-sm align-super">
-                  {v.verse}
-                </span>
-                {v.kjv_text}
-              </p>
-
-              {/* Twi Column */}
-              <p className="text-base sm:text-lg leading-relaxed">
-                <span className="font-semibold text-gray-400 mr-2 text-sm align-super md:hidden">
-                  {v.verse}
-                </span>
-                {v.twi_text ? (
-                  v.twi_text
-                ) : (
-                  <span className="italic text-gray-400">
-                    Translation coming
-                  </span>
-                )}
-              </p>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-red-500 py-8">
-          No verses found for {book_name} {chapter}. Check the data pipeline.
-        </p>
-      )}
+      <VerseDisplay verses={verses} chapterHasTwi={chapterHasTwi} />
 
       {/* Navigation */}
       <nav className="flex items-center justify-between mt-10 pt-6 border-t">
