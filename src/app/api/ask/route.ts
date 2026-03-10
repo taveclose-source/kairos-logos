@@ -44,22 +44,60 @@ async function getSessionUserId(): Promise<string | null> {
   }
 }
 
+interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { question, context, email } = await req.json()
+    const body = await req.json()
 
-    if (!question || typeof question !== 'string' || question.trim().length === 0) {
-      return NextResponse.json({ error: 'Question is required.' }, { status: 400 })
+    // Support both legacy { question } and new { messages } format
+    let messages: ChatMessage[]
+    let email: string | undefined
+    let lastUserMessage: string
+
+    if (body.messages && Array.isArray(body.messages)) {
+      // New conversational format
+      messages = body.messages.filter(
+        (m: ChatMessage) =>
+          (m.role === 'user' || m.role === 'assistant') &&
+          typeof m.content === 'string' &&
+          m.content.trim().length > 0
+      )
+      email = body.email
+      lastUserMessage = messages.filter((m) => m.role === 'user').pop()?.content ?? ''
+    } else if (body.question && typeof body.question === 'string') {
+      // Legacy single-question format
+      let content = body.question.trim()
+      if (body.context && typeof body.context === 'string') {
+        content = `Context: ${body.context.trim()}\n\nQuestion: ${content}`
+      }
+      messages = [{ role: 'user', content }]
+      email = body.email
+      lastUserMessage = body.question.trim()
+    } else {
+      return NextResponse.json({ error: 'A message is required.' }, { status: 400 })
     }
 
-    if (question.trim().length > 2000) {
-      return NextResponse.json({ error: 'Question too long (max 2000 characters).' }, { status: 400 })
+    if (messages.length === 0) {
+      return NextResponse.json({ error: 'A message is required.' }, { status: 400 })
     }
 
-    // Build user message
-    let userMessage = question.trim()
-    if (context && typeof context === 'string') {
-      userMessage = `Context: ${context.trim()}\n\nQuestion: ${userMessage}`
+    if (lastUserMessage.length > 2000) {
+      return NextResponse.json({ error: 'Message too long (max 2000 characters).' }, { status: 400 })
+    }
+
+    // Prepend context to the first user message if provided (new format)
+    if (body.context && typeof body.context === 'string' && body.messages) {
+      const firstUserIdx = messages.findIndex((m) => m.role === 'user')
+      if (firstUserIdx !== -1) {
+        messages[firstUserIdx] = {
+          ...messages[firstUserIdx],
+          content: `Context: ${body.context.trim()}\n\n${messages[firstUserIdx].content}`,
+        }
+      }
     }
 
     // Stream from Claude API
@@ -67,7 +105,7 @@ export async function POST(req: NextRequest) {
       model: AGENT_MODEL,
       max_tokens: 2048,
       system: THEOLOGICAL_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userMessage }],
+      messages,
     })
 
     let fullAnswer = ''
@@ -85,7 +123,6 @@ export async function POST(req: NextRequest) {
           const routed_to_queue = shouldRouteToQueue(fullAnswer)
           const references = extractReferences(fullAnswer)
 
-          // Send final metadata
           controller.enqueue(
             encoder.encode(
               `data: ${JSON.stringify({ type: 'done', routed_to_queue, references })}\n\n`
@@ -102,7 +139,7 @@ export async function POST(req: NextRequest) {
               )
               const userId = await getSessionUserId()
               const row: Record<string, string | null> = {
-                question: question.trim(),
+                question: lastUserMessage,
                 ai_draft: fullAnswer,
                 status: 'pending',
                 submitted_at: new Date().toISOString(),
