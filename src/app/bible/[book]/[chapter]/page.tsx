@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import LastReadTracker from '@/components/LastReadTracker'
 
 interface Verse {
   verse: number
@@ -94,6 +95,7 @@ export default async function ChapterPage({
 
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <LastReadTracker book={book_name} chapter={chapter} />
       {/* Header */}
       <div className="mb-8 sm:mb-10">
         <Link
