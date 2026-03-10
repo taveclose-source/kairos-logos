@@ -11,6 +11,7 @@ interface AgentResponse {
 
 export default function AskPage() {
   const [question, setQuestion] = useState('')
+  const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [response, setResponse] = useState<AgentResponse | null>(null)
   const [error, setError] = useState('')
@@ -24,10 +25,13 @@ export default function AskPage() {
     setResponse(null)
 
     try {
+      const body: Record<string, string> = { question: question.trim() }
+      if (email.trim()) body.email = email.trim()
+
       const res = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: question.trim() }),
+        body: JSON.stringify(body),
       })
 
       const data = await res.json()
@@ -69,6 +73,13 @@ export default function AskPage() {
           rows={3}
           maxLength={2000}
           className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 resize-none"
+        />
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email (optional) — get notified if your question goes to pastoral review"
+          className="w-full mt-2 rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
         />
         <div className="flex items-center justify-between mt-3">
           <span className="text-xs text-gray-400">

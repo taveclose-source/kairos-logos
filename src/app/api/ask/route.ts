@@ -14,7 +14,7 @@ const anthropic = new Anthropic({
 
 export async function POST(req: NextRequest) {
   try {
-    const { question, context } = await req.json()
+    const { question, context, email } = await req.json()
 
     if (!question || typeof question !== 'string' || question.trim().length === 0) {
       return NextResponse.json({ error: 'Question is required.' }, { status: 400 })
@@ -51,12 +51,16 @@ export async function POST(req: NextRequest) {
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!
         )
-        await supabase.from('theological_queue').insert({
+        const row: Record<string, string> = {
           question: question.trim(),
           ai_draft: answer,
           status: 'pending',
           submitted_at: new Date().toISOString(),
-        })
+        }
+        if (email && typeof email === 'string' && email.includes('@')) {
+          row.submitter_email = email.trim()
+        }
+        await supabase.from('theological_queue').insert(row)
       } catch (queueError) {
         console.error('Failed to insert into theological_queue:', queueError)
       }
