@@ -17,9 +17,9 @@ export default function Home() {
       </div>
 
       {/* Navigation Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-3xl">
         <Link
-          href="/bible/Matthew/1"
+          href="/bible"
           className="group block p-8 rounded-2xl border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all"
         >
           <div className="text-3xl mb-3">&#x1F4D6;</div>
@@ -28,6 +28,19 @@ export default function Home() {
           </h2>
           <p className="text-sm text-gray-500">
             KJV &amp; Asante Twi parallel reader
+          </p>
+        </Link>
+
+        <Link
+          href="/ask"
+          className="group block p-8 rounded-2xl border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all"
+        >
+          <div className="text-3xl mb-3">&#x2721;</div>
+          <h2 className="text-xl font-semibold mb-1 group-hover:text-gray-900">
+            Ask the Word
+          </h2>
+          <p className="text-sm text-gray-500">
+            AI theological agent &middot; KJV
           </p>
         </Link>
 
