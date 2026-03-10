@@ -38,8 +38,8 @@ export default function VerseDisplay({
       {/* Controls */}
       <div className="flex items-center justify-between mb-4 pb-3 border-b flex-wrap gap-3">
         <div className="hidden md:flex gap-8">
-          <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-            King James Version
+          <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider" title="King James Version">
+            English
           </p>
           {showCompanion && (
             <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider">

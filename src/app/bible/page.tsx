@@ -60,7 +60,7 @@ export default async function BiblePage() {
     <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <h1 className="text-3xl sm:text-4xl font-bold mt-2 mb-1">Bible</h1>
       <p className="text-gray-500 mb-8">
-        KJV &amp; Asante Twi &middot; Select a book to begin reading
+        English &amp; Companion Translation &middot; Select a book to begin reading
       </p>
 
       <div className="mb-4 flex items-center gap-4 text-xs text-gray-400">

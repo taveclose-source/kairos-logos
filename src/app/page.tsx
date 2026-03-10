@@ -27,7 +27,7 @@ export default function Home() {
             Bible
           </h2>
           <p className="text-sm text-gray-500">
-            KJV &amp; Asante Twi parallel reader
+            English &amp; Companion parallel reader
           </p>
         </Link>
 
