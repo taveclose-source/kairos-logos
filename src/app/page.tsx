@@ -73,7 +73,13 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="mt-20 text-center text-xs text-gray-400">
-        <p>Kai&apos;Ros International &middot; Summit Bible Center</p>
+        <Link
+          href="/translation"
+          className="text-gray-400 hover:text-gray-600 transition-colors underline underline-offset-2"
+        >
+          Twi Translation Project
+        </Link>
+        <p className="mt-2">Kai&apos;Ros International &middot; Summit Bible Center</p>
       </footer>
     </main>
   );
