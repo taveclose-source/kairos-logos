@@ -125,32 +125,48 @@ export default function VerseDisplay({
           {verses.map((v) => (
             <div
               key={v.verse}
-              className={`py-2 border-b border-gray-100 ${
-                showCompanion ? 'grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-8' : ''
-              }`}
+              className="py-2 border-b border-gray-100"
             >
-              {/* KJV Column */}
-              <p className="text-base sm:text-lg leading-relaxed">
-                <span className="font-semibold text-gray-400 mr-2 text-sm align-super">
-                  {v.verse}
-                </span>
-                {v.kjv_text}
-              </p>
-
-              {/* Companion Column */}
-              {showCompanion && (
+              {/* Desktop: side-by-side grid / Mobile: stacked */}
+              <div className={showCompanion ? 'md:grid md:grid-cols-2 md:gap-8' : ''}>
+                {/* English Column */}
                 <p className="text-base sm:text-lg leading-relaxed">
-                  <span className="font-semibold text-gray-400 mr-2 text-sm align-super md:hidden">
+                  <span className="font-semibold text-gray-400 mr-2 text-sm align-super">
                     {v.verse}
                   </span>
-                  {languageCode === 'twi' && v.twi_text ? (
-                    v.twi_text
-                  ) : (
-                    <span className="italic text-gray-400">
-                      Translation coming
-                    </span>
-                  )}
+                  {v.kjv_text}
                 </p>
+
+                {/* Companion Column — desktop */}
+                {showCompanion && (
+                  <p className="hidden md:block text-base sm:text-lg leading-relaxed">
+                    {languageCode === 'twi' && v.twi_text ? (
+                      v.twi_text
+                    ) : (
+                      <span className="italic text-gray-400">
+                        Translation coming
+                      </span>
+                    )}
+                  </p>
+                )}
+              </div>
+
+              {/* Companion — mobile: stacked below with label and visual distinction */}
+              {showCompanion && (
+                <div className="md:hidden mt-2 ml-4 pl-3 border-l-2 border-emerald-200 bg-emerald-50/40 rounded-r-lg py-2 pr-3">
+                  <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider">
+                    {languageName}
+                  </span>
+                  <p className="text-base leading-relaxed mt-0.5">
+                    {languageCode === 'twi' && v.twi_text ? (
+                      v.twi_text
+                    ) : (
+                      <span className="italic text-gray-400">
+                        Translation coming
+                      </span>
+                    )}
+                  </p>
+                </div>
               )}
             </div>
           ))}
