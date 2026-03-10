@@ -35,7 +35,7 @@ export default function Home() {
           href="/ask"
           className="group block p-8 rounded-2xl border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all"
         >
-          <div className="text-3xl mb-3">&#x2721;</div>
+          <div className="text-3xl mb-3">&#x1FA94;</div>
           <h2 className="text-xl font-semibold mb-1 group-hover:text-gray-900">
             Ask the Word
           </h2>
