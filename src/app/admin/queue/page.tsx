@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
-import Link from 'next/link'
+import { useState, useEffect } from 'react'
 
 interface QueueItem {
   id: string
@@ -15,53 +14,31 @@ interface QueueItem {
 }
 
 export default function AdminQueuePage() {
-  const [password, setPassword] = useState('')
-  const [authenticated, setAuthenticated] = useState(false)
   const [items, setItems] = useState<QueueItem[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [filter, setFilter] = useState<'pending' | 'all'>('pending')
   const [drafts, setDrafts] = useState<Record<string, string>>({})
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
-  function authHeaders() {
-    return { Authorization: `Bearer ${password}`, 'Content-Type': 'application/json' }
-  }
-
-  async function login(e: FormEvent) {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-
-    try {
-      const res = await fetch('/api/admin/queue', {
-        headers: { Authorization: `Bearer ${password}` },
-      })
-
-      if (res.status === 401) {
-        setError('Invalid password.')
-        setLoading(false)
-        return
-      }
-
-      const data = await res.json()
-      setItems(data.items || [])
-      setAuthenticated(true)
-    } catch {
-      setError('Failed to connect.')
-    } finally {
-      setLoading(false)
-    }
-  }
+  useEffect(() => {
+    refresh()
+  }, [])
 
   async function refresh() {
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/queue', { headers: authHeaders() })
+      const res = await fetch('/api/admin/queue')
+      if (res.status === 401) {
+        setError('Access denied. Your account is not authorized for admin access.')
+        setLoading(false)
+        return
+      }
       const data = await res.json()
       setItems(data.items || [])
+      setError('')
     } catch {
-      setError('Failed to refresh.')
+      setError('Failed to load queue.')
     } finally {
       setLoading(false)
     }
@@ -77,7 +54,7 @@ export default function AdminQueuePage() {
 
       const res = await fetch('/api/admin/queue', {
         method: 'PATCH',
-        headers: authHeaders(),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
 
@@ -99,55 +76,10 @@ export default function AdminQueuePage() {
     ? items.filter((i) => i.status === 'pending')
     : items
 
-  // Login screen
-  if (!authenticated) {
-    return (
-      <main className="max-w-md mx-auto px-4 py-16">
-        <Link
-          href="/"
-          className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          &larr; Home
-        </Link>
-        <h1 className="text-2xl font-bold mt-4 mb-6">Admin &middot; Theological Queue</h1>
-
-        <form onSubmit={login}>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Admin password"
-            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
-          />
-          <button
-            type="submit"
-            disabled={!password || loading}
-            className="mt-3 w-full px-6 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-40 transition-colors"
-          >
-            {loading ? 'Checking...' : 'Log In'}
-          </button>
-        </form>
-
-        {error && (
-          <p className="mt-4 text-sm text-red-600">{error}</p>
-        )}
-      </main>
-    )
-  }
-
-  // Queue dashboard
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <Link
-            href="/"
-            className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            &larr; Home
-          </Link>
-          <h1 className="text-2xl font-bold mt-1">Theological Queue</h1>
-        </div>
+        <h1 className="text-2xl font-bold">Theological Queue</h1>
         <button
           onClick={refresh}
           disabled={loading}
@@ -187,7 +119,7 @@ export default function AdminQueuePage() {
         </button>
       </div>
 
-      {displayed.length === 0 && (
+      {!loading && displayed.length === 0 && (
         <p className="text-gray-400 text-sm text-center py-12">
           {filter === 'pending' ? 'No pending questions.' : 'No questions in the queue.'}
         </p>
@@ -199,7 +131,6 @@ export default function AdminQueuePage() {
             key={item.id}
             className="rounded-xl border border-gray-200 overflow-hidden"
           >
-            {/* Header */}
             <div className="px-5 py-3 bg-gray-50 flex items-center justify-between border-b border-gray-100">
               <div className="flex items-center gap-3">
                 <StatusBadge status={item.status} />
@@ -221,7 +152,6 @@ export default function AdminQueuePage() {
               <span className="text-[10px] text-gray-300 font-mono">{item.id.slice(0, 8)}</span>
             </div>
 
-            {/* Question */}
             <div className="px-5 py-4">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
                 Question
@@ -229,7 +159,6 @@ export default function AdminQueuePage() {
               <p className="text-sm text-gray-800">{item.question}</p>
             </div>
 
-            {/* AI Draft */}
             {item.ai_draft && (
               <div className="px-5 pb-4">
                 <details>
@@ -243,7 +172,6 @@ export default function AdminQueuePage() {
               </div>
             )}
 
-            {/* Approved answer (for reviewed items) */}
             {item.approved_answer && (
               <div className="px-5 pb-4">
                 <h3 className="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-1">
@@ -255,7 +183,6 @@ export default function AdminQueuePage() {
               </div>
             )}
 
-            {/* Actions — only for pending items */}
             {item.status === 'pending' && (
               <div className="px-5 pb-4 pt-2 border-t border-gray-100">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">

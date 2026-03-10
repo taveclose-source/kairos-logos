@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import {
   THEOLOGICAL_SYSTEM_PROMPT,
   AGENT_MODEL,
@@ -11,6 +13,36 @@ import {
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
+
+async function getSessionUserId(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              )
+            } catch {
+              // ignore
+            }
+          },
+        },
+      }
+    )
+    const { data: { user } } = await supabase.auth.getUser()
+    return user?.id ?? null
+  } catch {
+    return null
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,11 +83,17 @@ export async function POST(req: NextRequest) {
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!
         )
-        const row: Record<string, string> = {
+
+        const userId = await getSessionUserId()
+
+        const row: Record<string, string | null> = {
           question: question.trim(),
           ai_draft: answer,
           status: 'pending',
           submitted_at: new Date().toISOString(),
+        }
+        if (userId) {
+          row.user_id = userId
         }
         if (email && typeof email === 'string' && email.includes('@')) {
           row.submitter_email = email.trim()
