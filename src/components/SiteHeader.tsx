@@ -16,16 +16,33 @@ const NAV_LINKS = [
 
 export default function SiteHeader() {
   const [user, setUser] = useState<User | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
 
   useEffect(() => {
     const supabase = createSupabaseBrowser()
-    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user)
+      if (data.user) {
+        fetch('/api/admin/check')
+          .then((r) => r.json())
+          .then((d) => setIsAdmin(d.admin === true))
+          .catch(() => setIsAdmin(false))
+      }
+    })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      if (session?.user) {
+        fetch('/api/admin/check')
+          .then((r) => r.json())
+          .then((d) => setIsAdmin(d.admin === true))
+          .catch(() => setIsAdmin(false))
+      } else {
+        setIsAdmin(false)
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -77,6 +94,20 @@ export default function SiteHeader() {
           <div className="hidden md:flex items-center gap-2">
             {user ? (
               <>
+                {isAdmin && (
+                  <Link
+                    href="/admin/queue"
+                    className="text-xs font-medium text-amber-600 hover:text-amber-800 transition-colors"
+                  >
+                    Admin
+                  </Link>
+                )}
+                <Link
+                  href="/dashboard"
+                  className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
+                >
+                  Dashboard
+                </Link>
                 <span className="text-xs text-gray-400 max-w-[160px] truncate">
                   {user.email}
                 </span>
@@ -136,14 +167,32 @@ export default function SiteHeader() {
           </nav>
           <div className="mt-3 pt-3 border-t border-gray-100">
             {user ? (
-              <div className="flex items-center justify-between px-3">
-                <span className="text-xs text-gray-400 truncate">{user.email}</span>
-                <button
-                  onClick={handleSignOut}
-                  className="text-xs text-gray-500 hover:text-gray-700"
-                >
-                  Sign out
-                </button>
+              <div className="space-y-2">
+                <div className="flex gap-2 px-3">
+                  <Link
+                    href="/dashboard"
+                    className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin/queue"
+                      className="text-sm font-medium text-amber-600 hover:text-amber-800 transition-colors"
+                    >
+                      Admin
+                    </Link>
+                  )}
+                </div>
+                <div className="flex items-center justify-between px-3">
+                  <span className="text-xs text-gray-400 truncate">{user.email}</span>
+                  <button
+                    onClick={handleSignOut}
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    Sign out
+                  </button>
+                </div>
               </div>
             ) : (
               <Link

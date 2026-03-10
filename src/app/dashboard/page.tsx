@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [questions, setQuestions] = useState<QueueItem[]>([])
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -38,8 +39,8 @@ export default function DashboardPage() {
       }
       setUser(user)
 
-      // Fetch profile and questions in parallel
-      const [profileRes, questionsRes] = await Promise.all([
+      // Fetch profile, questions, and admin status in parallel
+      const [profileRes, questionsRes, adminRes] = await Promise.all([
         supabase
           .from('users')
           .select('display_name, last_read_book, last_read_chapter')
@@ -50,10 +51,12 @@ export default function DashboardPage() {
           .select('id, question, status, submitted_at, ai_draft, approved_answer')
           .eq('user_id', user.id)
           .order('submitted_at', { ascending: false }),
+        fetch('/api/admin/check').then((r) => r.json()).catch(() => ({ admin: false })),
       ])
 
       setProfile(profileRes.data)
       setQuestions(questionsRes.data ?? [])
+      setIsAdmin(adminRes.admin === true)
       setLoading(false)
     })
   }, [router])
@@ -77,6 +80,21 @@ export default function DashboardPage() {
         Welcome, {displayName}
       </h1>
       <p className="text-gray-500 mb-8">Your study companion</p>
+
+      {/* Admin Access */}
+      {isAdmin && (
+        <Link
+          href="/admin/queue"
+          className="block rounded-xl border border-amber-200 bg-amber-50 p-5 mb-6 hover:border-amber-400 hover:shadow-md transition-all group"
+        >
+          <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-1">
+            Admin
+          </p>
+          <p className="text-lg font-semibold text-amber-800 group-hover:text-amber-700">
+            Theological Queue &rarr;
+          </p>
+        </Link>
+      )}
 
       {/* Continue Reading */}
       {hasLastRead && (

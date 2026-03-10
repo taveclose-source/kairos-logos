@@ -12,7 +12,7 @@ function SignInForm() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/'
+  const redirect = searchParams.get('redirect') || '/dashboard'
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
