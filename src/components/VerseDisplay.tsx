@@ -51,7 +51,7 @@ export default function VerseDisplay({
     languageCode === 'twi' ? chapterHasTwi : true
   )
   const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [strongsEnabled, setStrongsEnabled] = useState(false)
+  const [strongsEnabled, setStrongsEnabled] = useState(true)
   const [verseWords, setVerseWords] = useState<Record<number, StrongsWord[]>>({})
   const [loadingStrongs, setLoadingStrongs] = useState(false)
   const [selectedWord, setSelectedWord] = useState<SelectedWord | null>(null)
@@ -224,14 +224,14 @@ export default function VerseDisplay({
             onClick={() => setStrongsEnabled(!strongsEnabled)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               strongsEnabled
-                ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
                 : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
             }`}
           >
-            <span className={`inline-block w-2 h-2 rounded-full ${strongsEnabled ? 'bg-amber-500' : 'bg-gray-400'}`} />
-            Strong&apos;s
+            <span className={`inline-block w-2 h-2 rounded-full ${strongsEnabled ? 'bg-emerald-500' : 'bg-gray-400'}`} />
+            Strong&apos;s: {strongsEnabled ? 'ON' : 'OFF'}
             {loadingStrongs && (
-              <svg className="w-3 h-3 animate-spin text-amber-500" viewBox="0 0 24 24" fill="none">
+              <svg className="w-3 h-3 animate-spin text-emerald-500" viewBox="0 0 24 24" fill="none">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
