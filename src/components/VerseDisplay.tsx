@@ -189,7 +189,7 @@ export default function VerseDisplay({
               {w.strongs_number ? (
                 <span
                   onClick={() => handleWordClick(w, v.verse)}
-                  className="cursor-pointer border-b border-dotted border-amber-400 hover:bg-amber-50 hover:text-amber-900 transition-colors rounded-sm px-0.5 -mx-0.5"
+                  className="cursor-pointer text-[#2563eb] hover:text-[#1d4ed8] underline decoration-[#2563eb]/30 hover:decoration-[#1d4ed8]/50 transition-colors rounded-sm px-0.5 -mx-0.5"
                 >
                   {w.word_text}
                 </span>
