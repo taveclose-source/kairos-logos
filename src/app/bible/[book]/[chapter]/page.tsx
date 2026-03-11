@@ -5,6 +5,7 @@ import LastReadTracker from '@/components/LastReadTracker'
 import VerseDisplay from '@/components/VerseDisplay'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 interface Verse {
   verse: number

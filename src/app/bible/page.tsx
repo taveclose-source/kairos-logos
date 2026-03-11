@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 interface BookInfo {
   id: string
