@@ -10,7 +10,7 @@
 | Project | Logos by Kai'Ros |
 | Type | Bible platform — KJV + Asante Twi, AI Theological Agent, Twi Learning App |
 | Owner | Tave Close Sr. (Kai'Ros International / Summit Bible Center) |
-| File Root | Documents\Summit\Ghana\Kai'Ros\Logos\ |
+| File Root | C:\Dev\Logos\ |
 | Master Chat | Logos by Kai'Ros master chat on claude.ai |
 | Coding Agent | Bubby (Claude Code) |
 
@@ -92,19 +92,14 @@ KAI'ROS INTERNATIONAL
 ## File Structure
 
 ```
-Documents\Summit\Ghana\Kai'Ros\
-├── Bible\                          ← Twi Translation project (predates Logos, feeds into it)
-├── Logos\                          ← Platform root (this project)
-│   └── _MASTER\
-│       ├── CLAUDE.md               ← this file
-│       ├── CLAUDE.md.docx          ← formatted version
-│       ├── MASTER_TASK_LIST.docx   ← full task list with status
-│       └── THEOLOGICAL_BRIEF.md    ← MUST BE WRITTEN BY TAVE before Phase 2
-├── Fundraising\                    ← kairos.summitbiblecenter.com (live — separate project)
-├── Coffee\
-├── Grasshopper\
-├── SOPs\
-└── Approved 2026 budget.pdf
+C:\Dev\Logos\                       ← Platform root (this project)
+├── CLAUDE.md                       ← this file
+├── CLAUDE.md.docx                  ← formatted version
+├── MASTER_TASK_LIST.docx           ← full task list with status
+├── THEOLOGICAL_BRIEF_FINAL.docx    ← theological brief
+├── src\                            ← Next.js app source
+├── scripts\                        ← import scripts + data
+└── Start Bubby - Logos.bat         ← launcher
 ```
 
 ---
@@ -147,6 +142,6 @@ tool, not a commercial product. Build accordingly — this matters beyond the co
 ## Resuming Bubby
 
 To start a new Claude Code session on this project:
-1. Navigate to: Documents\Summit\Ghana\Kai'Ros\Logos\
-2. Run: claude
+1. Navigate to: C:\Dev\Logos\
+2. Run: claude (or double-click "Start Bubby - Logos.bat")
 3. Bubby reads this file automatically and has full context.
