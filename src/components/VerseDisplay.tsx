@@ -329,7 +329,7 @@ export default function VerseDisplay({
                 {/* Companion Column — desktop */}
                 {showCompanion && (
                   <p className="hidden md:block text-base sm:text-lg leading-relaxed">
-                    {languageCode === 'twi' && v.twi_text ? (
+                    {v.twi_text ? (
                       v.twi_text
                     ) : (
                       <span className="italic text-gray-400">
@@ -347,7 +347,7 @@ export default function VerseDisplay({
                     {languageName}
                   </span>
                   <p className="text-base leading-relaxed mt-0.5">
-                    {languageCode === 'twi' && v.twi_text ? (
+                    {v.twi_text ? (
                       v.twi_text
                     ) : (
                       <span className="italic text-gray-400">
