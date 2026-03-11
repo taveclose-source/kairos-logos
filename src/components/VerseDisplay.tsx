@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useLanguage, BPS_LANGUAGES } from '@/context/LanguageContext'
+import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
 interface Verse {
   verse: number
@@ -10,27 +11,196 @@ interface Verse {
   has_twi: boolean
 }
 
+interface StrongsWord {
+  word_position: number
+  word_text: string
+  strongs_number: string | null
+  testament: string | null
+  original_word: string | null
+  transliteration: string | null
+  pronunciation: string | null
+  part_of_speech: string | null
+  definition: string | null
+  kjv_usage: string | null
+}
+
+interface SelectedWord extends StrongsWord {
+  verseNum: number
+}
+
+// Strip manuscript/translation notes in curly braces from KJV text
+// e.g. "{was}", "{firmament: Heb. expansion}", "{And the evening...: Heb. ...}"
+function cleanKjvText(text: string): string {
+  return text.replace(/\s*\{[^}]*\}\s*/g, ' ').replace(/\s{2,}/g, ' ').trim()
+}
+
 export default function VerseDisplay({
   verses,
   chapterHasTwi,
+  bookName,
+  chapter,
 }: {
   verses: Verse[]
   chapterHasTwi: boolean
+  bookName: string
+  chapter: number
 }) {
   const { languageCode, languageName, setLanguage } = useLanguage()
 
-  // Auto-show companion column when the selected language has content
-  // User can still manually hide/show
   const [showCompanion, setShowCompanion] = useState(
     languageCode === 'twi' ? chapterHasTwi : true
   )
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [strongsEnabled, setStrongsEnabled] = useState(false)
+  const [verseWords, setVerseWords] = useState<Record<number, StrongsWord[]>>({})
+  const [loadingStrongs, setLoadingStrongs] = useState(false)
+  const [selectedWord, setSelectedWord] = useState<SelectedWord | null>(null)
+  const popupRef = useRef<HTMLDivElement>(null)
 
   function handleSelectLang(code: string, active: boolean) {
     if (!active) return
     setLanguage(code)
     setShowCompanion(true)
     setDropdownOpen(false)
+  }
+
+  // Fetch Strong's data when enabled
+  useEffect(() => {
+    if (!strongsEnabled || !bookName || !chapter) return
+    if (Object.keys(verseWords).length > 0) return // already loaded
+
+    let cancelled = false
+    setLoadingStrongs(true)
+
+    async function fetchWords() {
+      const supabase = createSupabaseBrowser()
+      const results: Record<number, StrongsWord[]> = {}
+
+      // Single query: fetch all words for this chapter with Strong's data joined
+      const { data, error } = await supabase
+        .from('verse_words')
+        .select('verse, word_position, word_text, strongs_number')
+        .eq('book', bookName)
+        .eq('chapter', chapter)
+        .order('verse')
+        .order('word_position')
+        .limit(10000)
+
+      if (cancelled || error || !data || data.length === 0) {
+        if (!cancelled) setLoadingStrongs(false)
+        return
+      }
+
+      // Collect unique Strong's numbers to look up
+      const strongsNums = Array.from(new Set(
+        data.filter(r => r.strongs_number).map(r => r.strongs_number as string)
+      ))
+
+      // Fetch Strong's entries for those numbers
+      const { data: strongsData } = strongsNums.length > 0
+        ? await supabase
+            .from('strongs_entries')
+            .select('strongs_number, testament, original_word, transliteration, pronunciation, part_of_speech, definition, kjv_usage')
+            .in('strongs_number', strongsNums)
+        : { data: [] }
+
+      interface StrongsEntry {
+        strongs_number: string
+        testament: string
+        original_word: string
+        transliteration: string | null
+        pronunciation: string | null
+        part_of_speech: string | null
+        definition: string | null
+        kjv_usage: string | null
+      }
+      const lookup: Record<string, StrongsEntry> = {}
+      if (strongsData) {
+        for (const se of strongsData as StrongsEntry[]) {
+          lookup[se.strongs_number] = se
+        }
+      }
+
+      // Group by verse
+      for (const row of data) {
+        if (!results[row.verse]) results[row.verse] = []
+        const se = row.strongs_number ? lookup[row.strongs_number] : null
+        results[row.verse].push({
+          word_position: row.word_position,
+          word_text: row.word_text,
+          strongs_number: row.strongs_number,
+          testament: se?.testament ?? null,
+          original_word: se?.original_word ?? null,
+          transliteration: se?.transliteration ?? null,
+          pronunciation: se?.pronunciation ?? null,
+          part_of_speech: se?.part_of_speech ?? null,
+          definition: se?.definition ?? null,
+          kjv_usage: se?.kjv_usage ?? null,
+        })
+      }
+
+      if (!cancelled) {
+        setVerseWords(results)
+        setLoadingStrongs(false)
+      }
+    }
+
+    fetchWords()
+    return () => { cancelled = true }
+  }, [strongsEnabled, bookName, chapter, verseWords])
+
+  // Close popup on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
+        setSelectedWord(null)
+      }
+    }
+    if (selectedWord) {
+      document.addEventListener('mousedown', handleClick)
+      return () => document.removeEventListener('mousedown', handleClick)
+    }
+  }, [selectedWord])
+
+  const handleWordClick = useCallback((word: StrongsWord, verseNum: number) => {
+    if (!word.strongs_number) return
+    setSelectedWord({ ...word, verseNum })
+  }, [])
+
+  function renderStrongsVerse(v: Verse) {
+    const words = verseWords[v.verse]
+    if (!words || words.length === 0) {
+      return <>{cleanKjvText(v.kjv_text)}</>
+    }
+
+    // Filter out curly-brace annotation words and clean remaining word text
+    const cleanedWords = words
+      .map(w => ({ ...w, word_text: w.word_text.replace(/\{[^}]*\}?/g, '').trim() }))
+      .filter(w => w.word_text.length > 0)
+
+    let wordIndex = 0
+    return (
+      <>
+        {cleanedWords.map((w) => {
+          wordIndex++
+          return (
+            <span key={w.word_position}>
+              {wordIndex > 1 && ' '}
+              {w.strongs_number ? (
+                <span
+                  onClick={() => handleWordClick(w, v.verse)}
+                  className="cursor-pointer border-b border-dotted border-amber-400 hover:bg-amber-50 hover:text-amber-900 transition-colors rounded-sm px-0.5 -mx-0.5"
+                >
+                  {w.word_text}
+                </span>
+              ) : (
+                w.word_text
+              )}
+            </span>
+          )
+        })}
+      </>
+    )
   }
 
   return (
@@ -49,6 +219,25 @@ export default function VerseDisplay({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Strong's toggle */}
+          <button
+            onClick={() => setStrongsEnabled(!strongsEnabled)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              strongsEnabled
+                ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
+                : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+            }`}
+          >
+            <span className={`inline-block w-2 h-2 rounded-full ${strongsEnabled ? 'bg-amber-500' : 'bg-gray-400'}`} />
+            Strong&apos;s
+            {loadingStrongs && (
+              <svg className="w-3 h-3 animate-spin text-amber-500" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            )}
+          </button>
+
           {/* Language selector */}
           <div className="relative">
             <button
@@ -134,7 +323,7 @@ export default function VerseDisplay({
                   <span className="font-semibold text-gray-400 mr-2 text-sm align-super">
                     {v.verse}
                   </span>
-                  {v.kjv_text}
+                  {strongsEnabled ? renderStrongsVerse(v) : cleanKjvText(v.kjv_text)}
                 </p>
 
                 {/* Companion Column — desktop */}
@@ -175,6 +364,103 @@ export default function VerseDisplay({
         <p className="text-red-500 py-8">
           No verses found. Check the data pipeline.
         </p>
+      )}
+
+      {/* Strong's Popup */}
+      {selectedWord && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="fixed inset-0 bg-black/30" onClick={() => setSelectedWord(null)} />
+          <div
+            ref={popupRef}
+            className="relative z-50 w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[80vh] overflow-y-auto"
+          >
+            {/* Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 rounded-t-2xl flex items-start justify-between">
+              <div>
+                <p className="text-lg font-bold text-gray-900">{selectedWord.word_text}</p>
+                <p className="text-sm text-amber-600 font-mono font-medium">{selectedWord.strongs_number}</p>
+              </div>
+              <button
+                onClick={() => setSelectedWord(null)}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-5 py-4 space-y-4">
+              {/* Original word */}
+              {selectedWord.original_word && (
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                    {selectedWord.testament === 'OT' ? 'Hebrew' : 'Greek'}
+                  </p>
+                  <p className="text-2xl font-serif text-gray-900">{selectedWord.original_word}</p>
+                </div>
+              )}
+
+              {/* Transliteration & Pronunciation */}
+              <div className="flex gap-6">
+                {selectedWord.transliteration && (
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Transliteration</p>
+                    <p className="text-sm text-gray-700 italic">{selectedWord.transliteration}</p>
+                  </div>
+                )}
+                {selectedWord.pronunciation && (
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Pronunciation</p>
+                    <p className="text-sm text-gray-700">{selectedWord.pronunciation}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Part of Speech / Derivation */}
+              {selectedWord.part_of_speech && (
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Derivation</p>
+                  <p className="text-sm text-gray-700">{selectedWord.part_of_speech}</p>
+                </div>
+              )}
+
+              {/* Definition */}
+              {selectedWord.definition && (
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Definition</p>
+                  <p className="text-sm text-gray-900 leading-relaxed">{selectedWord.definition}</p>
+                </div>
+              )}
+
+              {/* KJV Usage */}
+              {selectedWord.kjv_usage && (
+                <div>
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">KJV Usage</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{selectedWord.kjv_usage}</p>
+                </div>
+              )}
+
+              {/* Verse reference */}
+              <div className="pt-2 border-t border-gray-100">
+                <p className="text-xs text-gray-400">
+                  {bookName} {chapter}:{selectedWord.verseNum}
+                </p>
+              </div>
+
+              {/* Ask the agent button */}
+              <a
+                href={`/ask?q=${encodeURIComponent(
+                  `What is the significance of the ${selectedWord.testament === 'OT' ? 'Hebrew' : 'Greek'} word "${selectedWord.original_word}" (${selectedWord.strongs_number}) used in ${bookName} ${chapter}:${selectedWord.verseNum}?`
+                )}`}
+                className="block w-full text-center px-4 py-3 rounded-xl bg-amber-50 text-amber-700 font-medium text-sm border border-amber-200 hover:bg-amber-100 transition-colors"
+              >
+                Ask the agent about this word
+              </a>
+            </div>
+          </div>
+        </div>
       )}
     </>
   )

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect, FormEvent } from 'react'
+import { useState, useRef, useEffect, FormEvent, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -35,6 +36,15 @@ function OilLampIcon({ className }: { className?: string }) {
 }
 
 export default function AskPage() {
+  return (
+    <Suspense>
+      <AskPageInner />
+    </Suspense>
+  )
+}
+
+function AskPageInner() {
+  const searchParams = useSearchParams()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -42,6 +52,15 @@ export default function AskPage() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Pre-populate input from ?q= query parameter (e.g. from Strong's popup)
+  useEffect(() => {
+    const q = searchParams.get('q')
+    if (q && messages.length === 0) {
+      setInput(q)
+      inputRef.current?.focus()
+    }
+  }, [searchParams, messages.length])
 
   // Auto-scroll to bottom when messages change or during streaming
   useEffect(() => {

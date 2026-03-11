@@ -110,7 +110,7 @@ export default async function ChapterPage({
         <h2 className="text-xl text-gray-500">Chapter {chapter}</h2>
       </div>
 
-      <VerseDisplay verses={verses} chapterHasTwi={chapterHasTwi} />
+      <VerseDisplay verses={verses} chapterHasTwi={chapterHasTwi} bookName={book_name} chapter={chapter} />
 
       {/* Navigation */}
       <nav className="flex items-center justify-between mt-10 pt-6 border-t">
