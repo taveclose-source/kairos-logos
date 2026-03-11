@@ -119,30 +119,72 @@ function validate(data, fileName) {
 
   if (errors.length > 0) return errors
 
-  // Glossary enforcement: check that locked terms are NOT replaced
-  // by variant spellings. Collect all twi_text into one string.
+  // Glossary enforcement: locked terms must appear exactly as specified
+  // whenever their concept is used. We check that no variant spelling
+  // replaces the locked form.
+  //
+  // Multi-word terms (e.g. "ɔsoro ahennie") are matched as complete
+  // phrases — individual component words like "soro" (heaven/sky)
+  // appearing independently are NOT violations.
+  //
+  // Single-word terms are checked by scanning for words that look like
+  // variant spellings (same root, different form) when the exact locked
+  // form is absent.
   const allText = data.verses.map(v => v.twi_text).join(' ')
 
-  for (const term of LOCKED_TERMS) {
-    // Build a case-insensitive check for common misspellings / alterations
-    // We only flag if a near-match is found but the exact term is absent
-    // For "Gergesefoɔ" this only applies to Matthew (Gergesenes context)
-    // We check presence — if the term should appear, the translator must use it exactly
-    const lower = allText.toLowerCase()
-    const termLower = term.toLowerCase()
+  // Map of Twi special characters to their common ASCII substitutes
+  const TWI_CHAR_MAP = { 'ɔ': 'o', 'Ɔ': 'O', 'ɛ': 'e', 'Ɛ': 'E' }
 
-    // Check for variant: same base but different diacritics or suffix
-    // Simple heuristic: if a word starts with the first 4 chars of the term
-    // but isn't the exact term, flag it
-    const base = termLower.slice(0, Math.min(4, termLower.length))
-    const words = allText.split(/\s+/)
-    for (const word of words) {
-      const clean = word.replace(/[.,;:!?"""''()[\]]/g, '')
-      if (clean.toLowerCase().startsWith(base) && clean !== term && clean.length >= base.length) {
-        // Possible variant — only flag if exact term is NOT present
-        if (!allText.includes(term)) {
-          errors.push(`Glossary violation: found "${clean}" but locked term is "${term}"`)
-          break
+  for (const term of LOCKED_TERMS) {
+    const isPhrase = term.includes(' ')
+
+    if (isPhrase) {
+      // For multi-word locked phrases: find any near-variant of the
+      // full phrase. We look for sequences where each word of the
+      // phrase is replaced by a similar-looking word.
+      // Diacritics and Twi-specific characters (ɔ↔o, ɛ↔e) are made
+      // interchangeable so "osoro ahenni" matches as a variant of
+      // "ɔsoro ahennie".
+      const phraseWords = term.split(/\s+/)
+      const variantPattern = phraseWords
+        .map(w => {
+          let pat = ''
+          for (let ci = 0; ci < Math.min(3, w.length); ci++) {
+            const ch = w[ci]
+            const ascii = TWI_CHAR_MAP[ch]
+              || ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            if (ascii !== ch) {
+              const esc = ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+              pat += `[${esc}${ascii}]`
+            } else {
+              pat += ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            }
+          }
+          return `${pat}\\S*`
+        })
+        .join('\\s+')
+      const re = new RegExp(variantPattern, 'gi')
+      const matches = allText.match(re)
+      if (matches) {
+        for (const m of matches) {
+          if (m !== term) {
+            errors.push(`Glossary violation: found "${m}" but locked phrase is "${term}"`)
+            break
+          }
+        }
+      }
+    } else {
+      // Single-word term: flag words that share the same root but
+      // differ in spelling, only when the exact term is absent.
+      const base = term.toLowerCase().slice(0, Math.min(4, term.length))
+      const words = allText.split(/\s+/)
+      for (const word of words) {
+        const clean = word.replace(/[.,;:!?"""''()[\]]/g, '')
+        if (clean.toLowerCase().startsWith(base) && clean !== term && clean.length >= base.length) {
+          if (!allText.includes(term)) {
+            errors.push(`Glossary violation: found "${clean}" but locked term is "${term}"`)
+            break
+          }
         }
       }
     }
