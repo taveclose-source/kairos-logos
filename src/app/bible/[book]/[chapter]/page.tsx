@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation'
 import LastReadTracker from '@/components/LastReadTracker'
 import VerseDisplay from '@/components/VerseDisplay'
 
+export const dynamic = 'force-dynamic'
+
 interface Verse {
   verse: number
   kjv_text: string
