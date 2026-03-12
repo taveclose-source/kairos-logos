@@ -276,7 +276,16 @@ function EntryList({
 
 // ── Main Expanded Strong's Modal ───────────────────────────────────────────
 
+type TabId = 'study' | 'concordance' | 'english'
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'study', label: 'Word Study' },
+  { id: 'concordance', label: 'Concordance' },
+  { id: 'english', label: 'English' },
+]
+
 export default function StrongsModal({ word, onClose }: StrongsModalProps) {
+  const [activeTab, setActiveTab] = useState<TabId>('study')
   const [strongsConcordance, setStrongsConcordance] = useState<ConcordanceEntry[]>([])
   const [englishConcordance, setEnglishConcordance] = useState<ConcordanceEntry[]>([])
   const [loadingStrongs, setLoadingStrongs] = useState(false)
@@ -287,6 +296,11 @@ export default function StrongsModal({ word, onClose }: StrongsModalProps) {
 
   const currentWord = modalStack[modalStack.length - 1]
   const testament = currentWord.testament === 'OT' ? 'OT' : 'NT'
+
+  // Reset tab to Word Study when cascading to a new word
+  useEffect(() => {
+    setActiveTab('study')
+  }, [modalStack.length])
 
   // Fetch Strong's concordance when word changes
   useEffect(() => {
@@ -315,7 +329,6 @@ export default function StrongsModal({ word, onClose }: StrongsModalProps) {
     setLoadingEnglish(true)
     setEnglishConcordance([])
 
-    // Strip punctuation from the word for search
     const cleanWord = currentWord.word_text.replace(/[^a-zA-Z'-]/g, '')
     if (!cleanWord) { setLoadingEnglish(false); return }
 
@@ -336,7 +349,6 @@ export default function StrongsModal({ word, onClose }: StrongsModalProps) {
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
-        // Don't close if verse modal is open
         if (!activeVerseEntry) {
           onClose()
         }
@@ -363,7 +375,6 @@ export default function StrongsModal({ word, onClose }: StrongsModalProps) {
     return () => document.removeEventListener('keydown', handleKey)
   }, [onClose, activeVerseEntry, modalStack.length])
 
-  // When a blue word is clicked in the verse modal, cascade to new Strong's view
   const handleCascadeWord = useCallback((newWord: SelectedWord) => {
     setActiveVerseEntry(null)
     setModalStack(prev => [...prev, newWord])
@@ -387,7 +398,7 @@ export default function StrongsModal({ word, onClose }: StrongsModalProps) {
           className="relative z-50 w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[85vh] flex flex-col"
         >
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 rounded-t-2xl flex items-start justify-between shrink-0">
+          <div className="bg-white border-b border-gray-100 px-5 py-4 rounded-t-2xl flex items-start justify-between shrink-0">
             <div className="flex items-center gap-2">
               {modalStack.length > 1 && (
                 <button
@@ -412,112 +423,138 @@ export default function StrongsModal({ word, onClose }: StrongsModalProps) {
             </button>
           </div>
 
-          {/* Scrollable content */}
+          {/* Tabs */}
+          <div className="flex border-b border-gray-200 shrink-0 bg-white px-5">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative px-3 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                  activeTab === tab.id
+                    ? 'text-emerald-700'
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                {tab.label}
+                {activeTab === tab.id && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 rounded-full" />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab content */}
           <div className="overflow-y-auto px-5 py-4 space-y-4">
-            {/* Original word */}
-            {currentWord.original_word && (
-              <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                  {langLabel}
-                </p>
-                <p className="text-2xl font-serif text-gray-900">{currentWord.original_word}</p>
-              </div>
+
+            {/* ── Tab 1: Word Study ──────────────────────────────────────── */}
+            {activeTab === 'study' && (
+              <>
+                {currentWord.original_word && (
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                      {langLabel}
+                    </p>
+                    <p className="text-2xl font-serif text-gray-900">{currentWord.original_word}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-6">
+                  {currentWord.transliteration && (
+                    <div>
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Transliteration</p>
+                      <p className="text-sm text-gray-700 italic">{currentWord.transliteration}</p>
+                    </div>
+                  )}
+                  {currentWord.pronunciation && (
+                    <div>
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Pronunciation</p>
+                      <p className="text-sm text-gray-700">{currentWord.pronunciation}</p>
+                    </div>
+                  )}
+                </div>
+
+                {currentWord.part_of_speech && (
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Derivation</p>
+                    <p className="text-sm text-gray-700">{currentWord.part_of_speech}</p>
+                  </div>
+                )}
+
+                {currentWord.definition && (
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Definition</p>
+                    <p className="text-sm text-gray-900 leading-relaxed">{currentWord.definition}</p>
+                  </div>
+                )}
+
+                {currentWord.kjv_usage && (
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">KJV Usage</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">{currentWord.kjv_usage}</p>
+                  </div>
+                )}
+
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs text-gray-400">
+                    {currentWord.bookName} {currentWord.chapter}:{currentWord.verseNum}
+                  </p>
+                </div>
+
+                <a
+                  href={`/ask?q=${encodeURIComponent(
+                    `What is the significance of the ${langLabel} word "${currentWord.original_word}" (${currentWord.strongs_number}) used in ${currentWord.bookName} ${currentWord.chapter}:${currentWord.verseNum}?`
+                  )}`}
+                  className="block w-full text-center px-4 py-3 rounded-xl bg-amber-50 text-amber-700 font-medium text-sm border border-amber-200 hover:bg-amber-100 transition-colors"
+                >
+                  Ask the agent about this word
+                </a>
+              </>
             )}
 
-            {/* Transliteration & Pronunciation */}
-            <div className="flex gap-6">
-              {currentWord.transliteration && (
-                <div>
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Transliteration</p>
-                  <p className="text-sm text-gray-700 italic">{currentWord.transliteration}</p>
-                </div>
-              )}
-              {currentWord.pronunciation && (
-                <div>
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Pronunciation</p>
-                  <p className="text-sm text-gray-700">{currentWord.pronunciation}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Part of Speech / Derivation */}
-            {currentWord.part_of_speech && (
-              <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Derivation</p>
-                <p className="text-sm text-gray-700">{currentWord.part_of_speech}</p>
-              </div>
+            {/* ── Tab 2: Concordance (Strong's number) ───────────────────── */}
+            {activeTab === 'concordance' && (
+              <>
+                {loadingStrongs ? (
+                  <div className="flex items-center gap-2 text-gray-400 text-sm py-6">
+                    <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Loading concordance...
+                  </div>
+                ) : (
+                  <ConcordanceSection
+                    heading={`All occurrences of ${currentWord.original_word ?? currentWord.word_text} in Scripture`}
+                    entries={strongsConcordance}
+                    testament={null}
+                    onEntryClick={setActiveVerseEntry}
+                  />
+                )}
+              </>
             )}
 
-            {/* Definition */}
-            {currentWord.definition && (
-              <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Definition</p>
-                <p className="text-sm text-gray-900 leading-relaxed">{currentWord.definition}</p>
-              </div>
+            {/* ── Tab 3: English (testament-restricted) ──────────────────── */}
+            {activeTab === 'english' && (
+              <>
+                {loadingEnglish ? (
+                  <div className="flex items-center gap-2 text-gray-400 text-sm py-6">
+                    <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Loading English concordance...
+                  </div>
+                ) : (
+                  <ConcordanceSection
+                    heading={`All occurrences of '${currentWord.word_text}' in the ${testament === 'NT' ? 'New' : 'Old'} Testament`}
+                    entries={englishConcordance}
+                    testament={testament as 'OT' | 'NT'}
+                    onEntryClick={setActiveVerseEntry}
+                  />
+                )}
+              </>
             )}
 
-            {/* KJV Usage */}
-            {currentWord.kjv_usage && (
-              <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">KJV Usage</p>
-                <p className="text-sm text-gray-700 leading-relaxed">{currentWord.kjv_usage}</p>
-              </div>
-            )}
-
-            {/* Verse reference */}
-            <div className="pt-2 border-t border-gray-100">
-              <p className="text-xs text-gray-400">
-                {currentWord.bookName} {currentWord.chapter}:{currentWord.verseNum}
-              </p>
-            </div>
-
-            {/* Ask the agent button */}
-            <a
-              href={`/ask?q=${encodeURIComponent(
-                `What is the significance of the ${langLabel} word "${currentWord.original_word}" (${currentWord.strongs_number}) used in ${currentWord.bookName} ${currentWord.chapter}:${currentWord.verseNum}?`
-              )}`}
-              className="block w-full text-center px-4 py-3 rounded-xl bg-amber-50 text-amber-700 font-medium text-sm border border-amber-200 hover:bg-amber-100 transition-colors"
-            >
-              Ask the agent about this word
-            </a>
-
-            {/* ── SECTION 1: Strong's Concordance ──────────────────────────── */}
-            <div className="pt-3 border-t border-gray-200">
-              <ConcordanceSection
-                heading={`All occurrences of ${currentWord.original_word ?? currentWord.word_text} in Scripture`}
-                entries={strongsConcordance}
-                testament={null}
-                onEntryClick={setActiveVerseEntry}
-              />
-              {loadingStrongs && (
-                <div className="flex items-center gap-2 text-gray-400 text-sm py-2">
-                  <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Loading concordance...
-                </div>
-              )}
-            </div>
-
-            {/* ── SECTION 2: English Concordance (testament-restricted) ───── */}
-            <div className="pt-3 border-t border-gray-200">
-              <ConcordanceSection
-                heading={`All occurrences of '${currentWord.word_text}' in the ${testament === 'NT' ? 'New' : 'Old'} Testament`}
-                entries={englishConcordance}
-                testament={testament as 'OT' | 'NT'}
-                onEntryClick={setActiveVerseEntry}
-              />
-              {loadingEnglish && (
-                <div className="flex items-center gap-2 text-gray-400 text-sm py-2">
-                  <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Loading English concordance...
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
