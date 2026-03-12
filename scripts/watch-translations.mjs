@@ -178,17 +178,27 @@ function validate(data, fileName) {
         }
       }
     } else {
-      // Single-word term: flag words that share the same root but
-      // differ in spelling, only when the exact term is absent.
-      const base = term.toLowerCase().slice(0, Math.min(4, term.length))
+      // Single-word term: flag words that normalize to the same string
+      // as the locked term but differ in actual spelling.
+      // Normalization only collapses visually ambiguous diacritics
+      // (ɔ↔o, ɛ↔e) — it does NOT collapse phonetically distinct
+      // vowels like ɔ and u, which are different phonemes in Twi.
+      function twiNormalize(s) {
+        let out = ''
+        for (const ch of s) {
+          out += TWI_CHAR_MAP[ch] || ch
+        }
+        return out.toLowerCase()
+      }
+      const normTerm = twiNormalize(term)
       const words = allText.split(/\s+/)
       for (const word of words) {
         const clean = word.replace(/[.,;:!?"""''()[\]]/g, '')
-        if (clean.toLowerCase().startsWith(base) && clean !== term && clean.length >= base.length) {
-          if (!allText.includes(term)) {
-            errors.push(`Glossary violation: found "${clean}" but locked term is "${term}"`)
-            break
-          }
+        if (clean === term) continue
+        if (clean.length < 3) continue
+        if (twiNormalize(clean) === normTerm && !allText.includes(term)) {
+          errors.push(`Glossary violation: found "${clean}" but locked term is "${term}"`)
+          break
         }
       }
     }
