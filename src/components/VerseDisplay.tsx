@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useLanguage, BPS_LANGUAGES } from '@/context/LanguageContext'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import StrongsModal from '@/components/StrongsModal'
 
 interface Verse {
   verse: number
@@ -26,6 +27,8 @@ interface StrongsWord {
 
 interface SelectedWord extends StrongsWord {
   verseNum: number
+  bookName: string
+  chapter: number
 }
 
 // Strip manuscript/translation notes in curly braces from KJV text
@@ -55,7 +58,6 @@ export default function VerseDisplay({
   const [verseWords, setVerseWords] = useState<Record<number, StrongsWord[]>>({})
   const [loadingStrongs, setLoadingStrongs] = useState(false)
   const [selectedWord, setSelectedWord] = useState<SelectedWord | null>(null)
-  const popupRef = useRef<HTMLDivElement>(null)
 
   function handleSelectLang(code: string, active: boolean) {
     if (!active) return
@@ -149,23 +151,10 @@ export default function VerseDisplay({
     return () => { cancelled = true }
   }, [strongsEnabled, bookName, chapter, verseWords])
 
-  // Close popup on outside click
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
-        setSelectedWord(null)
-      }
-    }
-    if (selectedWord) {
-      document.addEventListener('mousedown', handleClick)
-      return () => document.removeEventListener('mousedown', handleClick)
-    }
-  }, [selectedWord])
-
   const handleWordClick = useCallback((word: StrongsWord, verseNum: number) => {
     if (!word.strongs_number) return
-    setSelectedWord({ ...word, verseNum })
-  }, [])
+    setSelectedWord({ ...word, verseNum, bookName, chapter })
+  }, [bookName, chapter])
 
   function renderStrongsVerse(v: Verse) {
     const words = verseWords[v.verse]
@@ -366,101 +355,12 @@ export default function VerseDisplay({
         </p>
       )}
 
-      {/* Strong's Popup */}
+      {/* Expanded Strong's Modal */}
       {selectedWord && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-          <div className="fixed inset-0 bg-black/30" onClick={() => setSelectedWord(null)} />
-          <div
-            ref={popupRef}
-            className="relative z-50 w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[80vh] overflow-y-auto"
-          >
-            {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 rounded-t-2xl flex items-start justify-between">
-              <div>
-                <p className="text-lg font-bold text-gray-900">{selectedWord.word_text}</p>
-                <p className="text-sm text-amber-600 font-mono font-medium">{selectedWord.strongs_number}</p>
-              </div>
-              <button
-                onClick={() => setSelectedWord(null)}
-                className="text-gray-400 hover:text-gray-600 p-1"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="px-5 py-4 space-y-4">
-              {/* Original word */}
-              {selectedWord.original_word && (
-                <div>
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                    {selectedWord.testament === 'OT' ? 'Hebrew' : 'Greek'}
-                  </p>
-                  <p className="text-2xl font-serif text-gray-900">{selectedWord.original_word}</p>
-                </div>
-              )}
-
-              {/* Transliteration & Pronunciation */}
-              <div className="flex gap-6">
-                {selectedWord.transliteration && (
-                  <div>
-                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Transliteration</p>
-                    <p className="text-sm text-gray-700 italic">{selectedWord.transliteration}</p>
-                  </div>
-                )}
-                {selectedWord.pronunciation && (
-                  <div>
-                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Pronunciation</p>
-                    <p className="text-sm text-gray-700">{selectedWord.pronunciation}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Part of Speech / Derivation */}
-              {selectedWord.part_of_speech && (
-                <div>
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Derivation</p>
-                  <p className="text-sm text-gray-700">{selectedWord.part_of_speech}</p>
-                </div>
-              )}
-
-              {/* Definition */}
-              {selectedWord.definition && (
-                <div>
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Definition</p>
-                  <p className="text-sm text-gray-900 leading-relaxed">{selectedWord.definition}</p>
-                </div>
-              )}
-
-              {/* KJV Usage */}
-              {selectedWord.kjv_usage && (
-                <div>
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">KJV Usage</p>
-                  <p className="text-sm text-gray-700 leading-relaxed">{selectedWord.kjv_usage}</p>
-                </div>
-              )}
-
-              {/* Verse reference */}
-              <div className="pt-2 border-t border-gray-100">
-                <p className="text-xs text-gray-400">
-                  {bookName} {chapter}:{selectedWord.verseNum}
-                </p>
-              </div>
-
-              {/* Ask the agent button */}
-              <a
-                href={`/ask?q=${encodeURIComponent(
-                  `What is the significance of the ${selectedWord.testament === 'OT' ? 'Hebrew' : 'Greek'} word "${selectedWord.original_word}" (${selectedWord.strongs_number}) used in ${bookName} ${chapter}:${selectedWord.verseNum}?`
-                )}`}
-                className="block w-full text-center px-4 py-3 rounded-xl bg-amber-50 text-amber-700 font-medium text-sm border border-amber-200 hover:bg-amber-100 transition-colors"
-              >
-                Ask the agent about this word
-              </a>
-            </div>
-          </div>
-        </div>
+        <StrongsModal
+          word={selectedWord}
+          onClose={() => setSelectedWord(null)}
+        />
       )}
     </>
   )
