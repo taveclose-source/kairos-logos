@@ -149,7 +149,8 @@ function validate(data, fileName) {
       const variantPattern = phraseWords
         .map(w => {
           let pat = ''
-          for (let ci = 0; ci < Math.min(3, w.length); ci++) {
+          // Build pattern from ALL characters with diacritic flexibility
+          for (let ci = 0; ci < w.length; ci++) {
             const ch = w[ci]
             const ascii = TWI_CHAR_MAP[ch]
               || ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -160,13 +161,13 @@ function validate(data, fileName) {
               pat += ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
             }
           }
-          // Allow up to 2 extra chars beyond the original word length
-          // to catch minor spelling variants but not entirely different words
-          const extraChars = Math.max(0, w.length - 3) + 2
-          return `${pat}\\S{0,${extraChars}}`
+          // (?!\w) ensures the matched word is not followed by additional
+          // word characters — prevents "Ba" matching inside "baako",
+          // "onipa" matching inside "onipafoo", etc.
+          return `${pat}(?!\\w)`
         })
         .join('\\s+')
-      const re = new RegExp(`(?<=^|\\s)${variantPattern}(?=\\s|$)`, 'gi')
+      const re = new RegExp(variantPattern, 'gi')
       const matches = allText.match(re)
       if (matches) {
         for (const m of matches) {
