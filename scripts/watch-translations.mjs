@@ -160,10 +160,13 @@ function validate(data, fileName) {
               pat += ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
             }
           }
-          return `${pat}\\S*`
+          // Allow up to 2 extra chars beyond the original word length
+          // to catch minor spelling variants but not entirely different words
+          const extraChars = Math.max(0, w.length - 3) + 2
+          return `${pat}\\S{0,${extraChars}}`
         })
         .join('\\s+')
-      const re = new RegExp(variantPattern, 'gi')
+      const re = new RegExp(`(?<=^|\\s)${variantPattern}(?=\\s|$)`, 'gi')
       const matches = allText.match(re)
       if (matches) {
         for (const m of matches) {
