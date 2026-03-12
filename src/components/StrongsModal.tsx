@@ -444,7 +444,7 @@ export default function StrongsModal({ word, onClose }: StrongsModalProps) {
           </div>
 
           {/* Tab content */}
-          <div className="overflow-y-auto px-5 py-4 space-y-4">
+          <div className="overflow-y-auto flex-1 min-h-0 px-5 py-4 space-y-4">
 
             {/* ── Tab 1: Word Study ──────────────────────────────────────── */}
             {activeTab === 'study' && (
