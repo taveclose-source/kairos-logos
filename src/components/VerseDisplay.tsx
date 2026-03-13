@@ -74,11 +74,14 @@ export default function VerseDisplay({
   useEffect(() => {
     let cancelled = false
     fetch('/api/glossary')
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`Glossary fetch failed: ${r.status}`)
+        return r.json()
+      })
       .then((data) => {
         if (!cancelled && Array.isArray(data)) setGlossaryTerms(data)
       })
-      .catch(() => {})
+      .catch((err) => console.error('[Logos] glossary load error:', err))
     return () => { cancelled = true }
   }, [])
 
