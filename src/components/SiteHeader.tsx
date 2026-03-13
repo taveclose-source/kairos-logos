@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: '/ask', label: 'Ask' },
   { href: '/why-kjv', label: 'Why KJV?' },
   { href: '/learn', label: 'Learn' },
+  { href: '/glossary', label: 'Glossary' },
   { href: '/translation', label: 'Translation' },
 ]
 
