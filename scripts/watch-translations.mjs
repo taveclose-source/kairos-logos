@@ -171,7 +171,15 @@ function validate(data, fileName) {
       const matches = allText.match(re)
       if (matches) {
         for (const m of matches) {
-          if (m !== term) {
+          // Compare case-insensitively so that "Ɔsoro ahennie" (capital
+          // at sentence start) is recognized as the correct locked form.
+          // Standard toLowerCase() doesn't handle Twi chars (Ɔ/ɔ, Ɛ/ɛ),
+          // so apply Twi-aware lowercasing before comparing.
+          const TWI_LOWER = { 'Ɔ': 'ɔ', 'Ɛ': 'ɛ' }
+          const twiLower = s => [...s].map(c => TWI_LOWER[c] || c).join('').toLowerCase()
+          const normMatch = twiLower(m)
+          const normTerm = twiLower(term)
+          if (normMatch !== normTerm) {
             errors.push(`Glossary violation: found "${m}" but locked phrase is "${term}"`)
             break
           }
