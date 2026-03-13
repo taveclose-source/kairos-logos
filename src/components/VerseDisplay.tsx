@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useLanguage, BPS_LANGUAGES } from '@/context/LanguageContext'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import StrongsModal from '@/components/StrongsModal'
+import GlossaryModal from '@/components/GlossaryModal'
+import type { GlossaryTerm } from '@/components/GlossaryModal'
 
 interface Verse {
   verse: number
@@ -58,6 +60,8 @@ export default function VerseDisplay({
   const [verseWords, setVerseWords] = useState<Record<number, StrongsWord[]>>({})
   const [loadingStrongs, setLoadingStrongs] = useState(false)
   const [selectedWord, setSelectedWord] = useState<SelectedWord | null>(null)
+  const [glossaryTerms, setGlossaryTerms] = useState<GlossaryTerm[]>([])
+  const [selectedGlossary, setSelectedGlossary] = useState<GlossaryTerm | null>(null)
 
   function handleSelectLang(code: string, active: boolean) {
     if (!active) return
@@ -65,6 +69,77 @@ export default function VerseDisplay({
     setShowCompanion(true)
     setDropdownOpen(false)
   }
+
+  // Fetch glossary terms once
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/glossary')
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled && Array.isArray(data)) setGlossaryTerms(data)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
+  // Build sorted matchers: longest twi_term first so phrases match before sub-words
+  const glossaryMatchers = useMemo(() => {
+    return glossaryTerms
+      .filter((t) => t.twi_term)
+      .sort((a, b) => b.twi_term.length - a.twi_term.length)
+  }, [glossaryTerms])
+
+  // Render Twi text with glossary highlights
+  const renderTwiWithGlossary = useCallback(
+    (text: string) => {
+      if (glossaryMatchers.length === 0) return <>{text}</>
+
+      type Segment = { text: string; term: GlossaryTerm | null }
+      const segments: Segment[] = [{ text, term: null }]
+
+      for (const term of glossaryMatchers) {
+        const pattern = new RegExp(
+          `(${term.twi_term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
+          'gi'
+        )
+        for (let i = segments.length - 1; i >= 0; i--) {
+          const seg = segments[i]
+          if (seg.term) continue // already matched
+          const parts = seg.text.split(pattern)
+          if (parts.length <= 1) continue
+          const newSegs: Segment[] = []
+          for (const part of parts) {
+            if (!part) continue
+            if (part.toLowerCase() === term.twi_term.toLowerCase()) {
+              newSegs.push({ text: part, term })
+            } else {
+              newSegs.push({ text: part, term: null })
+            }
+          }
+          segments.splice(i, 1, ...newSegs)
+        }
+      }
+
+      return (
+        <>
+          {segments.map((seg, i) =>
+            seg.term ? (
+              <span
+                key={i}
+                onClick={() => setSelectedGlossary(seg.term)}
+                className="cursor-pointer underline decoration-emerald-300 decoration-dotted underline-offset-2 hover:decoration-emerald-500 hover:bg-emerald-50/50 rounded-sm transition-colors"
+              >
+                {seg.text}
+              </span>
+            ) : (
+              <span key={i}>{seg.text}</span>
+            )
+          )}
+        </>
+      )
+    },
+    [glossaryMatchers]
+  )
 
   // Fetch Strong's data when enabled
   useEffect(() => {
@@ -319,7 +394,7 @@ export default function VerseDisplay({
                 {showCompanion && (
                   <p className="hidden md:block text-base sm:text-lg leading-relaxed">
                     {v.twi_text ? (
-                      v.twi_text
+                      renderTwiWithGlossary(v.twi_text)
                     ) : (
                       <span className="italic text-gray-400">
                         Translation coming
@@ -337,7 +412,7 @@ export default function VerseDisplay({
                   </span>
                   <p className="text-base leading-relaxed mt-0.5">
                     {v.twi_text ? (
-                      v.twi_text
+                      renderTwiWithGlossary(v.twi_text)
                     ) : (
                       <span className="italic text-gray-400">
                         Translation coming
@@ -360,6 +435,14 @@ export default function VerseDisplay({
         <StrongsModal
           word={selectedWord}
           onClose={() => setSelectedWord(null)}
+        />
+      )}
+
+      {/* Glossary Term Modal */}
+      {selectedGlossary && (
+        <GlossaryModal
+          term={selectedGlossary}
+          onClose={() => setSelectedGlossary(null)}
         />
       )}
     </>
