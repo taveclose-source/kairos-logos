@@ -7,7 +7,7 @@
  *
  * Usage:  node scripts/watch-translations.mjs
  */
-import { watch, readFileSync, writeFileSync, renameSync, existsSync, mkdirSync, appendFileSync } from 'fs'
+import { watch, readFileSync, writeFileSync, renameSync, existsSync, mkdirSync, appendFileSync, readdirSync } from 'fs'
 import { join, basename, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
@@ -383,7 +383,6 @@ console.log('Press Ctrl+C to stop.')
 console.log('')
 
 // Process any files already sitting in the inbox
-import { readdirSync } from 'fs'
 const existing = readdirSync(INBOX).filter(f => f.endsWith('.json'))
 if (existing.length > 0) {
   log(`Found ${existing.length} existing file(s) in inbox — processing...`)
