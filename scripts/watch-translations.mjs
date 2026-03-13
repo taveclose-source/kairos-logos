@@ -58,12 +58,65 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 
 // ── Locked glossary terms ──────────────────────────────────
 const LOCKED_TERMS = [
+  // Core Divine Names
   'Onyankopɔn',
   'Awurade',
-  'ɔsoro ahennie',
+  'Yesu Kristo',
+  'Kronkron Honhom',
+
+  // Christological Titles
   'Onipa Ba',
+  'Onyankopɔn Ba',
+  'Dawid Ba',
+
+  // Kingdom Distinction — must never cross
+  'ɔsoro ahennie',
+  'Onyankopɔn ahennie',
+
+  // Salvation Vocabulary
+  'adom',
+  'gyidie',
+  'nkwagyeɛ',
+  'tenenee',
+  'nkwa a enni awiei',
+
+  // Sin & Judgment
   'amumuyɛ',
+  'atemmuo',
+  'gehenna',
+
+  // Gospel & Church
+  'asɛmpa',
+  'asafo',
+  'ɔsomafoɔ',
+  'adwensakra',
+
+  // Religious Terms
+  'Baptistfoɔ',
+  'homeda',
+  'hyiadan',
+
+  // Moral/Ethical
+  'nyaatwomfoɔ',
+  'atoro nkɔmhyɛfoɔ',
+  'mmɔborɔhunu',
+  'akyinnyeɛ',
+
+  // Mark Additions — Temporal
+  'saa ntɛm ara',
+  'ntɛm ara',
+
+  // Mark Additions — People/Titles
+  'honhom fifirow',
+  'hyiadan panyin',
+  'tɔllfoɔ',
+
+  // Retained Proper Nouns & Aramaic
   'Gergesefoɔ',
+  'Ephphatha',
+  'Talitha cumi',
+  'Abba',
+  'Korban',
 ]
 
 // ── Helpers ────────────────────────────────────────────────
