@@ -130,7 +130,7 @@ export default function VerseDisplay({
               <span
                 key={i}
                 onClick={() => setSelectedGlossary(seg.term)}
-                className="cursor-pointer underline decoration-emerald-300 decoration-dotted underline-offset-2 hover:decoration-emerald-500 hover:bg-emerald-50/50 rounded-sm transition-colors"
+                className="cursor-pointer underline decoration-emerald-500 decoration-2 underline-offset-2 hover:decoration-emerald-700 hover:bg-emerald-50/50 rounded-sm transition-colors"
               >
                 {seg.text}
               </span>

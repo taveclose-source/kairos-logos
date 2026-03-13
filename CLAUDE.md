@@ -116,6 +116,15 @@ C:\Dev\Logos\                       ← Platform root (this project)
 
 ---
 
+## Deployment Rules
+
+- Never run `git push` after a commit unless explicitly instructed by Tave
+- Batch related changes into a single commit before pushing
+- When ready to push, state what will be pushed and wait for confirmation
+- Every push triggers a Vercel deployment — unnecessary pushes queue builds and block production
+
+---
+
 ## What NOT To Do
 
 - Do NOT make the AI agent theologically neutral — it has a confessional identity
