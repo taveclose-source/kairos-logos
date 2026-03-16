@@ -91,7 +91,13 @@ export default function SignInPage() {
 
         <h2 className="text-lg font-semibold text-center mb-6">Sign in</h2>
 
-        <Suspense fallback={<div className="text-center text-sm text-gray-400">Loading...</div>}>
+        <Suspense fallback={
+          <form className="space-y-4">
+            <input type="email" placeholder="Email" className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300" />
+            <input type="password" placeholder="Password" className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300" />
+            <button type="button" className="w-full px-6 py-3 rounded-xl bg-gray-900 text-white text-sm font-medium">Sign In</button>
+          </form>
+        }>
           <SignInForm />
         </Suspense>
       </div>
