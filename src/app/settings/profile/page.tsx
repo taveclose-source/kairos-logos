@@ -10,6 +10,9 @@ export default function ProfileSettingsPage() {
   const [displayName, setDisplayName] = useState('')
   const [username, setUsername] = useState('')
   const [fullName, setFullName] = useState('')
+  const [country, setCountry] = useState('')
+  const [stateRegion, setStateRegion] = useState('')
+  const [city, setCity] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -27,13 +30,16 @@ export default function ProfileSettingsPage() {
       setUserEmail(user.email ?? '')
       const { data } = await supabase
         .from('users')
-        .select('display_name, username, full_name')
+        .select('display_name, username, full_name, country, state_region, city')
         .eq('id', user.id)
         .single()
       if (data) {
         setDisplayName(data.display_name ?? '')
         setUsername(data.username ?? '')
         setFullName(data.full_name ?? '')
+        setCountry(data.country ?? '')
+        setStateRegion(data.state_region ?? '')
+        setCity(data.city ?? '')
       }
       setLoading(false)
     })
@@ -70,6 +76,9 @@ export default function ProfileSettingsPage() {
         display_name: displayName.trim() || null,
         username: username.trim() || null,
         full_name: fullName.trim() || null,
+        country: country.trim() || null,
+        state_region: stateRegion.trim() || null,
+        city: city.trim() || null,
       }, { onConflict: 'id' })
 
     if (dbError) {
@@ -133,6 +142,46 @@ export default function ProfileSettingsPage() {
             placeholder="Your real name"
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Country
+          </label>
+          <input
+            type="text"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            placeholder="e.g. Ghana, United States"
+            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              State / Region
+            </label>
+            <input
+              type="text"
+              value={stateRegion}
+              onChange={(e) => setStateRegion(e.target.value)}
+              placeholder="e.g. Ashanti, Florida"
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              City
+            </label>
+            <input
+              type="text"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="e.g. Kumasi, Sarasota"
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            />
+          </div>
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}

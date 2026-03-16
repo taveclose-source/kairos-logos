@@ -163,7 +163,7 @@ export default function SiteHeader() {
               <>
                 {isAdmin && (
                   <Link
-                    href="/admin/queue"
+                    href="/admin"
                     className="text-xs font-medium text-amber-600 hover:text-amber-800 transition-colors"
                   >
                     Admin
