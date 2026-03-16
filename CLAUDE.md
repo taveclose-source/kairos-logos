@@ -118,10 +118,10 @@ C:\Dev\Logos\                       ← Platform root (this project)
 
 ## Deployment Rules
 
-- Never run `git push` after a commit unless explicitly instructed by Tave
-- Batch related changes into a single commit before pushing
-- When ready to push, state what will be pushed and wait for confirmation
-- Every push triggers a Vercel deployment — unnecessary pushes queue builds and block production
+- Make all changes and commit locally throughout the session
+- At the end of every session, automatically run git push once as the final action
+- Never push mid-session for any reason
+- One push, end of session, automatic — no instruction needed from Tave
 
 ---
 
