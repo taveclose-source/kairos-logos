@@ -29,22 +29,6 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
-  const ADMIN_USER_ID = process.env.NEXT_PUBLIC_ADMIN_USER_ID ?? ''
-
-  // Protect /admin routes — must be authenticated AND admin
-  if (pathname.startsWith('/admin')) {
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/auth/signin'
-      url.searchParams.set('redirect', pathname)
-      return NextResponse.redirect(url)
-    }
-    if (user.id !== ADMIN_USER_ID) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/dashboard'
-      return NextResponse.redirect(url)
-    }
-  }
 
   // Protect premium API routes — check tier
   if (pathname.startsWith('/api/tts')) {

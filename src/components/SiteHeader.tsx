@@ -175,6 +175,12 @@ export default function SiteHeader() {
                 >
                   Dashboard
                 </Link>
+                <Link
+                  href="/settings/profile"
+                  className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
+                >
+                  Profile
+                </Link>
                 <span className="text-xs text-gray-400 max-w-[160px] truncate">
                   {user.email}
                 </span>
@@ -242,9 +248,15 @@ export default function SiteHeader() {
                   >
                     Dashboard
                   </Link>
+                  <Link
+                    href="/settings/profile"
+                    className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    Profile
+                  </Link>
                   {isAdmin && (
                     <Link
-                      href="/admin/queue"
+                      href="/admin"
                       className="text-sm font-medium text-amber-600 hover:text-amber-800 transition-colors"
                     >
                       Admin

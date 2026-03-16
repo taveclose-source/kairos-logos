@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import { ADMIN_USER_ID } from '@/lib/permissions'
 
 type Tab = 'users' | 'missions' | 'sponsorships' | 'revenue'
 
@@ -39,6 +41,24 @@ export default function AdminPage() {
   const [sponsorships, setSponsorships] = useState<Sponsorship[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [authorized, setAuthorized] = useState(false)
+  const router = useRouter()
+
+  // Auth gate — check user is admin before loading anything
+  useEffect(() => {
+    const sb = createSupabaseBrowser()
+    sb.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        router.replace('/auth/signin?redirect=/admin')
+        return
+      }
+      if (user.id !== ADMIN_USER_ID) {
+        router.replace('/dashboard')
+        return
+      }
+      setAuthorized(true)
+    })
+  }, [router])
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -58,7 +78,7 @@ export default function AdminPage() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { loadData() }, [loadData])
+  useEffect(() => { if (authorized) loadData() }, [authorized, loadData])
 
   // Missions queue actions
   async function approveMission(userId: string) {
@@ -106,6 +126,14 @@ export default function AdminPage() {
       <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-medium border ${colors[t] ?? colors.free}`}>
         {t}
       </span>
+    )
+  }
+
+  if (!authorized) {
+    return (
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
+        <p className="text-sm text-gray-400 text-center">Checking access…</p>
+      </main>
     )
   }
 
