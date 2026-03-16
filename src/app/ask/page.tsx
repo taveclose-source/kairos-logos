@@ -102,7 +102,7 @@ function AskPageInner() {
     // Free tier: enforce 10 queries/day
     if (!canUseUnlimitedAsk(userTier)) {
       const newCount = queryCount + 1
-      if (newCount > 10) {
+      if (newCount > 3) {
         setShowLimitModal(true)
         return
       }
@@ -272,7 +272,7 @@ function AskPageInner() {
         <div className="relative z-50 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 mx-4">
           <h2 className="text-lg font-bold text-gray-900 mb-2">You&rsquo;ve reached your daily limit</h2>
           <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-            Free accounts include 10 questions per day. Upgrade to Scholar for unlimited access,
+            Free accounts include 3 questions per day. Upgrade to Scholar for unlimited access,
             Pastor Tave&rsquo;s voice, and the full Pastor&rsquo;s Helps module.
           </p>
           <Link

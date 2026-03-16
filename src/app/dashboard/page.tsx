@@ -10,6 +10,7 @@ interface UserProfile {
   display_name: string | null
   last_read_book: string | null
   last_read_chapter: number | null
+  subscription_tier: string | null
 }
 
 interface QueueItem {
@@ -25,7 +26,6 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [questions, setQuestions] = useState<QueueItem[]>([])
-  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -39,11 +39,10 @@ export default function DashboardPage() {
       }
       setUser(user)
 
-      // Fetch profile, questions, and admin status in parallel
-      const [profileRes, questionsRes, adminRes] = await Promise.all([
+      const [profileRes, questionsRes] = await Promise.all([
         supabase
           .from('users')
-          .select('display_name, last_read_book, last_read_chapter')
+          .select('display_name, last_read_book, last_read_chapter, subscription_tier')
           .eq('id', user.id)
           .single(),
         supabase
@@ -51,12 +50,10 @@ export default function DashboardPage() {
           .select('id, question, status, submitted_at, ai_draft, approved_answer')
           .eq('user_id', user.id)
           .order('submitted_at', { ascending: false }),
-        fetch('/api/admin/check').then((r) => r.json()).catch(() => ({ admin: false })),
       ])
 
       setProfile(profileRes.data)
       setQuestions(questionsRes.data ?? [])
-      setIsAdmin(adminRes.admin === true)
       setLoading(false)
     })
   }, [router])
@@ -70,60 +67,68 @@ export default function DashboardPage() {
   }
 
   const displayName = profile?.display_name || user?.email?.split('@')[0] || 'Reader'
-  const hasLastRead = profile?.last_read_book && profile?.last_read_chapter
+  const tier = profile?.subscription_tier || 'free'
   const pendingCount = questions.filter((q) => q.status === 'pending').length
   const answeredCount = questions.filter((q) => q.status === 'approved').length
 
+  const tierLabels: Record<string, string> = {
+    free: 'Free',
+    scholar: 'Scholar',
+    ministry: 'Ministry',
+    missions: 'Missions',
+  }
+  const tierColors: Record<string, string> = {
+    free: 'bg-gray-50 text-gray-600 border-gray-200',
+    scholar: 'bg-blue-50 text-blue-700 border-blue-200',
+    ministry: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    missions: 'bg-amber-50 text-amber-700 border-amber-200',
+  }
+
   return (
     <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <h1 className="text-3xl sm:text-4xl font-bold mb-1">
-        Welcome, {displayName}
-      </h1>
+      <div className="flex items-center justify-between mb-1">
+        <h1 className="text-3xl sm:text-4xl font-bold">
+          Welcome, {displayName}
+        </h1>
+        <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${tierColors[tier] ?? tierColors.free}`}>
+          {tierLabels[tier] ?? 'Free'}
+        </span>
+      </div>
       <p className="text-gray-500 mb-8">Your study companion</p>
 
-      {/* Admin Access */}
-      {isAdmin && (
+      {/* Upgrade prompt for free tier */}
+      {tier === 'free' && (
         <Link
-          href="/admin"
-          className="block rounded-xl border border-amber-200 bg-amber-50 p-5 mb-6 hover:border-amber-400 hover:shadow-md transition-all group"
+          href="/pricing"
+          className="block rounded-xl border border-emerald-200 bg-emerald-50/50 p-5 mb-6 hover:border-emerald-400 hover:shadow-md transition-all group"
         >
-          <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-1">
-            Admin
+          <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-1">
+            Upgrade
           </p>
-          <p className="text-lg font-semibold text-amber-800 group-hover:text-amber-700">
-            Theological Queue &rarr;
+          <p className="text-sm text-gray-700">
+            Unlock unlimited questions, voice playback, and Pastor&apos;s Helps.{' '}
+            <span className="text-emerald-700 font-medium group-hover:text-emerald-800">See plans &rarr;</span>
           </p>
         </Link>
       )}
 
-      {/* Continue Reading */}
-      {hasLastRead && (
-        <Link
-          href={`/bible/${encodeURIComponent(profile!.last_read_book!)}/${profile!.last_read_chapter}`}
-          className="block rounded-xl border border-gray-200 p-5 mb-8 hover:border-gray-400 hover:shadow-md transition-all group"
-        >
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
-            Continue Reading
-          </p>
-          <p className="text-lg font-semibold text-gray-900 group-hover:text-gray-700">
-            {profile!.last_read_book} {profile!.last_read_chapter} &rarr;
-          </p>
-        </Link>
-      )}
-
-      {!hasLastRead && (
+      {/* Action buttons */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
         <Link
           href="/bible"
-          className="block rounded-xl border border-gray-200 p-5 mb-8 hover:border-gray-400 hover:shadow-md transition-all"
+          className="block rounded-xl border border-gray-200 p-5 hover:border-gray-400 hover:shadow-md transition-all"
         >
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
-            Start Reading
-          </p>
-          <p className="text-lg font-semibold text-gray-900">
-            Open the Bible &rarr;
-          </p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Read</p>
+          <p className="text-lg font-semibold text-gray-900">Open the Bible &rarr;</p>
         </Link>
-      )}
+        <Link
+          href="/ask"
+          className="block rounded-xl border border-gray-200 p-5 hover:border-gray-400 hover:shadow-md transition-all"
+        >
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Study</p>
+          <p className="text-lg font-semibold text-gray-900">Ask the Word &rarr;</p>
+        </Link>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-8">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
+// Image import removed — using plain img for SVG
 import { usePathname, useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { useLanguage, BPS_LANGUAGES } from '@/context/LanguageContext'
@@ -13,7 +13,6 @@ const NAV_LINKS = [
   { href: '/ask', label: 'Ask' },
   { href: '/why-kjv', label: 'Why KJV?' },
   { href: '/learn', label: 'Learn' },
-  { href: '/glossary', label: 'Glossary' },
   { href: '/translation', label: 'Translation' },
 ]
 
@@ -134,7 +133,7 @@ export default function SiteHeader() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
         {/* Wordmark */}
         <Link href="/" className="shrink-0">
-          <Image src="/logos-brand.svg" alt="Logos by Kai'Ros" width={140} height={40} priority />
+          <img src="/logos-brand.svg" alt="Logos by Kai'Ros" width="140" height="40" style={{display:'block'}} />
         </Link>
 
         {/* Desktop nav */}

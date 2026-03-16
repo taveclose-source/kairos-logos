@@ -1,47 +1,74 @@
 import Link from 'next/link'
+import { createClient } from '@supabase/supabase-js'
+import GlossaryClient from '@/app/glossary/GlossaryClient'
 
-const NT_BOOKS: BookStatus[] = [
-  { name: 'Matthew', chapters: 28, completed: 8, status: 'in-progress', note: 'Chapters 1–8 live, 9–28 in progress' },
-  { name: 'Mark', chapters: 16, completed: 0, status: 'coming' },
-  { name: 'Luke', chapters: 24, completed: 0, status: 'coming' },
-  { name: 'John', chapters: 21, completed: 0, status: 'coming' },
-  { name: 'Acts', chapters: 28, completed: 0, status: 'coming' },
-  { name: 'Romans', chapters: 16, completed: 16, status: 'review', note: '433 verses complete — pending final TR audit' },
-  { name: 'I Corinthians', chapters: 16, completed: 0, status: 'coming' },
-  { name: 'II Corinthians', chapters: 13, completed: 0, status: 'coming' },
-  { name: 'Galatians', chapters: 6, completed: 0, status: 'coming' },
-  { name: 'Ephesians', chapters: 6, completed: 0, status: 'coming' },
-  { name: 'Philippians', chapters: 4, completed: 0, status: 'coming' },
-  { name: 'Colossians', chapters: 4, completed: 0, status: 'coming' },
-  { name: 'I Thessalonians', chapters: 5, completed: 0, status: 'coming' },
-  { name: 'II Thessalonians', chapters: 3, completed: 0, status: 'coming' },
-  { name: 'I Timothy', chapters: 6, completed: 0, status: 'coming' },
-  { name: 'II Timothy', chapters: 4, completed: 0, status: 'coming' },
-  { name: 'Titus', chapters: 3, completed: 0, status: 'coming' },
-  { name: 'Philemon', chapters: 1, completed: 0, status: 'coming' },
-  { name: 'Hebrews', chapters: 13, completed: 0, status: 'coming' },
-  { name: 'James', chapters: 5, completed: 0, status: 'coming' },
-  { name: 'I Peter', chapters: 5, completed: 0, status: 'coming' },
-  { name: 'II Peter', chapters: 3, completed: 0, status: 'coming' },
-  { name: 'I John', chapters: 5, completed: 0, status: 'coming' },
-  { name: 'II John', chapters: 1, completed: 0, status: 'coming' },
-  { name: 'III John', chapters: 1, completed: 0, status: 'coming' },
-  { name: 'Jude', chapters: 1, completed: 0, status: 'coming' },
-  { name: 'Revelation', chapters: 22, completed: 0, status: 'coming' },
-]
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-interface BookStatus {
-  name: string
-  chapters: number
-  completed: number
-  status: 'live' | 'in-progress' | 'review' | 'coming'
-  note?: string
+function createSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 }
 
-const totalChapters = NT_BOOKS.reduce((s, b) => s + b.chapters, 0)
-const completedChapters = NT_BOOKS.reduce((s, b) => s + b.completed, 0)
+interface BookProgress {
+  book_name: string
+  total: number
+  translated: number
+}
 
-export default function TranslationPage() {
+export default async function TranslationPage() {
+  const supabase = createSupabase()
+
+  // Fetch live translation counts per NT book
+  const { data: progressData } = await supabase.rpc('get_translation_progress')
+
+  // Fallback: direct query if RPC doesn't exist
+  let books: BookProgress[] = []
+  if (progressData && Array.isArray(progressData)) {
+    books = progressData
+  } else {
+    const { data: bookList } = await supabase
+      .from('bible_books')
+      .select('id, book_name, sort_order')
+      .eq('testament', 'NT')
+      .order('sort_order')
+
+    if (bookList) {
+      const results = await Promise.all(
+        bookList.map(async (b) => {
+          const { count: total } = await supabase
+            .from('bible_verses')
+            .select('*', { count: 'exact', head: true })
+            .eq('book_id', b.id)
+          const { count: translated } = await supabase
+            .from('bible_verses')
+            .select('*', { count: 'exact', head: true })
+            .eq('book_id', b.id)
+            .eq('has_twi', true)
+          return {
+            book_name: b.book_name,
+            total: total ?? 0,
+            translated: translated ?? 0,
+          }
+        })
+      )
+      books = results
+    }
+  }
+
+  // Fetch glossary terms
+  const { data: glossaryData } = await supabase
+    .from('twi_glossary')
+    .select('id, kjv_term, twi_term, locked, notes, category, strongs_number, book_introduced')
+    .order('category')
+    .order('kjv_term')
+
+  const totalVerses = books.reduce((s, b) => s + b.total, 0)
+  const translatedVerses = books.reduce((s, b) => s + b.translated, 0)
+  const overallPct = totalVerses > 0 ? Math.round((translatedVerses / totalVerses) * 100) : 0
+
   return (
     <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <Link
@@ -64,123 +91,87 @@ export default function TranslationPage() {
           <div>
             <p className="text-sm font-semibold text-gray-700">New Testament Progress</p>
             <p className="text-xs text-gray-400 mt-0.5">
-              {completedChapters} of {totalChapters} chapters translated
+              {translatedVerses.toLocaleString()} of {totalVerses.toLocaleString()} verses translated
             </p>
           </div>
           <span className="text-2xl font-bold text-gray-900">
-            {Math.round((completedChapters / totalChapters) * 100)}%
+            {overallPct}%
           </span>
         </div>
         <div className="w-full h-3 rounded-full bg-gray-100 overflow-hidden">
           <div
             className="h-full rounded-full bg-emerald-500 transition-all"
-            style={{ width: `${(completedChapters / totalChapters) * 100}%` }}
+            style={{ width: `${overallPct}%` }}
           />
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 mb-6 text-xs text-gray-500">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500" />
-          Live
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-400" />
-          In progress
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2.5 h-2.5 rounded-full bg-blue-400" />
-          Under review
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2.5 h-2.5 rounded-full bg-gray-200" />
-          Coming
-        </span>
-      </div>
-
       {/* Book list */}
-      <div className="space-y-3">
-        {NT_BOOKS.map((book) => (
-          <BookRow key={book.name} book={book} />
-        ))}
+      <div className="space-y-3 mb-12">
+        {books.map((book) => {
+          const pct = book.total > 0 ? Math.round((book.translated / book.total) * 100) : 0
+          const barColor = pct === 100
+            ? 'bg-emerald-500'
+            : pct > 0
+              ? 'bg-amber-400'
+              : 'bg-gray-200'
+          const dotColor = barColor
+          const label = pct === 100 ? 'Complete' : pct > 0 ? 'In progress' : 'Coming'
+
+          return (
+            <div key={book.book_name} className="rounded-xl border border-gray-200 px-4 py-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-2">
+                  <span className={`inline-block w-2 h-2 rounded-full ${dotColor}`} />
+                  <span className="text-sm font-medium text-gray-800">{book.book_name}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-400">
+                    {book.translated}/{book.total} verses
+                  </span>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wide w-20 text-right">
+                    {label}
+                  </span>
+                </div>
+              </div>
+              <div className="w-full h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${barColor} transition-all`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       {/* Source info */}
-      <div className="mt-12 rounded-xl border border-gray-100 bg-gray-50 p-5">
+      <div className="rounded-xl border border-gray-100 bg-gray-50 p-5 mb-12">
         <h2 className="text-sm font-semibold text-gray-700 mb-2">About This Translation</h2>
         <p className="text-sm text-gray-600 leading-relaxed mb-3">
           Every verse is translated from the Scrivener 1894 Textus Receptus Greek text,
           using the King James Bible as the English benchmark. The locked Asante Twi glossary
           ensures theological terms remain consistent across the entire project.
         </p>
-        <p className="text-sm text-gray-600 leading-relaxed mb-3">
+        <p className="text-sm text-gray-600 leading-relaxed">
           This is not a paraphrase or dynamic equivalence translation. It is a formal
           equivalence rendering anchored to the preserved text &mdash; word for word,
           verse by verse.
         </p>
-        <p className="text-sm text-gray-600 leading-relaxed">
-          The translation serves Kai&apos;Ros International&apos;s mission in Kumasi, Ghana,
-          and will be deployed on-campus for Twi-primary readers.
+      </div>
+
+      {/* Glossary section */}
+      <div id="glossary">
+        <h2 className="text-2xl font-bold mb-1">Translation Glossary</h2>
+        <p className="text-gray-500 text-sm mb-6">
+          Locked terms governing all Asante Twi translations
         </p>
+        <GlossaryClient terms={glossaryData ?? []} />
       </div>
 
       <p className="mt-10 text-xs text-gray-400 text-center">
         Logos by Kai&apos;Ros &middot; Kai&apos;Ros International &middot; Summit Bible Center
       </p>
     </main>
-  )
-}
-
-function BookRow({ book }: { book: BookStatus }) {
-  const pct = book.chapters > 0 ? (book.completed / book.chapters) * 100 : 0
-
-  const dotColor = {
-    'live': 'bg-emerald-500',
-    'in-progress': 'bg-amber-400',
-    'review': 'bg-blue-400',
-    'coming': 'bg-gray-200',
-  }[book.status]
-
-  const barColor = {
-    'live': 'bg-emerald-500',
-    'in-progress': 'bg-amber-400',
-    'review': 'bg-blue-400',
-    'coming': 'bg-gray-200',
-  }[book.status]
-
-  const label = {
-    'live': 'Live',
-    'in-progress': 'In progress',
-    'review': 'Under review',
-    'coming': 'Coming',
-  }[book.status]
-
-  return (
-    <div className="rounded-xl border border-gray-200 px-4 py-3">
-      <div className="flex items-center justify-between mb-1.5">
-        <div className="flex items-center gap-2">
-          <span className={`inline-block w-2 h-2 rounded-full ${dotColor}`} />
-          <span className="text-sm font-medium text-gray-800">{book.name}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-400">
-            {book.completed}/{book.chapters} ch
-          </span>
-          <span className="text-[10px] text-gray-400 uppercase tracking-wide w-20 text-right">
-            {label}
-          </span>
-        </div>
-      </div>
-      <div className="w-full h-1.5 rounded-full bg-gray-100 overflow-hidden">
-        <div
-          className={`h-full rounded-full ${barColor} transition-all`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      {book.note && (
-        <p className="text-xs text-gray-400 mt-1.5">{book.note}</p>
-      )}
-    </div>
   )
 }
