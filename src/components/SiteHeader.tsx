@@ -122,7 +122,7 @@ export default function SiteHeader() {
   async function handleSignOut() {
     const supabase = createSupabaseBrowser()
     await supabase.auth.signOut()
-    router.push('/')
+    router.push('/auth/signin')
     router.refresh()
   }
 
