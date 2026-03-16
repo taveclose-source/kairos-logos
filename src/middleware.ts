@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
     }
     if (user.id !== ADMIN_USER_ID) {
       const url = request.nextUrl.clone()
-      url.pathname = '/'
+      url.pathname = '/dashboard'
       return NextResponse.redirect(url)
     }
   }

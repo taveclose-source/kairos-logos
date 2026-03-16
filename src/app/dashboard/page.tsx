@@ -84,7 +84,7 @@ export default function DashboardPage() {
       {/* Admin Access */}
       {isAdmin && (
         <Link
-          href="/admin/queue"
+          href="/admin"
           className="block rounded-xl border border-amber-200 bg-amber-50 p-5 mb-6 hover:border-amber-400 hover:shadow-md transition-all group"
         >
           <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-1">

@@ -157,6 +157,7 @@ export default function AdminPage() {
                     <tr className="text-left text-xs text-gray-400 uppercase tracking-wider">
                       <th className="pb-2 pr-4 font-medium">Email</th>
                       <th className="pb-2 pr-4 font-medium">Tier</th>
+                      <th className="pb-2 pr-4 font-medium">Override</th>
                       <th className="pb-2 pr-4 font-medium">Status</th>
                       <th className="pb-2 font-medium">Joined</th>
                     </tr>
@@ -166,6 +167,26 @@ export default function AdminPage() {
                       <tr key={u.id}>
                         <td className="py-2.5 pr-4 text-gray-900">{u.email}</td>
                         <td className="py-2.5 pr-4">{tierBadge(u.subscription_tier)}</td>
+                        <td className="py-2.5 pr-4">
+                          <select
+                            value={u.subscription_tier || 'free'}
+                            onChange={async (e) => {
+                              const newTier = e.target.value
+                              const sb = createSupabaseBrowser()
+                              await sb.from('users').update({
+                                subscription_tier: newTier,
+                                subscription_status: newTier === 'free' ? null : 'active',
+                              }).eq('id', u.id)
+                              loadData()
+                            }}
+                            className="text-xs rounded-lg border border-gray-200 px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          >
+                            <option value="free">Free</option>
+                            <option value="scholar">Scholar</option>
+                            <option value="ministry">Ministry</option>
+                            <option value="missions">Missions</option>
+                          </select>
+                        </td>
                         <td className="py-2.5 pr-4 text-gray-500">{u.subscription_status ?? '—'}</td>
                         <td className="py-2.5 text-gray-400 text-xs">
                           {new Date(u.created_at).toLocaleDateString()}
