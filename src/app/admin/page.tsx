@@ -40,37 +40,38 @@ export default function AdminPage() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
 
-  const supabase = createSupabaseBrowser()
-
   const loadData = useCallback(async () => {
     setLoading(true)
-    const { data: userData } = await supabase
+    const sb = createSupabaseBrowser()
+    const { data: userData } = await sb
       .from('users')
       .select('id, email, subscription_tier, subscription_status, missions_status, missions_application, created_at')
       .order('created_at', { ascending: false })
     setUsers((userData as UserRow[]) ?? [])
 
-    const { data: sponsorData } = await supabase
+    const { data: sponsorData } = await sb
       .from('missions_sponsorships')
       .select('*')
       .order('created_at', { ascending: false })
     setSponsorships((sponsorData as Sponsorship[]) ?? [])
 
     setLoading(false)
-  }, [supabase])
+  }, [])
 
   useEffect(() => { loadData() }, [loadData])
 
   // Missions queue actions
   async function approveMission(userId: string) {
-    await supabase.from('users').update({
+    const sb = createSupabaseBrowser()
+    await sb.from('users').update({
       missions_status: 'approved',
     }).eq('id', userId)
     loadData()
   }
 
   async function denyMission(userId: string) {
-    await supabase.from('users').update({
+    const sb = createSupabaseBrowser()
+    await sb.from('users').update({
       missions_status: 'denied',
     }).eq('id', userId)
     loadData()
