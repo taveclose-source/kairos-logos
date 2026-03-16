@@ -4,11 +4,11 @@ import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import {
-  THEOLOGICAL_SYSTEM_PROMPT,
   AGENT_MODEL,
   shouldRouteToQueue,
   extractReferences,
 } from '@/lib/theological-agent'
+import { AGENT_SYSTEM_PROMPT } from '@/lib/agent-system-prompt'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
     const stream = anthropic.messages.stream({
       model: AGENT_MODEL,
       max_tokens: 2048,
-      system: THEOLOGICAL_SYSTEM_PROMPT,
+      system: AGENT_SYSTEM_PROMPT,
       messages,
     })
 
