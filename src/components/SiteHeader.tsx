@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { useLanguage, BPS_LANGUAGES } from '@/context/LanguageContext'
@@ -132,9 +133,8 @@ export default function SiteHeader() {
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
         {/* Wordmark */}
-        <Link href="/" className="flex items-baseline gap-1.5 shrink-0">
-          <span className="text-lg font-bold tracking-tight">Logos</span>
-          <span className="text-xs text-gray-400">by Kai&apos;Ros</span>
+        <Link href="/" className="shrink-0">
+          <Image src="/logos-brand.svg" alt="Logos by Kai'Ros" width={140} height={40} priority />
         </Link>
 
         {/* Desktop nav */}
