@@ -2,6 +2,9 @@
 
 import { useState, useRef, useEffect, FormEvent, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import { canUseUnlimitedAsk } from '@/lib/permissions'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -49,9 +52,31 @@ function AskPageInner() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [authChecked, setAuthChecked] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userTier, setUserTier] = useState('free')
+  const [queryCount, setQueryCount] = useState(0)
+  const [showLimitModal, setShowLimitModal] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Check auth + tier
+  useEffect(() => {
+    const supabase = createSupabaseBrowser()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (user) {
+        setIsLoggedIn(true)
+        const { data } = await supabase
+          .from('users')
+          .select('subscription_tier')
+          .eq('id', user.id)
+          .single()
+        setUserTier(data?.subscription_tier ?? 'free')
+      }
+      setAuthChecked(true)
+    })
+  }, [])
 
   // Pre-populate input from ?q= query parameter (e.g. from Strong's popup)
   useEffect(() => {
@@ -73,6 +98,16 @@ function AskPageInner() {
     e.preventDefault()
     const trimmed = input.trim()
     if (!trimmed || loading) return
+
+    // Free tier: enforce 10 queries/day
+    if (!canUseUnlimitedAsk(userTier)) {
+      const newCount = queryCount + 1
+      if (newCount > 10) {
+        setShowLimitModal(true)
+        return
+      }
+      setQueryCount(newCount)
+    }
 
     const userMessage: Message = { role: 'user', content: trimmed }
     const updatedMessages = [...messages, userMessage]
@@ -179,7 +214,83 @@ function AskPageInner() {
     }
   }
 
+  // Wait for auth check
+  if (!authChecked) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-3.5rem)]">
+        <p className="text-sm text-gray-400">Loading…</p>
+      </div>
+    )
+  }
+
+  // Guest preview
+  if (!isLoggedIn) {
+    return (
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-16 text-center">
+        <OilLampIcon className="w-14 h-14 text-amber-400 mx-auto mb-6" />
+        <h1 className="text-3xl sm:text-4xl font-bold mb-3">Ask the Word</h1>
+        <p className="text-gray-500 mb-10 max-w-lg mx-auto">
+          A KJV theological agent — built on the Textus Receptus, grounded in the preserved Word.
+        </p>
+
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 px-6 py-5 text-left mb-10">
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Example Question</p>
+            <p className="text-sm text-gray-800 font-medium">Who was with Paul and Silas in Philippi?</p>
+          </div>
+          <div className="rounded-xl bg-white border border-gray-100 px-4 py-3">
+            <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-1">Logos</p>
+            <p className="text-sm text-gray-700 leading-relaxed">
+              Timothy joined Paul and Silas at Lystra in Acts 16:1-3, and traveled with them to Philippi
+              which they reached in Acts 16:12 — before the imprisonment at Acts 16:19.
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/auth/signup?redirect=/ask"
+          className="inline-block px-6 py-3 rounded-xl bg-gray-900 text-white font-medium text-sm hover:bg-gray-800 transition-colors"
+        >
+          Create a free account to ask your own question
+        </Link>
+        <p className="mt-3 text-sm text-gray-400">
+          Already have an account?{' '}
+          <Link href="/auth/signin?redirect=/ask" className="text-gray-600 underline hover:text-gray-800">
+            Sign in
+          </Link>
+        </p>
+      </main>
+    )
+  }
+
   return (
+    <>
+    {/* Daily limit modal */}
+    {showLimitModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/30" onClick={() => setShowLimitModal(false)} />
+        <div className="relative z-50 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 mx-4">
+          <h2 className="text-lg font-bold text-gray-900 mb-2">You&rsquo;ve reached your daily limit</h2>
+          <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+            Free accounts include 10 questions per day. Upgrade to Scholar for unlimited access,
+            Pastor Tave&rsquo;s voice, and the full Pastor&rsquo;s Helps module.
+          </p>
+          <Link
+            href="/pricing"
+            className="block w-full text-center py-3 rounded-xl bg-emerald-600 text-white font-medium text-sm hover:bg-emerald-700 transition-colors mb-2"
+          >
+            See pricing
+          </Link>
+          <button
+            onClick={() => setShowLimitModal(false)}
+            className="block w-full text-center py-3 rounded-xl bg-gray-100 text-gray-600 font-medium text-sm hover:bg-gray-200 transition-colors"
+          >
+            Come back tomorrow
+          </button>
+        </div>
+      </div>
+    )}
+
     <div className="flex flex-col h-[calc(100vh-3.5rem)] bg-white">
       {/* Page header (below SiteHeader which is h-14 / 3.5rem) */}
       <header className="shrink-0 border-b border-gray-100 px-4 sm:px-6 py-4">
@@ -312,5 +423,6 @@ function AskPageInner() {
         </p>
       </div>
     </div>
+    </>
   )
 }

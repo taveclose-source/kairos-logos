@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import LastReadTracker from '@/components/LastReadTracker'
 import VerseDisplay from '@/components/VerseDisplay'
 import ChapterSideArrows from '@/components/ChapterSideArrows'
+import ChapterAskBanner from '@/components/ChapterAskBanner'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -202,6 +203,9 @@ export default async function ChapterPage({
       <div className="mt-10 pt-6 border-t">
         {chapterNav}
       </div>
+
+      {/* Ask banner */}
+      <ChapterAskBanner bookName={book_name} chapter={chapter} />
 
       {/* Footer */}
       <p className="mt-8 text-sm text-gray-400 text-center">
