@@ -39,14 +39,17 @@ export default function SignUpPage() {
       return
     }
 
-    // Insert into users table
+    // Insert into users table via API (service role bypasses RLS)
     if (data.user) {
-      await supabase.from('users').upsert({
-        id: data.user.id,
-        email: email.trim(),
-        display_name: displayName.trim() || null,
-        preferred_language: 'english',
-      })
+      await fetch('/api/auth/create-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: data.user.id,
+          email: email.trim(),
+          display_name: displayName.trim() || email.trim().split('@')[0],
+        }),
+      }).catch(() => {})
     }
 
     setSuccess(true)

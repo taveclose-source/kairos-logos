@@ -6,6 +6,7 @@ import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
 export default function ProfileSettingsPage() {
   const [userId, setUserId] = useState<string | null>(null)
+  const [userEmail, setUserEmail] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [username, setUsername] = useState('')
   const [fullName, setFullName] = useState('')
@@ -23,6 +24,7 @@ export default function ProfileSettingsPage() {
         return
       }
       setUserId(user.id)
+      setUserEmail(user.email ?? '')
       const { data } = await supabase
         .from('users')
         .select('display_name, username, full_name')
@@ -62,12 +64,13 @@ export default function ProfileSettingsPage() {
 
     const { error: dbError } = await supabase
       .from('users')
-      .update({
+      .upsert({
+        id: userId,
+        email: userEmail,
         display_name: displayName.trim() || null,
         username: username.trim() || null,
         full_name: fullName.trim() || null,
-      })
-      .eq('id', userId)
+      }, { onConflict: 'id' })
 
     if (dbError) {
       setError('Failed to save. Please try again.')
