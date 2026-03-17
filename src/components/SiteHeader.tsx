@@ -88,27 +88,16 @@ export default function SiteHeader() {
   const router = useRouter()
 
   useEffect(() => {
+    const ADMIN_ID = '2f4cc459-6fdd-4f41-be4b-754770b28529'
     const supabase = createSupabaseBrowser()
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user)
-      if (data.user) {
-        fetch('/api/admin/check')
-          .then((r) => r.json())
-          .then((d) => setIsAdmin(d.admin === true))
-          .catch(() => setIsAdmin(false))
-      }
+      setIsAdmin(data.user?.id === ADMIN_ID)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
-      if (session?.user) {
-        fetch('/api/admin/check')
-          .then((r) => r.json())
-          .then((d) => setIsAdmin(d.admin === true))
-          .catch(() => setIsAdmin(false))
-      } else {
-        setIsAdmin(false)
-      }
+      setIsAdmin(session?.user?.id === ADMIN_ID)
     })
 
     return () => subscription.unsubscribe()
