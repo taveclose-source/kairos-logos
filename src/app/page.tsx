@@ -54,13 +54,22 @@ export default function HomePage() {
         </div>
       </section>
       <section className="px-6 sm:px-10 pb-16" style={{ maxWidth: '1100px', margin: '0 auto' }}>
-        <div className="grid sm:grid-cols-2 gap-4">
-          {FEATURES.map((f) => (
+        <div className="grid sm:grid-cols-4" style={{ borderTop: '1px solid rgba(90,40,10,0.5)' }}>
+          {FEATURES.map((f, i) => (
             <Link key={f.href} href={f.href}>
-              <div className="transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--border-medium)]" style={{ background: 'var(--bg-secondary)', border: '0.5px solid var(--border-subtle)', borderRadius: '4px', padding: '1.5rem' }}>
-                <span style={{ fontFamily: 'var(--font-reading)', fontSize: '36px', fontWeight: 300, color: 'var(--gold)' }}>{f.numeral}</span>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: '16px', color: 'var(--text-primary)', marginTop: '0.5rem' }}>{f.title}</p>
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{f.desc}</p>
+              <div
+                className="transition-all duration-200 hover:opacity-80"
+                style={{
+                  padding: '1.25rem',
+                  borderRight: i < FEATURES.length - 1 ? 'none' : 'none',
+                  borderImage: i < FEATURES.length - 1 ? 'linear-gradient(to bottom, transparent, rgba(90,40,10,0.4) 20%, rgba(90,40,10,0.4) 80%, transparent) 1' : 'none',
+                  borderRightWidth: i < FEATURES.length - 1 ? '1px' : '0',
+                  borderRightStyle: i < FEATURES.length - 1 ? 'solid' : 'none',
+                }}
+              >
+                <span style={{ fontFamily: 'var(--font-reading)', fontSize: '36px', fontWeight: 300, color: 'rgba(200,150,90,0.55)' }}>{f.numeral}</span>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '16px', color: '#E8E0D0', marginTop: '0.5rem' }}>{f.title}</p>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', color: '#5A3A1A', marginTop: '0.25rem' }}>{f.desc}</p>
               </div>
             </Link>
           ))}

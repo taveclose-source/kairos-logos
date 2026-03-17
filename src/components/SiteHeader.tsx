@@ -73,7 +73,7 @@ export default function SiteHeader() {
       className="sticky top-0 z-50"
       style={{
         background: 'var(--bg-primary)',
-        borderBottom: '1px solid var(--border-subtle)',
+        borderBottom: '1px solid rgba(90,40,10,0.6)',
         boxShadow: '0 1px 0 rgba(200,169,110,0.15)',
       }}
     >

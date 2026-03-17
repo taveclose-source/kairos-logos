@@ -5,7 +5,9 @@
 @tailwind utilities;
 
 body {
-  background: var(--bg-primary);
+  background-color: #1A0C02;
+  background-image: var(--leather-texture);
+  background-attachment: fixed;
   color: var(--text-primary);
   font-family: var(--font-ui);
 }
