@@ -51,7 +51,55 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   }, [nextHref, prevHref, router])
 
   return (
-    <div style={{ background: 'var(--bg-primary)', padding: '2rem 1rem' }}>
+    <div style={{ background: 'var(--bg-primary)', padding: '2rem 1rem' }} className="relative">
+      {/* Fixed side arrows — desktop only */}
+      <button
+        onClick={() => { if (prevHref) { playPageTurn('back'); goPrev() } }}
+        className="hidden md:flex items-center justify-center fixed z-20 transition-colors duration-200"
+        style={{
+          left: 'calc(50% - 480px)',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          width: 40, height: 40, borderRadius: '50%',
+          background: 'rgba(200,169,110,0.12)',
+          border: '1px solid rgba(200,169,110,0.3)',
+          color: 'var(--gold)',
+          cursor: prevHref ? 'pointer' : 'default',
+          opacity: prevHref ? 1 : 0.3,
+          pointerEvents: prevHref ? 'auto' : 'none',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(200,169,110,0.25)'; e.currentTarget.style.borderColor = 'var(--gold)' }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(200,169,110,0.12)'; e.currentTarget.style.borderColor = 'rgba(200,169,110,0.3)' }}
+        aria-label="Previous chapter"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+          <path d="M14 8L8 12L14 16" />
+        </svg>
+      </button>
+      <button
+        onClick={() => { if (nextHref) { playPageTurn('forward'); goNext() } }}
+        className="hidden md:flex items-center justify-center fixed z-20 transition-colors duration-200"
+        style={{
+          right: 'calc(50% - 480px)',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          width: 40, height: 40, borderRadius: '50%',
+          background: 'rgba(200,169,110,0.12)',
+          border: '1px solid rgba(200,169,110,0.3)',
+          color: 'var(--gold)',
+          cursor: nextHref ? 'pointer' : 'default',
+          opacity: nextHref ? 1 : 0.3,
+          pointerEvents: nextHref ? 'auto' : 'none',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(200,169,110,0.25)'; e.currentTarget.style.borderColor = 'var(--gold)' }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(200,169,110,0.12)'; e.currentTarget.style.borderColor = 'rgba(200,169,110,0.3)' }}
+        aria-label="Next chapter"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+          <path d="M10 8L16 12L10 16" />
+        </svg>
+      </button>
+
       <PageTurn onNext={goNext} onPrev={goPrev}>
         {/* Parchment book */}
         <div

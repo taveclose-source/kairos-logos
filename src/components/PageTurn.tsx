@@ -39,7 +39,7 @@ export default function PageTurn({ onNext, onPrev, children }: PageTurnProps) {
       setTurning(null)
       if (dir === 'forward') onNext()
       else onPrev()
-    }, 380)
+    }, 480)
   }, [onNext, onPrev, showHint])
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
@@ -74,7 +74,7 @@ export default function PageTurn({ onNext, onPrev, children }: PageTurnProps) {
     >
       <div
         style={{
-          transition: turning ? 'transform 380ms ease-in-out' : 'none',
+          transition: turning ? 'transform 480ms ease-in-out' : 'none',
           transformOrigin: turning === 'forward' ? 'left center' : 'right center',
           transform: turning === 'forward'
             ? 'rotateY(-90deg)'
