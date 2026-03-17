@@ -1,29 +1,60 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import { playPageTurn } from '@/lib/paperSound'
 
 const emboss = '0 1px 1px rgba(255,200,100,0.3), 0 -1px 1px rgba(0,0,0,0.4)'
 
 export default function BibleCover({ onOpen }: { onOpen: () => void }) {
   const [loggedIn, setLoggedIn] = useState(false)
+  const [showHint, setShowHint] = useState(false)
+  const startX = useRef(0)
 
   useEffect(() => {
     const sb = createSupabaseBrowser()
     sb.auth.getUser().then(({ data }) => setLoggedIn(!!data.user))
+    if (!localStorage.getItem('logos_cover_swiped')) setShowHint(true)
   }, [])
 
+  const handleOpen = useCallback(() => {
+    if (showHint) {
+      setShowHint(false)
+      localStorage.setItem('logos_cover_swiped', '1')
+    }
+    playPageTurn('forward')
+    setTimeout(() => onOpen(), 80)
+  }, [onOpen, showHint])
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX
+  }, [])
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (startX.current - e.changedTouches[0].clientX > 60) handleOpen()
+  }, [handleOpen])
+
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    startX.current = e.clientX
+  }, [])
+
+  const onMouseUp = useCallback((e: React.MouseEvent) => {
+    if (startX.current - e.clientX > 80) handleOpen()
+  }, [handleOpen])
+
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 40, background: '#4A2008' }}>
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 40, background: '#4A2008' }}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      onMouseDown={onMouseDown}
+      onMouseUp={onMouseUp}
+    >
       {/* Physical edges */}
-      {/* Spine */}
       <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 18, background: 'linear-gradient(to right, #1A0802, #2A1002)' }} />
-      {/* Fore-edge (gilt) */}
       <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 12, background: 'linear-gradient(to left, #C8A050, #E8C070)' }} />
-      {/* Head */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 8, background: '#2A1002' }} />
-      {/* Tail */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 8, background: '#2A1002' }} />
 
       {/* Leather cover */}
@@ -42,6 +73,13 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
         {/* Decorative border */}
         <div style={{ position: 'absolute', inset: 24, border: '1px solid rgba(200,160,80,0.35)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', inset: 30, border: '1px solid rgba(200,160,80,0.15)', pointerEvents: 'none' }} />
+
+        {/* Swipe hint chevron */}
+        {showHint && (
+          <div style={{ position: 'absolute', right: 20, top: '50%', color: 'rgba(212,160,80,0.4)', fontSize: 20, pointerEvents: 'none', animation: 'coverPulse 6s ease-in-out infinite', zIndex: 2 }}>
+            &#x203A;
+          </div>
+        )}
 
         {/* Cover text */}
         <div style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
@@ -66,7 +104,6 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
 
         {/* Bottom nav + button */}
         <div style={{ position: 'absolute', bottom: 60, left: 0, right: 0, textAlign: 'center' }}>
-          {/* Nav links */}
           <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginBottom: 20 }}>
             {[
               { href: '/ask', label: 'Ask' },
@@ -87,9 +124,8 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
             ))}
           </div>
 
-          {/* Open button */}
           <button
-            onClick={onOpen}
+            onClick={handleOpen}
             style={{
               fontFamily: 'var(--font-ui)', fontSize: 11, letterSpacing: '3px', textTransform: 'uppercase',
               color: 'rgba(212,160,80,0.7)', background: 'transparent',
@@ -101,8 +137,22 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
           >
             Open the Bible
           </button>
+
+          {showHint && (
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', color: 'rgba(212,160,80,0.3)', marginTop: 8 }}>
+              or swipe to open
+            </p>
+          )}
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes coverPulse {
+          0%, 85%, 100% { opacity: 0.4; transform: translateY(-50%) translateX(0); }
+          90% { opacity: 0.8; transform: translateY(-50%) translateX(4px); }
+          95% { opacity: 0.4; transform: translateY(-50%) translateX(0); }
+        }
+      `}</style>
     </div>
   )
 }
