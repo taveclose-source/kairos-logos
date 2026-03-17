@@ -55,7 +55,7 @@ export default function SiteHeader() {
     router.refresh()
   }
 
-  if (pathname.startsWith('/auth')) return null
+  if (pathname.startsWith('/auth') || pathname === '/') return null
 
   const navLinkStyle = (href: string) =>
     `transition-colors duration-200 ${
