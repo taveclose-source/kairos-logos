@@ -8,6 +8,7 @@ import type { PageTurnHandle } from '@/components/PageTurn'
 import GlossaryModal from '@/components/GlossaryModal'
 import type { GlossaryTerm } from '@/components/GlossaryModal'
 import { usePinchFontSize, DEFAULT_SIZE } from '@/hooks/usePinchFontSize'
+import StrongsPanel from '@/components/StrongsPanel'
 
 interface Verse {
   verse: number
@@ -55,7 +56,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const pageTurnRef = useRef<PageTurnHandle>(null)
   const { fontSize, setFontSize, onTouchStart: pinchStart, onTouchMove: pinchMove, onTouchEnd: pinchEnd } = usePinchFontSize()
   const [showSizeIndicator, setShowSizeIndicator] = useState(false)
-  const [strongsPopup, setStrongsPopup] = useState<{ number: string; entry: StrongsEntry; x: number; y: number } | null>(null)
+  const [strongsPanel, setStrongsPanel] = useState<{ number: string; word: string } | null>(null)
   const sizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Prefetch adjacent chapters for instant navigation
@@ -171,13 +172,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     )
   }, [glossaryMatchers])
 
-  // Dismiss Strong's popup on outside click
-  useEffect(() => {
-    if (!strongsPopup) return
-    function dismiss() { setStrongsPopup(null) }
-    document.addEventListener('mousedown', dismiss)
-    return () => document.removeEventListener('mousedown', dismiss)
-  }, [strongsPopup])
+  // (Strong's panel handles its own dismiss)
 
   function renderVerseWords(v: Verse, isFirst: boolean) {
     const words = verseWords?.[v.verse]
@@ -224,13 +219,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                 <span
                   onClick={(e) => {
                     e.stopPropagation()
-                    const rect = e.currentTarget.getBoundingClientRect()
-                    setStrongsPopup({
-                      number: w.strongs_number!,
-                      entry: strongsLookup![w.strongs_number!],
-                      x: rect.left + rect.width / 2,
-                      y: rect.bottom + 8,
-                    })
+                    setStrongsPanel({ number: w.strongs_number!, word: w.word_text })
                   }}
                   style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: '#8B6914', textUnderlineOffset: '3px', transition: 'color 150ms' }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = '#8B6914')}
@@ -405,49 +394,13 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         ) : <span />}
       </div>
 
-      {/* Strong's Popup */}
-      {strongsPopup && (
-        <div
-          onMouseDown={(e) => e.stopPropagation()}
-          style={{
-            position: 'fixed',
-            left: Math.min(strongsPopup.x, typeof window !== 'undefined' ? window.innerWidth - 260 : 300),
-            top: Math.min(strongsPopup.y, typeof window !== 'undefined' ? window.innerHeight - 200 : 400),
-            zIndex: 60,
-            background: 'var(--bg-warm)',
-            border: '1px solid rgba(139,107,20,0.3)',
-            borderRadius: 4,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
-            padding: '12px 16px',
-            maxWidth: 260,
-          }}
-        >
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: '#8B6914', letterSpacing: '1px' }}>{strongsPopup.number}</span>
-            <button onClick={() => setStrongsPopup(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8B6914', fontSize: 16 }}>&times;</button>
-          </div>
-          {strongsPopup.entry.original_word && (
-            <p style={{ fontFamily: 'serif', fontSize: 24, color: '#2C1810', textAlign: 'center', marginBottom: 2 }}>{strongsPopup.entry.original_word}</p>
-          )}
-          {strongsPopup.entry.transliteration && (
-            <p style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 13, color: '#5A3A1A', textAlign: 'center', marginBottom: 8 }}>{strongsPopup.entry.transliteration}</p>
-          )}
-          {/* Body */}
-          {strongsPopup.entry.part_of_speech && (
-            <p style={{ fontFamily: 'var(--font-ui)', fontStyle: 'italic', fontSize: 11, color: '#8B6914', marginBottom: 6 }}>{strongsPopup.entry.part_of_speech}</p>
-          )}
-          {strongsPopup.entry.definition && (
-            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#2C1810', lineHeight: 1.6, marginBottom: 8 }}>{strongsPopup.entry.definition}</p>
-          )}
-          {/* Footer */}
-          {strongsPopup.entry.kjv_usage && (
-            <div style={{ borderTop: '1px solid rgba(139,107,20,0.2)', paddingTop: 6 }}>
-              <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: 2 }}>KJV Usage</p>
-              <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: '#3C2415', lineHeight: 1.5 }}>{strongsPopup.entry.kjv_usage}</p>
-            </div>
-          )}
-        </div>
+      {/* Strong's Panel */}
+      {strongsPanel && (
+        <StrongsPanel
+          strongsNumber={strongsPanel.number}
+          englishWord={strongsPanel.word}
+          onClose={() => setStrongsPanel(null)}
+        />
       )}
 
       {/* Glossary Term Modal */}

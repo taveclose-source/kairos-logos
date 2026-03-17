@@ -1,3 +1,27 @@
+## Critical Build Rules
+
+### Before modifying any existing file:
+1. Read the current file completely first
+2. Run: git log --oneline -- <filename> to see its history
+3. RESTORE working code from git history � do not rebuild from scratch
+
+### Never overwrite working features � verify before every push:
+- Strong's concordance (3-tab: Lexicon, Strong's Concordance, English Concordance)
+- Glossary term highlighting with popups in Twi text
+- Pinch-to-zoom font scaling in Bible reader
+- Swipe left/right chapter navigation with page turn animation and sound
+- Twi parallel column, drop caps, progress bar
+- Bible cover home page with swipe-to-open
+- Table of Contents with book and chapter selection
+- Admin panel 4-tab layout, Dashboard personal study hub
+
+### When building new features:
+- Create NEW component files rather than modifying existing ones where possible
+- Import new components INTO existing files rather than replacing file contents
+- Always run: npx next build before committing
+
+---
+
 # CLAUDE.md — Logos by Kai'Ros
 ## Bubby Briefing File | Read this at the start of every session
 
@@ -154,3 +178,5 @@ To start a new Claude Code session on this project:
 1. Navigate to: C:\Dev\Logos\
 2. Run: claude (or double-click "Start Bubby - Logos.bat")
 3. Bubby reads this file automatically and has full context.
+
+
