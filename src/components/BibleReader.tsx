@@ -26,6 +26,8 @@ interface StrongsEntry {
   original_word: string
   transliteration: string | null
   definition: string | null
+  part_of_speech: string | null
+  kjv_usage: string | null
 }
 
 interface BibleReaderProps {
@@ -420,18 +422,30 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
             maxWidth: 260,
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, fontWeight: 600, color: '#8B6914', letterSpacing: '1px' }}>{strongsPopup.number}</span>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: '#8B6914', letterSpacing: '1px' }}>{strongsPopup.number}</span>
             <button onClick={() => setStrongsPopup(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8B6914', fontSize: 16 }}>&times;</button>
           </div>
           {strongsPopup.entry.original_word && (
-            <p style={{ fontFamily: 'serif', fontSize: 22, color: '#2C1810', marginBottom: 4 }}>{strongsPopup.entry.original_word}</p>
+            <p style={{ fontFamily: 'serif', fontSize: 24, color: '#2C1810', textAlign: 'center', marginBottom: 2 }}>{strongsPopup.entry.original_word}</p>
           )}
           {strongsPopup.entry.transliteration && (
-            <p style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 13, color: '#5A3A1A', marginBottom: 8 }}>{strongsPopup.entry.transliteration}</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 13, color: '#5A3A1A', textAlign: 'center', marginBottom: 8 }}>{strongsPopup.entry.transliteration}</p>
+          )}
+          {/* Body */}
+          {strongsPopup.entry.part_of_speech && (
+            <p style={{ fontFamily: 'var(--font-ui)', fontStyle: 'italic', fontSize: 11, color: '#8B6914', marginBottom: 6 }}>{strongsPopup.entry.part_of_speech}</p>
           )}
           {strongsPopup.entry.definition && (
-            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#2C1810', lineHeight: 1.5 }}>{strongsPopup.entry.definition.slice(0, 200)}{strongsPopup.entry.definition.length > 200 ? '…' : ''}</p>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#2C1810', lineHeight: 1.6, marginBottom: 8 }}>{strongsPopup.entry.definition}</p>
+          )}
+          {/* Footer */}
+          {strongsPopup.entry.kjv_usage && (
+            <div style={{ borderTop: '1px solid rgba(139,107,20,0.2)', paddingTop: 6 }}>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: 2 }}>KJV Usage</p>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: '#3C2415', lineHeight: 1.5 }}>{strongsPopup.entry.kjv_usage}</p>
+            </div>
           )}
         </div>
       )}

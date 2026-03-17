@@ -66,13 +66,13 @@ async function getChapterData(bookName: string, chapter: number) {
   // Collect unique strongs numbers and fetch definitions
   const strongsNums = Array.from(new Set((wordsRaw ?? []).filter(w => w.strongs_number).map(w => w.strongs_number as string)))
   const { data: strongsEntries } = strongsNums.length > 0
-    ? await supabase.from('strongs_entries').select('strongs_number, original_word, transliteration, definition').in('strongs_number', strongsNums)
+    ? await supabase.from('strongs_entries').select('strongs_number, original_word, transliteration, definition, part_of_speech, kjv_usage').in('strongs_number', strongsNums)
     : { data: [] }
 
   // Build lookup
-  const strongsLookup: Record<string, { original_word: string; transliteration: string | null; definition: string | null }> = {}
+  const strongsLookup: Record<string, { original_word: string; transliteration: string | null; definition: string | null; part_of_speech: string | null; kjv_usage: string | null }> = {}
   for (const e of (strongsEntries ?? [])) {
-    strongsLookup[e.strongs_number] = { original_word: e.original_word, transliteration: e.transliteration, definition: e.definition }
+    strongsLookup[e.strongs_number] = { original_word: e.original_word, transliteration: e.transliteration, definition: e.definition, part_of_speech: e.part_of_speech, kjv_usage: e.kjv_usage }
   }
 
   // Group words by verse
