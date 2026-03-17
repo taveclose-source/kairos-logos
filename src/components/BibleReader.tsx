@@ -7,6 +7,7 @@ import PageTurn from '@/components/PageTurn'
 import type { PageTurnHandle } from '@/components/PageTurn'
 import GlossaryModal from '@/components/GlossaryModal'
 import type { GlossaryTerm } from '@/components/GlossaryModal'
+import { usePinchFontSize, DEFAULT_SIZE } from '@/hooks/usePinchFontSize'
 
 interface Verse {
   verse: number
@@ -36,6 +37,9 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const [glossaryTerms, setGlossaryTerms] = useState<GlossaryTerm[]>([])
   const [selectedGlossary, setSelectedGlossary] = useState<GlossaryTerm | null>(null)
   const pageTurnRef = useRef<PageTurnHandle>(null)
+  const { fontSize, setFontSize, onTouchStart: pinchStart, onTouchMove: pinchMove, onTouchEnd: pinchEnd } = usePinchFontSize()
+  const [showSizeIndicator, setShowSizeIndicator] = useState(false)
+  const sizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Prefetch adjacent chapters for instant navigation
   useEffect(() => {
@@ -68,6 +72,31 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
   }, [turnNext, turnPrev])
+
+  // Keyboard font size: Ctrl+Plus, Ctrl+Minus, Ctrl+0
+  useEffect(() => {
+    function handleFontKey(e: KeyboardEvent) {
+      if (!e.ctrlKey && !e.metaKey) return
+      if (e.key === '=' || e.key === '+') { e.preventDefault(); setFontSize(fontSize + 1) }
+      if (e.key === '-') { e.preventDefault(); setFontSize(fontSize - 1) }
+      if (e.key === '0') { e.preventDefault(); setFontSize(DEFAULT_SIZE) }
+    }
+    window.addEventListener('keydown', handleFontKey)
+    return () => window.removeEventListener('keydown', handleFontKey)
+  }, [fontSize, setFontSize])
+
+  // Show font size indicator on change
+  useEffect(() => {
+    if (fontSize === DEFAULT_SIZE) return
+    setShowSizeIndicator(true)
+    if (sizeTimerRef.current) clearTimeout(sizeTimerRef.current)
+    sizeTimerRef.current = setTimeout(() => setShowSizeIndicator(false), 1500)
+  }, [fontSize])
+
+  // Pinch touch handlers that also show indicator
+  const handlePinchStart = useCallback((e: React.TouchEvent) => { pinchStart(e) }, [pinchStart])
+  const handlePinchMove = useCallback((e: React.TouchEvent) => { pinchMove(e); setShowSizeIndicator(true) }, [pinchMove])
+  const handlePinchEnd = useCallback(() => { pinchEnd() }, [pinchEnd])
 
   // Fetch glossary terms once
   useEffect(() => {
@@ -179,13 +208,27 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         {/* Parchment book */}
         <div
           className="mx-auto relative"
+          onTouchStart={handlePinchStart}
+          onTouchMove={handlePinchMove}
+          onTouchEnd={handlePinchEnd}
           style={{
             maxWidth: '900px',
             background: 'var(--bg-warm)',
             borderRadius: '4px',
             boxShadow: '-8px 0 20px rgba(0,0,0,0.5), 8px 0 20px rgba(0,0,0,0.3), 0 4px 40px rgba(0,0,0,0.6)',
+            touchAction: 'pan-y',
           }}
         >
+          {/* Font size indicator */}
+          <div style={{
+            position: 'absolute', top: 12, right: 16, zIndex: 5,
+            fontFamily: 'var(--font-ui)', fontSize: 10, color: '#8B6914',
+            opacity: showSizeIndicator ? 1 : 0,
+            transition: 'opacity 0.5s ease',
+            pointerEvents: 'none',
+          }}>
+            {fontSize}px
+          </div>
           {/* Spine line — desktop only */}
           <div
             className="hidden lg:block absolute top-0 bottom-0 left-1/2 pointer-events-none"
@@ -214,7 +257,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                     const firstLetter = text[0]
                     const rest = text.slice(1)
                     return (
-                      <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: '18px', fontWeight: 400, color: '#2C1810', lineHeight: 1.9 }}>
+                      <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: '#2C1810', lineHeight: 1.9 }}>
                         <span style={{ float: 'left', fontFamily: 'var(--font-display)', fontSize: '72px', lineHeight: 0.75, paddingRight: '8px', paddingTop: '4px', color: 'var(--gold-muted)' }}>
                           {firstLetter}
                         </span>
@@ -223,7 +266,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                     )
                   }
                   return (
-                    <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: '18px', fontWeight: 400, color: '#2C1810', lineHeight: 1.9 }}>
+                    <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: '#2C1810', lineHeight: 1.9 }}>
                       <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: 500, color: '#8B6914', verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>
                         {v.verse}
                       </sup>
@@ -237,7 +280,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
               {chapterHasTwi && (
                 <div className="hidden lg:block" style={{ borderLeft: '1px solid rgba(139,107,20,0.2)', paddingLeft: '2rem', color: '#3C2415' }}>
                   {verses.map((v) => (
-                    <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: '16px', fontWeight: 400, color: v.twi_text ? '#3C2415' : '#B8A88A', lineHeight: 1.9, fontStyle: v.twi_text ? 'normal' : 'italic' }}>
+                    <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${Math.round(fontSize * 0.89)}px`, fontWeight: 400, color: v.twi_text ? '#3C2415' : '#B8A88A', lineHeight: 1.9, fontStyle: v.twi_text ? 'normal' : 'italic' }}>
                       <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: 500, color: '#8B6914', verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>
                         {v.verse}
                       </sup>
@@ -255,7 +298,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                   {languageName}
                 </p>
                 {verses.map((v) => (
-                  <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: '16px', fontWeight: 400, color: v.twi_text ? '#3C2415' : '#B8A88A', lineHeight: 1.9, fontStyle: v.twi_text ? 'normal' : 'italic' }}>
+                  <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${Math.round(fontSize * 0.89)}px`, fontWeight: 400, color: v.twi_text ? '#3C2415' : '#B8A88A', lineHeight: 1.9, fontStyle: v.twi_text ? 'normal' : 'italic' }}>
                     <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: 500, color: '#8B6914', verticalAlign: 'super', marginRight: '3px' }}>
                       {v.verse}
                     </sup>
