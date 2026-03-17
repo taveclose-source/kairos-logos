@@ -36,6 +36,8 @@ const TABS: { id: Tab; label: string }[] = [
 
 export default function StrongsPanel({ strongsNumber, englishWord, onClose }: StrongsPanelProps) {
   const [entry, setEntry] = useState<StrongsEntry | null>(null)
+  const [currentNumber, setCurrentNumber] = useState(strongsNumber)
+  const [numberStack, setNumberStack] = useState<string[]>([])
   const [tab, setTab] = useState<Tab>('lexicon')
   const [strongsResults, setStrongsResults] = useState<ConcordanceResult[]>([])
   const [englishResults, setEnglishResults] = useState<ConcordanceResult[]>([])
@@ -47,13 +49,52 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
   const [englishFetched, setEnglishFetched] = useState(false)
   const router = useRouter()
 
-  // Fetch lexicon entry immediately
+  // Fetch lexicon entry when number changes
   useEffect(() => {
-    fetch(`/api/strongs/${encodeURIComponent(strongsNumber)}`)
+    setEntry(null)
+    fetch(`/api/strongs/${encodeURIComponent(currentNumber)}`)
       .then(r => r.json())
       .then(data => { if (data.strongs_number) setEntry(data) })
       .catch(() => {})
-  }, [strongsNumber])
+  }, [currentNumber])
+
+  function navigateToRoot(num: string) {
+    setNumberStack(prev => [...prev, currentNumber])
+    setCurrentNumber(num)
+    setTab('lexicon')
+    setStrongsFetched(false)
+    setEnglishFetched(false)
+  }
+
+  function navigateBack() {
+    const prev = numberStack[numberStack.length - 1]
+    if (prev) {
+      setNumberStack(s => s.slice(0, -1))
+      setCurrentNumber(prev)
+      setTab('lexicon')
+      setStrongsFetched(false)
+      setEnglishFetched(false)
+    }
+  }
+
+  // Extract Strong's references from part_of_speech
+  function renderWithStrongsLinks(text: string) {
+    const parts = text.split(/([GH]\d+)/g)
+    return parts.map((part, i) => {
+      if (/^[GH]\d+$/.test(part)) {
+        return (
+          <span
+            key={i}
+            onClick={() => navigateToRoot(part)}
+            style={{ color: '#8B6914', cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '2px' }}
+          >
+            {part}
+          </span>
+        )
+      }
+      return part
+    })
+  }
 
   // Lazy load Strong's concordance
   useEffect(() => {
@@ -62,7 +103,7 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
     fetch('/api/strongs/concordance', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ strongsNumber, page: 0, limit: 100 }),
+      body: JSON.stringify({ strongsNumber: currentNumber, page: 0, limit: 100 }),
     })
       .then(r => r.json())
       .then(data => {
@@ -170,7 +211,7 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
 
         {/* Header */}
         <div style={{ padding: '0 1.25rem 0.75rem', textAlign: 'center', flexShrink: 0 }}>
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: '#8B6914', letterSpacing: '3px' }}>{strongsNumber}</p>
+          <p style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: '#8B6914', letterSpacing: '3px' }}>{currentNumber}</p>
           {entry?.original_word && (
             <p style={{ fontFamily: 'var(--font-reading)', fontSize: 28, color: '#2C1810', margin: '4px 0 2px' }}>{entry.original_word}</p>
           )}
@@ -206,13 +247,54 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
         <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.25rem', scrollbarWidth: 'thin', scrollbarColor: 'rgba(139,107,20,0.3) transparent' }}>
           {tab === 'lexicon' && entry && (
             <>
-              {entry.definition && (
-                <p style={{ fontFamily: 'var(--font-reading)', fontSize: 16, color: '#2C1810', lineHeight: 1.8, marginBottom: '1rem' }}>{entry.definition}</p>
+              {/* Back button for root navigation */}
+              {numberStack.length > 0 && (
+                <button onClick={navigateBack} style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', background: 'none', border: 'none', cursor: 'pointer', marginBottom: '0.75rem' }}>
+                  &larr; Back to {numberStack[numberStack.length - 1]}
+                </button>
               )}
+
+              {/* Part of Speech */}
+              {entry.part_of_speech && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: 4 }}>Part of Speech</p>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: '#2C1810', lineHeight: 1.6 }}>{renderWithStrongsLinks(entry.part_of_speech)}</p>
+                </div>
+              )}
+
+              {/* Definition */}
+              {entry.definition && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: 4 }}>Definition</p>
+                  <p style={{ fontFamily: 'var(--font-reading)', fontSize: 17, color: '#2C1810', lineHeight: 1.9 }}>{entry.definition}</p>
+                </div>
+              )}
+
+              {/* KJV Translations */}
               {entry.kjv_usage && (
+                <div style={{ borderTop: '1px solid rgba(139,107,20,0.2)', paddingTop: '0.75rem', marginBottom: '1rem' }}>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: 4 }}>KJV Translations</p>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: '#5C3D11', lineHeight: 1.8 }}>{entry.kjv_usage}</p>
+                </div>
+              )}
+
+              {/* Root words */}
+              {entry.part_of_speech && /[GH]\d+/.test(entry.part_of_speech) && (
                 <div style={{ borderTop: '1px solid rgba(139,107,20,0.2)', paddingTop: '0.75rem' }}>
-                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: 4 }}>KJV Usage</p>
-                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: '#5C3D11', lineHeight: 1.6 }}>{entry.kjv_usage}</p>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: 4 }}>Root Words</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {(entry.part_of_speech.match(/[GH]\d+/g) ?? []).map((num, i) => (
+                      <button
+                        key={i}
+                        onClick={() => navigateToRoot(num)}
+                        style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: '#8B6914', background: 'rgba(139,107,20,0.08)', border: '1px solid rgba(139,107,20,0.25)', borderRadius: 3, padding: '4px 10px', cursor: 'pointer', letterSpacing: '1px', transition: 'all 150ms' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(139,107,20,0.15)'; e.currentTarget.style.borderColor = 'rgba(139,107,20,0.5)' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(139,107,20,0.08)'; e.currentTarget.style.borderColor = 'rgba(139,107,20,0.25)' }}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </>
