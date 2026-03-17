@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { playPageTurn } from '@/lib/paperSound'
 
-const emboss = '0 1px 1px rgba(255,200,100,0.3), 0 -1px 1px rgba(0,0,0,0.4)'
+const emboss = '0 1px 2px rgba(0,0,0,0.6), 0 -1px 1px rgba(255,200,80,0.2)'
 
 export default function BibleCover({ onOpen }: { onOpen: () => void }) {
   const [loggedIn, setLoggedIn] = useState(false)
@@ -76,28 +76,28 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
 
         {/* Swipe hint chevron */}
         {showHint && (
-          <div style={{ position: 'absolute', right: 20, top: '50%', color: 'rgba(212,160,80,0.4)', fontSize: 20, pointerEvents: 'none', animation: 'coverPulse 6s ease-in-out infinite', zIndex: 2 }}>
+          <div style={{ position: 'absolute', right: 20, top: '50%', color: 'rgba(240,192,96,0.65)', fontSize: 20, pointerEvents: 'none', animation: 'coverPulse 6s ease-in-out infinite', zIndex: 2 }}>
             &#x203A;
           </div>
         )}
 
         {/* Cover text */}
         <div style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 700, color: '#D4A050', letterSpacing: '8px', marginBottom: 8, textShadow: emboss }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 700, color: '#F0C060', letterSpacing: '8px', marginBottom: 8, textShadow: emboss }}>
             HOLY BIBLE
           </h1>
-          <p style={{ fontFamily: 'var(--font-reading)', fontStyle: 'italic', fontSize: 'clamp(14px, 2vw, 22px)', color: 'rgba(212,160,80,0.75)', letterSpacing: '3px', marginBottom: 32, textShadow: emboss }}>
+          <p style={{ fontFamily: 'var(--font-reading)', fontStyle: 'italic', fontSize: 'clamp(14px, 2vw, 22px)', color: 'rgba(240,192,96,0.90)', letterSpacing: '3px', marginBottom: 32, textShadow: emboss }}>
             King James Version
           </p>
-          <div style={{ width: 120, height: 1, background: 'rgba(212,160,80,0.4)', margin: '0 auto 24px' }} />
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(12px, 1.5vw, 18px)', color: 'rgba(212,160,80,0.65)', letterSpacing: '5px', marginBottom: 40, textShadow: emboss }}>
+          <div style={{ width: 120, height: 1, background: 'rgba(240,192,96,0.55)', margin: '0 auto 24px' }} />
+          <p style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(12px, 1.5vw, 18px)', color: 'rgba(240,192,96,0.80)', letterSpacing: '5px', marginBottom: 40, textShadow: emboss }}>
             LOGOS BY KAI&apos;ROS
           </p>
-          <div style={{ width: 120, height: 1, background: 'rgba(212,160,80,0.4)', margin: '0 auto 24px' }} />
-          <p style={{ fontFamily: 'var(--font-reading)', fontStyle: 'italic', fontSize: 'clamp(11px, 1.3vw, 16px)', color: 'rgba(212,160,80,0.55)', lineHeight: 1.8, textAlign: 'center', maxWidth: 320, margin: '0 auto 4px', textShadow: emboss }}>
+          <div style={{ width: 120, height: 1, background: 'rgba(240,192,96,0.55)', margin: '0 auto 24px' }} />
+          <p style={{ fontFamily: 'var(--font-reading)', fontStyle: 'italic', fontSize: 'clamp(11px, 1.3vw, 16px)', color: 'rgba(240,192,96,0.78)', lineHeight: 1.8, textAlign: 'center', maxWidth: 320, margin: '0 auto 4px', textShadow: emboss }}>
             He must increase, but I must decrease.
           </p>
-          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '3px', color: 'rgba(212,160,80,0.4)' }}>
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '3px', color: 'rgba(240,192,96,0.60)' }}>
             JOHN 3:30
           </p>
         </div>
@@ -115,9 +115,9 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
               <Link
                 key={link.href}
                 href={link.href}
-                style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(212,160,80,0.4)', textDecoration: 'none', transition: 'color 200ms' }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(212,160,80,0.7)')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(212,160,80,0.4)')}
+                style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(240,192,96,0.65)', textDecoration: 'none', transition: 'color 200ms' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(240,192,96,0.95)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(240,192,96,0.65)')}
               >
                 {link.label}
               </Link>
@@ -128,18 +128,18 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
             onClick={handleOpen}
             style={{
               fontFamily: 'var(--font-ui)', fontSize: 11, letterSpacing: '3px', textTransform: 'uppercase',
-              color: 'rgba(212,160,80,0.7)', background: 'transparent',
-              border: '1px solid rgba(212,160,80,0.3)', padding: '10px 28px',
+              color: 'rgba(240,192,96,0.90)', background: 'transparent',
+              border: '1px solid rgba(240,192,96,0.55)', padding: '10px 28px',
               borderRadius: 2, cursor: 'pointer', transition: 'all 300ms',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(212,160,80,1)'; e.currentTarget.style.borderColor = 'rgba(212,160,80,0.7)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(212,160,80,0.7)'; e.currentTarget.style.borderColor = 'rgba(212,160,80,0.3)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(240,192,96,1)'; e.currentTarget.style.borderColor = 'rgba(240,192,96,0.8)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(240,192,96,0.90)'; e.currentTarget.style.borderColor = 'rgba(240,192,96,0.55)' }}
           >
             Open the Bible
           </button>
 
           {showHint && (
-            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', color: 'rgba(212,160,80,0.3)', marginTop: 8 }}>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', color: 'rgba(240,192,96,0.55)', marginTop: 8 }}>
               or swipe to open
             </p>
           )}
