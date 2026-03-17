@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import { playPageTurn } from '@/lib/paperSound'
 
 interface BookEntry { book_name: string; testament: string; sort_order: number }
 interface ChapterEntry { chapter: number; summary: string }
@@ -49,6 +50,7 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
   }, [])
 
   function handleBookSelect(book: BookEntry) {
+    playPageTurn('forward')
     setSelectedBook(book.book_name)
     setSelectedTestament(book.testament === 'OT' ? 'Old Testament' : 'New Testament')
     setLoadingChapters(true)
@@ -72,6 +74,7 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
   }
 
   function handleBack() {
+    playPageTurn('back')
     setTransitioning(true)
     setTimeout(() => {
       setView('books')
@@ -173,7 +176,12 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
               {chapters.map((c) => (
                 <button
                   key={c.chapter}
-                  onClick={() => onSelect(selectedBook!, c.chapter)}
+                  onClick={() => {
+                    playPageTurn('forward')
+                    setTimeout(() => playPageTurn('forward'), 120)
+                    setTimeout(() => playPageTurn('forward'), 240)
+                    setTimeout(() => onSelect(selectedBook!, c.chapter), 400)
+                  }}
                   style={{ padding: '0.75rem 1rem', borderBottom: '0.5px solid rgba(139,107,20,0.15)', background: 'transparent', border: 'none', borderBottomWidth: '0.5px', borderBottomStyle: 'solid', borderBottomColor: 'rgba(139,107,20,0.15)', cursor: 'pointer', textAlign: 'left', transition: 'background 150ms' }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(139,107,20,0.06)')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
