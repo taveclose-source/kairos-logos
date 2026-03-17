@@ -40,15 +40,28 @@ export async function POST(req: NextRequest) {
       return true
     })
 
+    // Filter by testament if provided (for KJV concordance tab)
+    let filtered = unique
+    if (testament) {
+      const bookTestaments: Record<string, string> = {}
+      for (const w of unique) {
+        if (!bookTestaments[w.book]) {
+          const { data: bb } = await supabase.from('bible_books').select('testament').eq('book_name', w.book).single()
+          bookTestaments[w.book] = bb?.testament ?? ''
+        }
+      }
+      filtered = unique.filter(w => bookTestaments[w.book] === testament)
+    }
+
     // Fetch verse texts
-    const results = await Promise.all(unique.map(async (w) => {
+    const results = await Promise.all(filtered.map(async (w) => {
       const { data: book } = await supabase.from('bible_books').select('id').eq('book_name', w.book).single()
       if (!book) return null
       const { data: verse } = await supabase.from('bible_verses').select('kjv_text').eq('book_id', book.id).eq('chapter', w.chapter).eq('verse', w.verse).single()
       return { book: w.book, chapter: w.chapter, verse: w.verse, kjv_text: verse?.kjv_text ?? '' }
     }))
 
-    return NextResponse.json({ results: results.filter(Boolean), total: count ?? 0 })
+    return NextResponse.json({ results: results.filter(Boolean), total: testament ? filtered.length : (count ?? 0) })
   }
 
   if (englishWord && testament) {
