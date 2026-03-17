@@ -11,8 +11,7 @@ function SignInForm() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/dashboard'
+  useSearchParams() // keep Suspense boundary working
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -20,7 +19,7 @@ function SignInForm() {
     setLoading(true)
 
     const supabase = createSupabaseBrowser()
-    const { error: authError } = await supabase.auth.signInWithPassword({
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     })
@@ -31,7 +30,8 @@ function SignInForm() {
       return
     }
 
-    router.push(redirect)
+    const isAdmin = data.user?.id === '2f4cc459-6fdd-4f41-be4b-754770b28529'
+    router.push(isAdmin ? '/admin' : '/dashboard')
     router.refresh()
   }
 
