@@ -233,23 +233,21 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
               )}
             </div>
 
-            {/* Twi — mobile toggle */}
+            {/* Twi — mobile/tablet (below lg) */}
             {chapterHasTwi && (
-              <details className="lg:hidden mt-6">
-                <summary style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', cursor: 'pointer' }}>
-                  Show {languageName}
-                </summary>
-                <div className="mt-4" style={{ borderTop: '1px solid rgba(139,107,20,0.2)', paddingTop: '1rem' }}>
-                  {verses.map((v) => (
-                    <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: '16px', fontWeight: 400, color: v.twi_text ? '#3C2415' : '#B8A88A', lineHeight: 1.9, fontStyle: v.twi_text ? 'normal' : 'italic' }}>
-                      <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: 500, color: '#8B6914', verticalAlign: 'super', marginRight: '3px' }}>
-                        {v.verse}
-                      </sup>
-                      {v.twi_text ? renderTwiWithGlossary(v.twi_text) : 'Translation coming'}{' '}
-                    </span>
-                  ))}
-                </div>
-              </details>
+              <div className="lg:hidden mt-6" style={{ borderTop: '1px solid rgba(139,107,20,0.2)', paddingTop: '1rem' }}>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: '0.75rem' }}>
+                  {languageName}
+                </p>
+                {verses.map((v) => (
+                  <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: '16px', fontWeight: 400, color: v.twi_text ? '#3C2415' : '#B8A88A', lineHeight: 1.9, fontStyle: v.twi_text ? 'normal' : 'italic' }}>
+                    <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: 500, color: '#8B6914', verticalAlign: 'super', marginRight: '3px' }}>
+                      {v.verse}
+                    </sup>
+                    {v.twi_text ? renderTwiWithGlossary(v.twi_text) : 'Translation coming'}{' '}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
 
