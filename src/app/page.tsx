@@ -9,7 +9,7 @@ const FEATURES = [
 
 export default function HomePage() {
   return (
-    <div style={{ background: 'var(--bg-primary)', minHeight: 'calc(100vh - 56px)' }}>
+    <div className="relative z-[1]" style={{ minHeight: 'calc(100vh - 56px)' }}>
       <section
         className="flex flex-col lg:flex-row items-start justify-center gap-12 px-6 sm:px-10"
         style={{
@@ -53,23 +53,22 @@ export default function HomePage() {
           </p>
         </div>
       </section>
-      <section className="px-6 sm:px-10 pb-16" style={{ maxWidth: '1100px', margin: '0 auto' }}>
-        <div className="grid sm:grid-cols-4" style={{ borderTop: '1px solid rgba(90,40,10,0.5)' }}>
+      <section className="px-6 sm:px-10 pb-16 relative z-[1]" style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        <div className="grid sm:grid-cols-4" style={{ borderTop: '1px solid rgba(0,0,0,0.22)' }}>
           {FEATURES.map((f, i) => (
             <Link key={f.href} href={f.href}>
               <div
                 className="transition-all duration-200 hover:opacity-80"
                 style={{
                   padding: '1.25rem',
-                  borderRight: i < FEATURES.length - 1 ? 'none' : 'none',
-                  borderImage: i < FEATURES.length - 1 ? 'linear-gradient(to bottom, transparent, rgba(90,40,10,0.4) 20%, rgba(90,40,10,0.4) 80%, transparent) 1' : 'none',
                   borderRightWidth: i < FEATURES.length - 1 ? '1px' : '0',
                   borderRightStyle: i < FEATURES.length - 1 ? 'solid' : 'none',
+                  borderImage: i < FEATURES.length - 1 ? 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.18) 20%, rgba(0,0,0,0.18) 80%, transparent) 1' : 'none',
                 }}
               >
-                <span style={{ fontFamily: 'var(--font-reading)', fontSize: '36px', fontWeight: 300, color: 'rgba(200,150,90,0.55)' }}>{f.numeral}</span>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: '16px', color: '#E8E0D0', marginTop: '0.5rem' }}>{f.title}</p>
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', color: '#5A3A1A', marginTop: '0.25rem' }}>{f.desc}</p>
+                <span style={{ fontFamily: 'var(--font-reading)', fontSize: '36px', fontWeight: 300, color: 'rgba(245,200,120,0.55)' }}>{f.numeral}</span>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '16px', color: '#FFF8F0', marginTop: '0.5rem' }}>{f.title}</p>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', color: '#E8B878', marginTop: '0.25rem' }}>{f.desc}</p>
               </div>
             </Link>
           ))}

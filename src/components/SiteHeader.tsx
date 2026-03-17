@@ -60,8 +60,8 @@ export default function SiteHeader() {
   const navLinkStyle = (href: string) =>
     `transition-colors duration-200 ${
       pathname.startsWith(href)
-        ? 'text-[var(--gold)]'
-        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+        ? 'text-[#F5C878]'
+        : 'text-[#E8B878] hover:text-[#FFF8F0]'
     }`
 
   const navLinkClass = 'font-[var(--font-ui)] text-[11px] tracking-[2px] uppercase'
@@ -70,10 +70,10 @@ export default function SiteHeader() {
 
   return (
     <header
-      className="sticky top-0 z-50"
+      className="sticky top-0 z-50 relative"
       style={{
         background: 'var(--bg-primary)',
-        borderBottom: '1px solid rgba(90,40,10,0.6)',
+        borderBottom: '1px solid rgba(0,0,0,0.25)',
         boxShadow: '0 1px 0 rgba(200,169,110,0.15)',
       }}
     >
@@ -132,10 +132,10 @@ export default function SiteHeader() {
           ) : (
             <Link href="/auth/signin">
               <span
-                className="inline-block transition-colors duration-200 hover:bg-[var(--gold)] hover:text-[var(--bg-primary)]"
+                className="inline-block transition-colors duration-200 hover:bg-[#F5C878] hover:text-[#6B3515]"
                 style={{
-                  border: '1px solid var(--gold)',
-                  color: 'var(--gold)',
+                  border: '1px solid #F5C878',
+                  color: '#F5C878',
                   padding: '6px 16px',
                   fontFamily: 'var(--font-ui)',
                   fontSize: '11px',

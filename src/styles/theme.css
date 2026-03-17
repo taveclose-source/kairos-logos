@@ -1,17 +1,17 @@
 :root {
-  --bg-primary: #1A0C02;
-  --bg-secondary: #1A0C02;
-  --bg-surface: #1E1005;
+  --bg-primary: #6B3515;
+  --bg-secondary: #5E2E10;
+  --bg-surface: #623212;
   --bg-warm: #F5EDD9;
   --bg-warm-dark: #EDE0C4;
-  --border-subtle: rgba(90,40,10,0.5);
-  --border-medium: rgba(90,40,10,0.7);
-  --text-primary: #F5F0E8;
-  --text-secondary: #6A4A28;
-  --text-tertiary: #4A3018;
-  --gold: #C8965A;
-  --gold-light: #E8B87A;
-  --gold-muted: #8B6914;
+  --border-subtle: rgba(0,0,0,0.22);
+  --border-medium: rgba(0,0,0,0.32);
+  --text-primary: #FFF8F0;
+  --text-secondary: #F0DEC0;
+  --text-tertiary: #E8B878;
+  --gold: #F5C878;
+  --gold-light: #FFD898;
+  --gold-muted: #E8B060;
   --emerald: #1D9E75;
   --emerald-dark: #0F6E56;
   --font-display: 'Cinzel', serif;
@@ -19,12 +19,15 @@
   --font-ui: 'DM Sans', sans-serif;
   --font-reading: 'Cormorant Garamond', serif;
   --leather-texture:
-    repeating-linear-gradient(44deg,rgba(255,170,70,0.022) 0px,rgba(255,170,70,0.022) 1px,transparent 1px,transparent 4px),
-    repeating-linear-gradient(-44deg,rgba(255,170,70,0.022) 0px,rgba(255,170,70,0.022) 1px,transparent 1px,transparent 4px),
-    repeating-linear-gradient(44deg,rgba(255,100,20,0.04) 0px,rgba(255,100,20,0.04) 1px,transparent 1px,transparent 8px),
-    repeating-linear-gradient(-44deg,rgba(255,100,20,0.04) 0px,rgba(255,100,20,0.04) 1px,transparent 1px,transparent 8px),
-    radial-gradient(ellipse at 8% 92%,rgba(60,20,0,0.55) 0%,transparent 35%),
-    radial-gradient(ellipse at 92% 8%,rgba(60,20,0,0.45) 0%,transparent 30%),
-    radial-gradient(ellipse at 85% 88%,rgba(40,10,0,0.35) 0%,transparent 28%),
-    radial-gradient(ellipse at 50% 50%,rgba(255,100,20,0.025) 0%,transparent 70%);
+    repeating-linear-gradient(44deg,rgba(255,200,100,0.07) 0px,rgba(255,200,100,0.07) 1px,transparent 1px,transparent 4px),
+    repeating-linear-gradient(-44deg,rgba(255,200,100,0.07) 0px,rgba(255,200,100,0.07) 1px,transparent 1px,transparent 4px),
+    repeating-linear-gradient(44deg,rgba(0,0,0,0.10) 0px,rgba(0,0,0,0.10) 1px,transparent 1px,transparent 8px),
+    repeating-linear-gradient(-44deg,rgba(0,0,0,0.10) 0px,rgba(0,0,0,0.10) 1px,transparent 1px,transparent 8px),
+    radial-gradient(ellipse at 5% 95%,rgba(25,8,0,0.70) 0%,transparent 30%),
+    radial-gradient(ellipse at 95% 5%,rgba(25,8,0,0.60) 0%,transparent 26%),
+    radial-gradient(ellipse at 88% 90%,rgba(25,8,0,0.50) 0%,transparent 22%),
+    radial-gradient(ellipse at 15% 15%,rgba(25,8,0,0.35) 0%,transparent 20%),
+    radial-gradient(ellipse at 50% 50%,rgba(255,150,50,0.03) 0%,transparent 65%),
+    repeating-linear-gradient(12deg,rgba(0,0,0,0.04) 0px,rgba(0,0,0,0.04) 1px,transparent 1px,transparent 22px),
+    repeating-linear-gradient(-12deg,rgba(255,180,80,0.02) 0px,rgba(255,180,80,0.02) 1px,transparent 1px,transparent 22px);
 }
