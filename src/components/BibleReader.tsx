@@ -37,12 +37,18 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const [selectedGlossary, setSelectedGlossary] = useState<GlossaryTerm | null>(null)
   const pageTurnRef = useRef<PageTurnHandle>(null)
 
+  // Prefetch adjacent chapters for instant navigation
+  useEffect(() => {
+    if (nextHref) router.prefetch(nextHref)
+    if (prevHref) router.prefetch(prevHref)
+  }, [nextHref, prevHref, router])
+
   const goNext = useCallback(() => {
-    if (nextHref) router.push(nextHref)
+    if (nextHref) router.push(nextHref, { scroll: false })
   }, [nextHref, router])
 
   const goPrev = useCallback(() => {
-    if (prevHref) router.push(prevHref)
+    if (prevHref) router.push(prevHref, { scroll: false })
   }, [prevHref, router])
 
   const turnNext = useCallback(() => {

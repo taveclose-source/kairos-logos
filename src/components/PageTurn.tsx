@@ -18,7 +18,9 @@ const PageTurn = forwardRef<PageTurnHandle, PageTurnProps>(function PageTurn({ o
   const startX = useRef(0)
   const startTime = useRef(0)
   const [turning, setTurning] = useState<'forward' | 'back' | null>(null)
+  const [hidden, setHidden] = useState(false)
   const [showHint, setShowHint] = useState(false)
+  const turningRef = useRef(false)
 
   useEffect(() => {
     const dismissed = localStorage.getItem('logos-page-hint-dismissed')
@@ -26,7 +28,8 @@ const PageTurn = forwardRef<PageTurnHandle, PageTurnProps>(function PageTurn({ o
   }, [])
 
   const doTurn = useCallback((dir: 'forward' | 'back') => {
-    if (turning) return
+    if (turningRef.current) return
+    turningRef.current = true
     setTurning(dir)
     playPageTurn(dir)
 
@@ -35,16 +38,21 @@ const PageTurn = forwardRef<PageTurnHandle, PageTurnProps>(function PageTurn({ o
       localStorage.setItem('logos-page-hint-dismissed', '1')
     }
 
-    // Navigate mid-animation when page is rotated away
+    // At 280ms the page is past 90deg (edge-on, content invisible)
+    // Hide it and navigate — user sees nothing
     setTimeout(() => {
+      setHidden(true)
       if (dir === 'forward') onNext()
       else onPrev()
-    }, 240)
-    // Clear animation state after full duration
-    setTimeout(() => {
-      setTurning(null)
-    }, 480)
-  }, [onNext, onPrev, showHint, turning])
+    }, 280)
+  }, [onNext, onPrev, showHint])
+
+  // Reset state when new content arrives (props change = new chapter)
+  useEffect(() => {
+    setTurning(null)
+    setHidden(false)
+    turningRef.current = false
+  }, [children])
 
   useImperativeHandle(ref, () => ({
     triggerTurn: doTurn,
@@ -90,11 +98,12 @@ const PageTurn = forwardRef<PageTurnHandle, PageTurnProps>(function PageTurn({ o
           transition: turning ? 'transform 480ms ease-in-out' : 'none',
           transformOrigin: turning === 'forward' ? 'left center' : 'right center',
           transform: turning === 'forward'
-            ? 'rotateY(-90deg)'
+            ? 'rotateY(-120deg)'
             : turning === 'back'
-              ? 'rotateY(90deg)'
+              ? 'rotateY(120deg)'
               : 'rotateY(0deg)',
           backfaceVisibility: 'hidden',
+          opacity: hidden ? 0 : 1,
         }}
       >
         {children}
