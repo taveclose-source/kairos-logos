@@ -30,6 +30,7 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
     sb.from('chapter_summaries')
       .select('book_name, testament, sort_order')
       .order('sort_order', { ascending: true })
+      .limit(2000)
       .then(({ data }) => {
         if (!data) return
         const seen = new Set<string>()
