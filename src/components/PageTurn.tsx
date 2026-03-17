@@ -1,7 +1,11 @@
 'use client'
 
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react'
 import { playPageTurn } from '@/lib/paperSound'
+
+export interface PageTurnHandle {
+  triggerTurn: (direction: 'forward' | 'back') => void
+}
 
 interface PageTurnProps {
   onNext: () => void
@@ -9,8 +13,8 @@ interface PageTurnProps {
   children: React.ReactNode
 }
 
-export default function PageTurn({ onNext, onPrev, children }: PageTurnProps) {
-  const ref = useRef<HTMLDivElement>(null)
+const PageTurn = forwardRef<PageTurnHandle, PageTurnProps>(function PageTurn({ onNext, onPrev, children }, ref) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const startX = useRef(0)
   const startTime = useRef(0)
   const [turning, setTurning] = useState<'forward' | 'back' | null>(null)
@@ -21,12 +25,8 @@ export default function PageTurn({ onNext, onPrev, children }: PageTurnProps) {
     if (!dismissed) setShowHint(true)
   }, [])
 
-  const handleSwipe = useCallback((dx: number) => {
-    if (Math.abs(dx) < 60) return
-    const elapsed = Date.now() - startTime.current
-    if (elapsed > 500) return
-
-    const dir = dx < 0 ? 'forward' : 'back'
+  const doTurn = useCallback((dir: 'forward' | 'back') => {
+    if (turning) return
     setTurning(dir)
     playPageTurn(dir)
 
@@ -40,7 +40,18 @@ export default function PageTurn({ onNext, onPrev, children }: PageTurnProps) {
       if (dir === 'forward') onNext()
       else onPrev()
     }, 480)
-  }, [onNext, onPrev, showHint])
+  }, [onNext, onPrev, showHint, turning])
+
+  useImperativeHandle(ref, () => ({
+    triggerTurn: doTurn,
+  }), [doTurn])
+
+  const handleSwipe = useCallback((dx: number) => {
+    if (Math.abs(dx) < 60) return
+    const elapsed = Date.now() - startTime.current
+    if (elapsed > 500) return
+    doTurn(dx < 0 ? 'forward' : 'back')
+  }, [doTurn])
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     startX.current = e.touches[0].clientX
@@ -48,8 +59,7 @@ export default function PageTurn({ onNext, onPrev, children }: PageTurnProps) {
   }, [])
 
   const onTouchEnd = useCallback((e: React.TouchEvent) => {
-    const dx = e.changedTouches[0].clientX - startX.current
-    handleSwipe(dx)
+    handleSwipe(e.changedTouches[0].clientX - startX.current)
   }, [handleSwipe])
 
   const onMouseDown = useCallback((e: React.MouseEvent) => {
@@ -58,13 +68,12 @@ export default function PageTurn({ onNext, onPrev, children }: PageTurnProps) {
   }, [])
 
   const onMouseUp = useCallback((e: React.MouseEvent) => {
-    const dx = e.clientX - startX.current
-    handleSwipe(dx)
+    handleSwipe(e.clientX - startX.current)
   }, [handleSwipe])
 
   return (
     <div
-      ref={ref}
+      ref={containerRef}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       onMouseDown={onMouseDown}
@@ -87,7 +96,6 @@ export default function PageTurn({ onNext, onPrev, children }: PageTurnProps) {
         {children}
       </div>
 
-      {/* Page curl hint */}
       {showHint && (
         <div
           className="absolute bottom-4 right-4 pointer-events-none"
@@ -108,4 +116,6 @@ export default function PageTurn({ onNext, onPrev, children }: PageTurnProps) {
       `}</style>
     </div>
   )
-}
+})
+
+export default PageTurn

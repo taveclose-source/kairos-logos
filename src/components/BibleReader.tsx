@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useCallback, useState, useMemo } from 'react'
+import { useEffect, useCallback, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import PageTurn from '@/components/PageTurn'
-import { playPageTurn } from '@/lib/paperSound'
+import type { PageTurnHandle } from '@/components/PageTurn'
 import GlossaryModal from '@/components/GlossaryModal'
 import type { GlossaryTerm } from '@/components/GlossaryModal'
 
@@ -35,6 +35,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const progress = totalChapters > 0 ? (chapter / totalChapters) * 100 : 0
   const [glossaryTerms, setGlossaryTerms] = useState<GlossaryTerm[]>([])
   const [selectedGlossary, setSelectedGlossary] = useState<GlossaryTerm | null>(null)
+  const pageTurnRef = useRef<PageTurnHandle>(null)
 
   const goNext = useCallback(() => {
     if (nextHref) router.push(nextHref)
@@ -44,15 +45,23 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     if (prevHref) router.push(prevHref)
   }, [prevHref, router])
 
-  // Keyboard navigation
+  const turnNext = useCallback(() => {
+    if (nextHref && pageTurnRef.current) pageTurnRef.current.triggerTurn('forward')
+  }, [nextHref])
+
+  const turnPrev = useCallback(() => {
+    if (prevHref && pageTurnRef.current) pageTurnRef.current.triggerTurn('back')
+  }, [prevHref])
+
+  // Keyboard navigation — trigger animation
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'ArrowRight' && nextHref) { playPageTurn('forward'); router.push(nextHref) }
-      if (e.key === 'ArrowLeft' && prevHref) { playPageTurn('back'); router.push(prevHref) }
+      if (e.key === 'ArrowRight') turnNext()
+      if (e.key === 'ArrowLeft') turnPrev()
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [nextHref, prevHref, router])
+  }, [turnNext, turnPrev])
 
   // Fetch glossary terms once
   useEffect(() => {
@@ -114,7 +123,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     <div style={{ background: 'var(--bg-primary)', padding: '2rem 1rem' }} className="relative">
       {/* Fixed side arrows — desktop only */}
       <button
-        onClick={() => { if (prevHref) { playPageTurn('back'); goPrev() } }}
+        onClick={turnPrev}
         className="hidden md:flex items-center justify-center fixed z-20 transition-colors duration-200"
         style={{
           left: 'calc(50% - 480px)',
@@ -137,7 +146,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         </svg>
       </button>
       <button
-        onClick={() => { if (nextHref) { playPageTurn('forward'); goNext() } }}
+        onClick={turnNext}
         className="hidden md:flex items-center justify-center fixed z-20 transition-colors duration-200"
         style={{
           right: 'calc(50% - 480px)',
@@ -160,7 +169,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         </svg>
       </button>
 
-      <PageTurn onNext={goNext} onPrev={goPrev}>
+      <PageTurn ref={pageTurnRef} onNext={goNext} onPrev={goPrev}>
         {/* Parchment book */}
         <div
           className="mx-auto relative"
