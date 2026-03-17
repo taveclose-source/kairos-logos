@@ -27,21 +27,12 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
 
   useEffect(() => {
     const sb = createSupabaseBrowser()
-    sb.from('chapter_summaries')
+    sb.from('bible_books')
       .select('book_name, testament, sort_order')
       .order('sort_order', { ascending: true })
-      .limit(2000)
       .then(({ data }) => {
         if (!data) return
-        const seen = new Set<string>()
-        const unique: BookEntry[] = []
-        for (const row of data as BookEntry[]) {
-          if (!seen.has(row.book_name)) {
-            seen.add(row.book_name)
-            unique.push(row)
-          }
-        }
-        setBooks(unique)
+        setBooks(data as BookEntry[])
       })
   }, [])
 
