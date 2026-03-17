@@ -3,8 +3,21 @@
 import { useState, useEffect } from 'react'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
-interface BookEntry { book_name: string; testament: string }
+interface BookEntry { book_name: string; testament: string; sort_order: number }
 interface ChapterEntry { chapter: number; summary: string }
+
+function BookButton({ name, selected, onClick }: { name: string; selected: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{ fontFamily: 'var(--font-reading)', fontSize: 15, color: selected ? '#8B6914' : '#2C1810', fontWeight: selected ? 600 : 400, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '2px 0', transition: 'color 150ms' }}
+      onMouseEnter={(e) => { if (!selected) e.currentTarget.style.color = '#8B6914' }}
+      onMouseLeave={(e) => { if (!selected) e.currentTarget.style.color = '#2C1810' }}
+    >
+      {name}
+    </button>
+  )
+}
 
 export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: string, chapter: number) => void; onClose: () => void }) {
   const [books, setBooks] = useState<BookEntry[]>([])
@@ -15,13 +28,13 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
   useEffect(() => {
     const sb = createSupabaseBrowser()
     sb.from('chapter_summaries')
-      .select('book_name, testament')
-      .order('id', { ascending: true })
+      .select('book_name, testament, sort_order')
+      .order('sort_order', { ascending: true })
       .then(({ data }) => {
         if (!data) return
         const seen = new Set<string>()
         const unique: BookEntry[] = []
-        for (const row of data) {
+        for (const row of data as BookEntry[]) {
           if (!seen.has(row.book_name)) {
             seen.add(row.book_name)
             unique.push(row)
@@ -59,62 +72,45 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
       <div className="hidden md:block" style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: 1, background: 'linear-gradient(to bottom, transparent, rgba(139,107,20,0.3) 10%, rgba(139,107,20,0.3) 90%, transparent)', pointerEvents: 'none' }} />
 
       <div className="grid md:grid-cols-2" style={{ minHeight: '70vh' }}>
-        {/* Left page — Books */}
+        {/* Left page — Old Testament */}
         <div style={{ padding: 'clamp(1.5rem, 3vw, 3rem)', color: '#2C1810' }}>
           <p style={{ fontFamily: 'var(--font-display)', fontSize: 13, letterSpacing: '4px', color: '#8B6914', textTransform: 'uppercase', textAlign: 'center', marginBottom: '1.5rem' }}>
             Table of Contents
           </p>
-
-          {otBooks.length > 0 && (
-            <>
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: '3px', color: '#8B6914', textTransform: 'uppercase', marginBottom: '0.5rem', marginTop: '1rem' }}>Old Testament</p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                {otBooks.map((b) => (
-                  <button key={b.book_name} onClick={() => setSelectedBook(b.book_name)} style={{ fontFamily: 'var(--font-reading)', fontSize: 15, color: selectedBook === b.book_name ? '#8B6914' : '#2C1810', fontWeight: selectedBook === b.book_name ? 600 : 400, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '2px 0', transition: 'color 150ms' }}
-                    onMouseEnter={(e) => { if (selectedBook !== b.book_name) e.currentTarget.style.color = '#8B6914' }}
-                    onMouseLeave={(e) => { if (selectedBook !== b.book_name) e.currentTarget.style.color = '#2C1810' }}
-                  >
-                    {b.book_name}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-
-          {ntBooks.length > 0 && (
-            <>
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: '3px', color: '#8B6914', textTransform: 'uppercase', marginBottom: '0.5rem', marginTop: '1.5rem' }}>New Testament</p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                {ntBooks.map((b) => (
-                  <button key={b.book_name} onClick={() => setSelectedBook(b.book_name)} style={{ fontFamily: 'var(--font-reading)', fontSize: 15, color: selectedBook === b.book_name ? '#8B6914' : '#2C1810', fontWeight: selectedBook === b.book_name ? 600 : 400, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '2px 0', transition: 'color 150ms' }}
-                    onMouseEnter={(e) => { if (selectedBook !== b.book_name) e.currentTarget.style.color = '#8B6914' }}
-                    onMouseLeave={(e) => { if (selectedBook !== b.book_name) e.currentTarget.style.color = '#2C1810' }}
-                  >
-                    {b.book_name}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+          <p style={{ fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: '3px', color: '#8B6914', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Old Testament</p>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+            {otBooks.map((b) => (
+              <BookButton key={b.book_name} name={b.book_name} selected={selectedBook === b.book_name} onClick={() => setSelectedBook(b.book_name)} />
+            ))}
+          </div>
         </div>
 
-        {/* Right page — Chapters */}
+        {/* Right page — New Testament + Chapters */}
         <div style={{ padding: 'clamp(1.5rem, 3vw, 3rem)', borderLeft: '1px solid rgba(139,107,20,0.2)', color: '#2C1810' }}>
+          <p style={{ fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: '3px', color: '#8B6914', textTransform: 'uppercase', marginBottom: '0.5rem' }}>New Testament</p>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+            {ntBooks.map((b) => (
+              <BookButton key={b.book_name} name={b.book_name} selected={selectedBook === b.book_name} onClick={() => setSelectedBook(b.book_name)} />
+            ))}
+          </div>
+
+          {/* Divider */}
+          <div style={{ height: 1, background: 'rgba(139,107,20,0.2)', margin: '1.25rem 0' }} />
+
+          {/* Chapter list */}
           {!selectedBook ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-              <p style={{ fontFamily: 'var(--font-reading)', fontStyle: 'italic', fontSize: 16, color: '#8B6914', opacity: 0.5 }}>
-                Select a book to see chapters
-              </p>
-            </div>
+            <p style={{ fontFamily: 'var(--font-reading)', fontStyle: 'italic', fontSize: 16, color: '#8B6914', opacity: 0.5, paddingTop: '0.5rem' }}>
+              Select a book to see chapters
+            </p>
           ) : (
             <>
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: 13, letterSpacing: '4px', color: '#8B6914', textTransform: 'uppercase', textAlign: 'center', marginBottom: '1.5rem' }}>
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: 13, letterSpacing: '4px', color: '#8B6914', textTransform: 'uppercase', textAlign: 'center', marginBottom: '1rem' }}>
                 {selectedBook}
               </p>
               {loadingChapters ? (
                 <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#8B6914', textAlign: 'center' }}>Loading...</p>
               ) : (
-                <div className="space-y-0">
+                <div className="space-y-0 max-h-[40vh] overflow-y-auto">
                   {chapters.map((c) => (
                     <button
                       key={c.chapter}
