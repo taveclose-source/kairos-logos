@@ -1,16 +1,16 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { playPageTurn } from '@/lib/paperSound'
+import { useSwipe } from '@/hooks/useSwipe'
 
 const emboss = '0 1px 2px rgba(0,0,0,0.6), 0 -1px 1px rgba(255,200,80,0.2)'
 
 export default function BibleCover({ onOpen }: { onOpen: () => void }) {
   const [loggedIn, setLoggedIn] = useState(false)
   const [showHint, setShowHint] = useState(false)
-  const startX = useRef(0)
 
   useEffect(() => {
     const sb = createSupabaseBrowser()
@@ -27,29 +27,16 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
     setTimeout(() => onOpen(), 80)
   }, [onOpen, showHint])
 
-  const onTouchStart = useCallback((e: React.TouchEvent) => {
-    startX.current = e.touches[0].clientX
-  }, [])
-
-  const onTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (startX.current - e.changedTouches[0].clientX > 60) handleOpen()
-  }, [handleOpen])
-
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
-    startX.current = e.clientX
-  }, [])
-
-  const onMouseUp = useCallback((e: React.MouseEvent) => {
-    if (startX.current - e.clientX > 80) handleOpen()
-  }, [handleOpen])
+  const noop = useCallback(() => {}, [])
+  const swipe = useSwipe(handleOpen, noop)
 
   return (
     <div
       style={{ position: 'fixed', inset: 0, zIndex: 40, background: '#4A2008' }}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-      onMouseDown={onMouseDown}
-      onMouseUp={onMouseUp}
+      onTouchStart={swipe.onTouchStart}
+      onTouchEnd={swipe.onTouchEnd}
+      onMouseDown={swipe.onMouseDown}
+      onMouseUp={swipe.onMouseUp}
     >
       {/* Physical edges */}
       <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 18, background: 'linear-gradient(to right, #1A0802, #2A1002)' }} />

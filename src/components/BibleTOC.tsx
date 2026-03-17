@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { playPageTurn } from '@/lib/paperSound'
+import { useSwipe } from '@/hooks/useSwipe'
 
 interface BookEntry { book_name: string; testament: string; sort_order: number }
 interface ChapterEntry { chapter: number; summary: string }
@@ -82,6 +84,38 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
     }, 200)
   }
 
+  const router = useRouter()
+
+  // Swipe on main TOC (books view)
+  const swipeBooksTocLeft = useCallback(() => {
+    playPageTurn('forward')
+    const genesis = books.find((b) => b.book_name === 'Genesis')
+    if (genesis) handleBookSelect(genesis)
+  }, [books]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const swipeBooksTocRight = useCallback(() => {
+    playPageTurn('back')
+    onClose()
+  }, [onClose])
+
+  const booksSwipe = useSwipe(swipeBooksTocLeft, swipeBooksTocRight)
+
+  // Swipe on chapter view
+  const swipeChapterLeft = useCallback(() => {
+    if (!selectedBook) return
+    playPageTurn('forward')
+    setTimeout(() => playPageTurn('forward'), 120)
+    setTimeout(() => playPageTurn('forward'), 240)
+    setTimeout(() => router.push(`/bible/${encodeURIComponent(selectedBook)}/1`), 400)
+  }, [selectedBook, router])
+
+  const swipeChapterRight = useCallback(() => {
+    playPageTurn('back')
+    handleBack()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const chapterSwipe = useSwipe(swipeChapterLeft, swipeChapterRight)
+
   const otBooks = books.filter((b) => b.testament === 'OT')
   const ntBooks = books.filter((b) => b.testament === 'NT')
 
@@ -97,7 +131,12 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
       </button>
 
       {/* ── BOOKS VIEW ── */}
-      <div style={{
+      <div
+        onTouchStart={booksSwipe.onTouchStart}
+        onTouchEnd={booksSwipe.onTouchEnd}
+        onMouseDown={booksSwipe.onMouseDown}
+        onMouseUp={booksSwipe.onMouseUp}
+        style={{
         opacity: view === 'books' && !transitioning ? 1 : 0,
         transform: view === 'books' && !transitioning ? 'translateX(0)' : 'translateX(-20px)',
         transition: 'opacity 200ms ease, transform 200ms ease',
@@ -135,7 +174,12 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
       </div>
 
       {/* ── CHAPTERS VIEW ── */}
-      <div style={{
+      <div
+        onTouchStart={chapterSwipe.onTouchStart}
+        onTouchEnd={chapterSwipe.onTouchEnd}
+        onMouseDown={chapterSwipe.onMouseDown}
+        onMouseUp={chapterSwipe.onMouseUp}
+        style={{
         opacity: view === 'chapters' && !transitioning ? 1 : 0,
         transform: view === 'chapters' && !transitioning ? 'translateX(0)' : 'translateX(20px)',
         transition: 'opacity 200ms ease, transform 200ms ease',
