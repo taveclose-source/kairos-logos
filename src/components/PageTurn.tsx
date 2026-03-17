@@ -35,10 +35,14 @@ const PageTurn = forwardRef<PageTurnHandle, PageTurnProps>(function PageTurn({ o
       localStorage.setItem('logos-page-hint-dismissed', '1')
     }
 
+    // Navigate mid-animation when page is rotated away
     setTimeout(() => {
-      setTurning(null)
       if (dir === 'forward') onNext()
       else onPrev()
+    }, 240)
+    // Clear animation state after full duration
+    setTimeout(() => {
+      setTurning(null)
     }, 480)
   }, [onNext, onPrev, showHint, turning])
 
