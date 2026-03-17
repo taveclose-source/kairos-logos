@@ -1,0 +1,21 @@
+:root {
+  --bg-primary: #0D0D0D;
+  --bg-secondary: #141414;
+  --bg-surface: #1A1A1A;
+  --bg-warm: #F5EDD9;
+  --bg-warm-dark: #EDE0C4;
+  --border-subtle: #2A2A2A;
+  --border-medium: #3A3A3A;
+  --text-primary: #F5F0E8;
+  --text-secondary: #888880;
+  --text-tertiary: #555550;
+  --gold: #C8A96E;
+  --gold-light: #E8C98E;
+  --gold-muted: #8B6914;
+  --emerald: #1D9E75;
+  --emerald-dark: #0F6E56;
+  --font-display: 'Cinzel', serif;
+  --font-body: 'EB Garamond', serif;
+  --font-ui: 'DM Sans', sans-serif;
+  --font-reading: 'Cormorant Garamond', serif;
+}

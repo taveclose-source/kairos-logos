@@ -1,86 +1,71 @@
-import Link from "next/link";
+import Link from 'next/link'
 
-export default function Home() {
+const FEATURES = [
+  { numeral: 'I', title: 'Bible', desc: 'KJV parallel reader with Asante Twi', href: '/bible' },
+  { numeral: 'II', title: 'Ask the Word', desc: 'KJV theological AI agent', href: '/ask' },
+  { numeral: 'III', title: 'Translation', desc: 'Twi New Testament in progress', href: '/translation' },
+  { numeral: 'IV', title: 'Learn', desc: 'Asante Twi vocabulary', href: '/learn' },
+]
+
+export default function HomePage() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16">
-      {/* Branding */}
-      <div className="text-center mb-16">
-        <h1 className="text-5xl sm:text-6xl font-bold tracking-tight mb-3">
-          Logos
-        </h1>
-        <p className="text-lg text-gray-500 tracking-wide">
-          by Kai&apos;Ros
-        </p>
-        <p className="mt-4 text-sm text-gray-400 uppercase tracking-widest">
-          The Word. Preserved.
-        </p>
-      </div>
-
-      {/* Navigation Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl">
-        <Link
-          href="/bible"
-          className="group block p-8 rounded-2xl border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all"
-        >
-          <div className="text-3xl mb-3">&#x1F4D6;</div>
-          <h2 className="text-xl font-semibold mb-1 group-hover:text-gray-900">
-            Bible
-          </h2>
-          <p className="text-sm text-gray-500">
-            English &amp; Companion parallel reader
+    <div style={{ background: 'var(--bg-primary)', minHeight: 'calc(100vh - 56px)' }}>
+      <section
+        className="flex flex-col lg:flex-row items-start justify-center gap-12 px-6 sm:px-10"
+        style={{
+          minHeight: 'calc(100vh - 56px)',
+          paddingTop: 'clamp(4rem, 12vh, 8rem)',
+          paddingBottom: '4rem',
+          maxWidth: '1100px',
+          margin: '0 auto',
+          backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(200,169,110,0.02) 40px, rgba(200,169,110,0.02) 41px)',
+        }}
+      >
+        <div className="flex-1 max-w-[600px]">
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', letterSpacing: '4px', color: 'var(--gold)', textTransform: 'uppercase', borderLeft: '2px solid var(--gold)', paddingLeft: '12px', marginBottom: '1.5rem' }}>
+            Textus Receptus &middot; King James Bible &middot; Asante Twi
           </p>
-        </Link>
-
-        <Link
-          href="/ask"
-          className="group block p-8 rounded-2xl border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all"
-        >
-          <div className="text-3xl mb-3">&#x1FA94;</div>
-          <h2 className="text-xl font-semibold mb-1 group-hover:text-gray-900">
-            Ask the Word
-          </h2>
-          <p className="text-sm text-gray-500">
-            AI theological agent &middot; KJV
+          <h1 style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(42px, 6vw, 72px)', fontWeight: 400, fontStyle: 'italic', color: 'var(--text-primary)', lineHeight: 1.05, marginBottom: '1rem' }}>
+            The Word of God.<br />Preserved.
+          </h1>
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.9, letterSpacing: '0.5px', maxWidth: '420px', marginBottom: '2.5rem' }}>
+            A KJV Bible platform built on the Textus Receptus. Deep study tools, theological AI, and Asante Twi translation — for believers everywhere.
           </p>
-        </Link>
-
-        <Link
-          href="/why-kjv"
-          className="group block p-8 rounded-2xl border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all"
-        >
-          <div className="text-3xl mb-3">&#x1F4DC;</div>
-          <h2 className="text-xl font-semibold mb-1 group-hover:text-gray-900">
-            Why KJV?
-          </h2>
-          <p className="text-sm text-gray-500">
-            The manuscript case for the preserved Word
+          <div className="flex flex-wrap gap-3">
+            <Link href="/bible">
+              <span className="inline-block transition-colors duration-200 hover:opacity-90" style={{ background: 'var(--gold)', color: 'var(--bg-primary)', padding: '12px 28px', fontFamily: 'var(--font-ui)', fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', borderRadius: '2px', fontWeight: 500 }}>
+                Open the Bible
+              </span>
+            </Link>
+            <Link href="/ask">
+              <span className="inline-block transition-all duration-200 hover:border-[var(--gold)] hover:text-[var(--text-primary)]" style={{ border: '1px solid var(--border-medium)', color: 'var(--text-secondary)', padding: '12px 28px', fontFamily: 'var(--font-ui)', fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', borderRadius: '2px' }}>
+                Ask the Word
+              </span>
+            </Link>
+          </div>
+        </div>
+        <div className="hidden lg:block shrink-0" style={{ background: 'var(--bg-warm)', borderRadius: '4px', padding: '1.5rem', width: '240px' }}>
+          <p style={{ fontFamily: 'var(--font-reading)', fontStyle: 'italic', fontSize: '16px', color: '#2C1810', lineHeight: 1.7 }}>
+            In the beginning was the Word, and the Word was with God, and the Word was God.
           </p>
-        </Link>
-
-        <Link
-          href="/learn"
-          className="group block p-8 rounded-2xl border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all"
-        >
-          <div className="text-3xl mb-3">&#x1F4AC;</div>
-          <h2 className="text-xl font-semibold mb-1 group-hover:text-gray-900">
-            Learn Twi
-          </h2>
-          <p className="text-sm text-gray-500">
-            Flashcards &amp; vocabulary practice
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', color: '#8B6914', letterSpacing: '2px', marginTop: '1rem' }}>
+            JOHN 1:1
           </p>
-        </Link>
-      </div>
-
-      {/* Footer */}
-      <footer className="mt-20 text-center text-xs text-gray-400">
-        <Link
-          href="/translation"
-          className="text-gray-400 hover:text-gray-600 transition-colors underline underline-offset-2"
-        >
-          Twi Translation Project
-        </Link>
-        <p className="mt-2">Kai&apos;Ros International &middot; Summit Bible Center</p>
-      </footer>
-    </main>
-  );
+        </div>
+      </section>
+      <section className="px-6 sm:px-10 pb-16" style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {FEATURES.map((f) => (
+            <Link key={f.href} href={f.href}>
+              <div className="transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--border-medium)]" style={{ background: 'var(--bg-secondary)', border: '0.5px solid var(--border-subtle)', borderRadius: '4px', padding: '1.5rem' }}>
+                <span style={{ fontFamily: 'var(--font-reading)', fontSize: '36px', fontWeight: 300, color: 'var(--gold)' }}>{f.numeral}</span>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '16px', color: 'var(--text-primary)', marginTop: '0.5rem' }}>{f.title}</p>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{f.desc}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
 }

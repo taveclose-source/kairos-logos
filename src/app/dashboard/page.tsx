@@ -31,27 +31,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const supabase = createSupabaseBrowser()
-
     supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) {
-        router.push('/auth/signin?redirect=/dashboard')
-        return
-      }
+      if (!user) { router.push('/auth/signin?redirect=/dashboard'); return }
       setUser(user)
-
       const [profileRes, questionsRes] = await Promise.all([
-        supabase
-          .from('users')
-          .select('display_name, last_read_book, last_read_chapter, subscription_tier')
-          .eq('id', user.id)
-          .single(),
-        supabase
-          .from('theological_queue')
-          .select('id, question, status, submitted_at, ai_draft, approved_answer')
-          .eq('user_id', user.id)
-          .order('submitted_at', { ascending: false }),
+        supabase.from('users').select('display_name, last_read_book, last_read_chapter, subscription_tier').eq('id', user.id).single(),
+        supabase.from('theological_queue').select('id, question, status, submitted_at, ai_draft, approved_answer').eq('user_id', user.id).order('submitted_at', { ascending: false }),
       ])
-
       setProfile(profileRes.data)
       setQuestions(questionsRes.data ?? [])
       setLoading(false)
@@ -60,8 +46,8 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
-        <p className="text-sm text-gray-400 text-center">Loading...</p>
+      <main style={{ background: 'var(--bg-primary)', minHeight: 'calc(100vh - 56px)' }} className="flex items-center justify-center">
+        <p style={{ color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)', fontSize: '13px' }}>Loading...</p>
       </main>
     )
   }
@@ -71,168 +57,129 @@ export default function DashboardPage() {
   const pendingCount = questions.filter((q) => q.status === 'pending').length
   const answeredCount = questions.filter((q) => q.status === 'approved').length
 
-  const tierLabels: Record<string, string> = {
-    free: 'Free',
-    scholar: 'Scholar',
-    ministry: 'Ministry',
-    missions: 'Missions',
-  }
-  const tierColors: Record<string, string> = {
-    free: 'bg-gray-50 text-gray-600 border-gray-200',
-    scholar: 'bg-blue-50 text-blue-700 border-blue-200',
-    ministry: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    missions: 'bg-amber-50 text-amber-700 border-amber-200',
+  const tierBadgeColors: Record<string, string> = {
+    free: 'border-[var(--border-medium)] color-[var(--text-secondary)]',
+    scholar: 'border-blue-700 text-blue-400',
+    ministry: 'border-emerald-700 text-emerald-400',
+    missions: 'border-amber-700 text-amber-400',
   }
 
   return (
-    <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <div className="flex items-center justify-between mb-1">
-        <h1 className="text-3xl sm:text-4xl font-bold">
-          Welcome, {displayName}
-        </h1>
-        <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${tierColors[tier] ?? tierColors.free}`}>
-          {tierLabels[tier] ?? 'Free'}
-        </span>
-      </div>
-      <p className="text-gray-500 mb-8">Your study companion</p>
-
-      {/* Upgrade prompt for free tier */}
-      {tier === 'free' && (
-        <Link
-          href="/pricing"
-          className="block rounded-xl border border-emerald-200 bg-emerald-50/50 p-5 mb-6 hover:border-emerald-400 hover:shadow-md transition-all group"
-        >
-          <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-1">
-            Upgrade
-          </p>
-          <p className="text-sm text-gray-700">
-            Unlock unlimited questions, voice playback, and Pastor&apos;s Helps.{' '}
-            <span className="text-emerald-700 font-medium group-hover:text-emerald-800">See plans &rarr;</span>
-          </p>
-        </Link>
-      )}
-
-      {/* Action buttons */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <Link
-          href="/bible"
-          className="block rounded-xl border border-gray-200 p-5 hover:border-gray-400 hover:shadow-md transition-all"
-        >
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Read</p>
-          <p className="text-lg font-semibold text-gray-900">Open the Bible &rarr;</p>
-        </Link>
-        <Link
-          href="/ask"
-          className="block rounded-xl border border-gray-200 p-5 hover:border-gray-400 hover:shadow-md transition-all"
-        >
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Study</p>
-          <p className="text-lg font-semibold text-gray-900">Ask the Word &rarr;</p>
-        </Link>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="rounded-xl border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">{questions.length}</p>
-          <p className="text-xs text-gray-400 mt-0.5">Questions</p>
+    <main style={{ background: 'var(--bg-primary)', minHeight: 'calc(100vh - 56px)' }} className="px-4 sm:px-6 py-8 sm:py-12">
+      <div className="max-w-3xl mx-auto">
+        <div className="flex items-center justify-between mb-1">
+          <h1 style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)', fontSize: '28px', letterSpacing: '2px' }}>
+            Welcome, {displayName}
+          </h1>
+          <span className={`inline-block px-3 py-1 rounded text-[10px] font-medium uppercase tracking-[2px] border ${tierBadgeColors[tier] ?? tierBadgeColors.free}`} style={{ fontFamily: 'var(--font-ui)' }}>
+            {tier}
+          </span>
         </div>
-        <div className="rounded-xl border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-emerald-600">{answeredCount}</p>
-          <p className="text-xs text-gray-400 mt-0.5">Answered</p>
-        </div>
-        <div className="rounded-xl border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-amber-500">{pendingCount}</p>
-          <p className="text-xs text-gray-400 mt-0.5">Pending</p>
-        </div>
-      </div>
+        <p style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)', fontSize: '13px', marginBottom: '2rem' }}>Your study companion</p>
 
-      {/* Questions */}
-      <h2 className="text-lg font-semibold mb-4">Your Questions</h2>
+        {tier === 'free' && (
+          <Link href="/pricing" className="block mb-6 transition-all duration-200 hover:border-[var(--gold)]" style={{ border: '1px solid var(--border-subtle)', borderRadius: '4px', padding: '1.25rem', background: 'var(--bg-secondary)' }}>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: '0.25rem' }}>Upgrade</p>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '13px', color: 'var(--text-secondary)' }}>
+              Unlock unlimited questions, voice playback, and Pastor&apos;s Helps. <span style={{ color: 'var(--gold)' }}>See plans &rarr;</span>
+            </p>
+          </Link>
+        )}
 
-      {questions.length === 0 && (
-        <div className="rounded-xl border border-gray-100 bg-gray-50 p-8 text-center">
-          <p className="text-sm text-gray-400 mb-3">No questions yet.</p>
-          <Link
-            href="/ask"
-            className="inline-block px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors"
-          >
-            Ask the Word
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <Link href="/bible" className="block transition-all duration-200 hover:border-[var(--border-medium)]" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '4px', padding: '1.25rem' }}>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>Read</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: '16px', color: 'var(--text-primary)' }}>Open the Bible &rarr;</p>
+          </Link>
+          <Link href="/ask" className="block transition-all duration-200 hover:border-[var(--border-medium)]" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '4px', padding: '1.25rem' }}>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>Study</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: '16px', color: 'var(--text-primary)' }}>Ask the Word &rarr;</p>
           </Link>
         </div>
-      )}
 
-      <div className="space-y-4">
-        {questions.map((q) => (
-          <div key={q.id} className="rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-5 py-3 bg-gray-50 flex items-center justify-between border-b border-gray-100">
-              <StatusBadge status={q.status} />
-              <span className="text-xs text-gray-400">
-                {new Date(q.submitted_at).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {[
+            { n: questions.length, label: 'Questions', color: questions.length > 0 ? 'var(--gold)' : 'var(--text-secondary)' },
+            { n: answeredCount, label: 'Answered', color: answeredCount > 0 ? 'var(--emerald)' : 'var(--text-secondary)' },
+            { n: pendingCount, label: 'Pending', color: pendingCount > 0 ? 'var(--gold)' : 'var(--text-secondary)' },
+          ].map((s) => (
+            <div key={s.label} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '4px', padding: '1rem', textAlign: 'center' }}>
+              <p style={{ fontSize: '24px', fontWeight: 700, color: s.color, fontFamily: 'var(--font-ui)' }}>{s.n}</p>
+              <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)', letterSpacing: '1px', textTransform: 'uppercase', marginTop: '0.25rem' }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '14px', letterSpacing: '2px', color: 'var(--text-primary)', textTransform: 'uppercase', marginBottom: '1rem' }}>Your Questions</h2>
+
+        {questions.length === 0 && (
+          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '4px', padding: '2rem', textAlign: 'center' }}>
+            <p style={{ color: 'var(--text-tertiary)', fontSize: '13px', fontFamily: 'var(--font-ui)', marginBottom: '0.75rem' }}>No questions yet.</p>
+            <Link href="/ask">
+              <span className="inline-block transition-colors duration-200 hover:opacity-90" style={{ background: 'var(--gold)', color: 'var(--bg-primary)', padding: '10px 24px', fontFamily: 'var(--font-ui)', fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', borderRadius: '2px' }}>
+                Ask the Word
               </span>
-            </div>
+            </Link>
+          </div>
+        )}
 
-            <div className="px-5 py-4">
-              <p className="text-sm text-gray-800 font-medium">{q.question}</p>
-            </div>
-
-            {q.status === 'approved' && q.approved_answer && (
-              <div className="px-5 pb-4">
-                <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3">
-                  <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-1">
-                    Pastoral Answer
-                  </p>
-                  <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
-                    {q.approved_answer}
+        <div className="space-y-3">
+          {questions.map((q) => (
+            <div key={q.id} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '4px', overflow: 'hidden' }}>
+              <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                <StatusBadge status={q.status} />
+                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)' }}>
+                  {new Date(q.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </span>
+              </div>
+              <div className="px-5 py-4">
+                <p style={{ fontSize: '14px', color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}>{q.question}</p>
+              </div>
+              {q.status === 'approved' && q.approved_answer && (
+                <div className="px-5 pb-4">
+                  <div style={{ background: 'rgba(29,158,117,0.1)', border: '1px solid rgba(29,158,117,0.2)', borderRadius: '4px', padding: '0.75rem 1rem' }}>
+                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--emerald)', marginBottom: '0.25rem' }}>Pastoral Answer</p>
+                    <p style={{ fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'var(--font-body)', whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>{q.approved_answer}</p>
+                  </div>
+                </div>
+              )}
+              {q.status === 'pending' && (
+                <div className="px-5 pb-4">
+                  <p style={{ fontSize: '12px', color: 'var(--gold)', fontStyle: 'italic', fontFamily: 'var(--font-body)' }}>
+                    Under pastoral review — you&apos;ll see the answer here when it&apos;s approved.
                   </p>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+          ))}
+        </div>
 
-            {q.status === 'pending' && (
-              <div className="px-5 pb-4">
-                <p className="text-xs text-amber-600 italic">
-                  Under pastoral review — you&apos;ll see the answer here when it&apos;s approved.
-                </p>
-              </div>
-            )}
-
-            {q.status === 'rejected' && (
-              <div className="px-5 pb-4">
-                <p className="text-xs text-gray-400 italic">
-                  This question was reviewed and closed.
-                </p>
-              </div>
-            )}
-          </div>
-        ))}
+        <p className="mt-12 text-center" style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)', letterSpacing: '2px' }}>
+          LOGOS BY KAI&apos;ROS &middot; YOUR STUDY, HIS WORD
+        </p>
       </div>
-
-      <p className="mt-12 text-xs text-gray-400 text-center">
-        Logos by Kai&apos;Ros &middot; Your study, His Word
-      </p>
     </main>
   )
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    pending: 'bg-amber-100 text-amber-700',
-    approved: 'bg-emerald-100 text-emerald-700',
-    rejected: 'bg-gray-100 text-gray-500',
+  const colors: Record<string, string> = {
+    pending: 'rgba(200,169,110,0.15)',
+    approved: 'rgba(29,158,117,0.15)',
+    rejected: 'rgba(85,85,80,0.15)',
   }
-
+  const textColors: Record<string, string> = {
+    pending: 'var(--gold)',
+    approved: 'var(--emerald)',
+    rejected: 'var(--text-tertiary)',
+  }
   const labels: Record<string, string> = {
     pending: 'Pending review',
     approved: 'Answered',
     rejected: 'Closed',
   }
-
   return (
-    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${styles[status] || 'bg-gray-100 text-gray-500'}`}>
+    <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: '2px', fontSize: '10px', fontFamily: 'var(--font-ui)', letterSpacing: '1px', textTransform: 'uppercase', background: colors[status] ?? colors.rejected, color: textColors[status] ?? textColors.rejected }}>
       {labels[status] || status}
     </span>
   )

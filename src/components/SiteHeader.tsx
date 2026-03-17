@@ -2,97 +2,40 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-// Image import removed — using plain img for SVG
 import { usePathname, useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
-import { useLanguage, BPS_LANGUAGES } from '@/context/LanguageContext'
 import type { User } from '@supabase/supabase-js'
 
-const NAV_LINKS = [
+const ADMIN_ID = '2f4cc459-6fdd-4f41-be4b-754770b28529'
+
+const CENTER_LINKS = [
   { href: '/bible', label: 'Bible' },
   { href: '/ask', label: 'Ask' },
   { href: '/why-kjv', label: 'Why KJV?' },
-  { href: '/learn', label: 'Learn' },
   { href: '/translation', label: 'Translation' },
 ]
 
-function LanguageSelector() {
-  const { languageCode, languageName, setLanguage } = useLanguage()
-  const [open, setOpen] = useState(false)
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-        aria-label="Select companion language"
-      >
-        <span className="text-[10px] text-gray-400 uppercase tracking-wide hidden sm:inline">Companion:</span>
-        <span className="font-medium">{languageName}</span>
-        <svg className="w-2.5 h-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 mt-1 z-50 w-56 max-h-80 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
-            <div className="px-3 py-2 border-b border-gray-100">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
-                Companion Language
-              </p>
-              <p className="text-[10px] text-gray-400">
-                BPS-approved editions &middot; {BPS_LANGUAGES.length} languages
-              </p>
-            </div>
-            {BPS_LANGUAGES.map((lang) => (
-              <button
-                key={lang.code}
-                onClick={() => {
-                  if (lang.active) {
-                    setLanguage(lang.code)
-                    setOpen(false)
-                  }
-                }}
-                disabled={!lang.active}
-                className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors ${
-                  lang.active
-                    ? lang.code === languageCode
-                      ? 'bg-emerald-50 text-emerald-700 font-medium'
-                      : 'hover:bg-gray-50 text-gray-700'
-                    : 'text-gray-300 cursor-default'
-                }`}
-              >
-                <span>{lang.name}</span>
-                {lang.active && lang.code === languageCode && (
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                )}
-                {!lang.active && (
-                  <span className="text-[10px] text-gray-300 italic">Coming soon</span>
-                )}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
 export default function SiteHeader() {
   const [user, setUser] = useState<User | null>(null)
+  const [displayName, setDisplayName] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
 
   useEffect(() => {
-    const ADMIN_ID = '2f4cc459-6fdd-4f41-be4b-754770b28529'
     const supabase = createSupabaseBrowser()
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       setUser(data.user)
       setIsAdmin(data.user?.id === ADMIN_ID)
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('display_name')
+          .eq('id', data.user.id)
+          .single()
+        setDisplayName(profile?.display_name ?? '')
+      }
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -103,10 +46,7 @@ export default function SiteHeader() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Close mobile menu on navigation
-  useEffect(() => {
-    setMenuOpen(false)
-  }, [pathname])
+  useEffect(() => { setMenuOpen(false) }, [pathname])
 
   async function handleSignOut() {
     const supabase = createSupabaseBrowser()
@@ -115,164 +55,163 @@ export default function SiteHeader() {
     router.refresh()
   }
 
-  // Don't show header on auth pages
   if (pathname.startsWith('/auth')) return null
 
+  const navLinkStyle = (href: string) =>
+    `transition-colors duration-200 ${
+      pathname.startsWith(href)
+        ? 'text-[var(--gold)]'
+        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+    }`
+
+  const navLinkClass = 'font-[var(--font-ui)] text-[11px] tracking-[2px] uppercase'
+
+  const avatarLetter = (displayName || user?.email || '?')[0].toUpperCase()
+
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
-        {/* Wordmark */}
+    <header
+      className="sticky top-0 z-50"
+      style={{
+        background: 'var(--bg-primary)',
+        borderBottom: '1px solid var(--border-subtle)',
+        boxShadow: '0 1px 0 rgba(200,169,110,0.15)',
+      }}
+    >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14 md:h-[56px]">
+        {/* Logo */}
         <Link href="/" className="shrink-0">
-          <img src="/logos-brand.svg" alt="Logos by Kai'Ros" width="140" height="40" style={{display:'block'}} />
+          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '4px' }}>LOGOS</span>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '9px', fontStyle: 'italic', color: 'var(--gold)', letterSpacing: '3px', marginTop: '2px' }}>by Kai&apos;Ros</span>
+          </div>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                pathname.startsWith(link.href)
-                  ? 'bg-gray-100 text-gray-900 font-medium'
-                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
+        {/* Center nav — desktop */}
+        <nav className="hidden md:flex items-center gap-6">
+          {CENTER_LINKS.map((link) => (
+            <Link key={link.href} href={link.href} className={`${navLinkClass} ${navLinkStyle(link.href)}`}>
               {link.label}
             </Link>
           ))}
         </nav>
 
-        {/* Language selector + Auth + mobile toggle */}
-        <div className="flex items-center gap-2">
-          <LanguageSelector />
-
-          {/* Desktop auth */}
-          <div className="hidden md:flex items-center gap-2">
-            {user ? (
-              <>
-                {isAdmin && (
-                  <Link
-                    href="/admin"
-                    className="text-xs font-medium text-amber-600 hover:text-amber-800 transition-colors"
-                  >
-                    Admin
-                  </Link>
-                )}
-                <Link
-                  href="/dashboard"
-                  className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/settings/profile"
-                  className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
-                >
-                  Profile
-                </Link>
-                <span className="text-xs text-gray-400 max-w-[160px] truncate">
-                  {user.email}
-                </span>
-                <button
-                  onClick={handleSignOut}
-                  className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  Sign out
-                </button>
-              </>
-            ) : (
-              <Link
-                href="/auth/signin"
-                className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
-              >
-                Sign in
+        {/* Right side */}
+        <div className="hidden md:flex items-center gap-4">
+          {user ? (
+            <>
+              <Link href="/learn" className={`${navLinkClass} ${navLinkStyle('/learn')}`}>
+                Learn
               </Link>
-            )}
-          </div>
-
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden p-2 -mr-2 text-gray-500 hover:text-gray-900"
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
+              {isAdmin && (
+                <Link href="/admin" className={`${navLinkClass} text-[var(--gold)] hover:text-[var(--gold-light)] transition-colors duration-200`}>
+                  Admin
+                </Link>
+              )}
+              <Link href="/settings/profile" title="Profile">
+                <div
+                  className="flex items-center justify-center rounded-full transition-colors duration-200"
+                  style={{
+                    width: 28, height: 28,
+                    background: 'var(--gold-muted)',
+                    color: 'var(--gold-light)',
+                    fontFamily: 'var(--font-ui)',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                  }}
+                >
+                  {avatarLetter}
+                </div>
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className={`${navLinkClass} text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200`}
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <Link href="/auth/signin">
+              <span
+                className="inline-block transition-colors duration-200 hover:bg-[var(--gold)] hover:text-[var(--bg-primary)]"
+                style={{
+                  border: '1px solid var(--gold)',
+                  color: 'var(--gold)',
+                  padding: '6px 16px',
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: '11px',
+                  letterSpacing: '2px',
+                  textTransform: 'uppercase',
+                  background: 'transparent',
+                  borderRadius: '2px',
+                }}
+              >
+                Sign In
+              </span>
+            </Link>
+          )}
         </div>
+
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="md:hidden p-2 -mr-2"
+          aria-label="Toggle menu"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="var(--gold)" strokeWidth={1.5}>
+            {menuOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile drawer */}
       {menuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white px-4 pb-4 pt-2">
-          <nav className="flex flex-col gap-1">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-3 py-2 rounded-lg text-sm transition-colors ${
-                  pathname.startsWith(link.href)
-                    ? 'bg-gray-100 text-gray-900 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                {link.label}
+        <>
+          <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={() => setMenuOpen(false)} />
+          <div
+            className="fixed top-0 right-0 bottom-0 z-50 w-64 md:hidden flex flex-col"
+            style={{ background: 'var(--bg-secondary)', borderLeft: '1px solid var(--border-subtle)' }}
+          >
+            <div className="flex justify-end p-4">
+              <button onClick={() => setMenuOpen(false)} aria-label="Close menu">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="var(--gold)" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <nav className="flex flex-col gap-1 px-4">
+              {CENTER_LINKS.map((link) => (
+                <Link key={link.href} href={link.href} className={`py-2 ${navLinkClass} ${navLinkStyle(link.href)}`}>
+                  {link.label}
+                </Link>
+              ))}
+              <Link href="/learn" className={`py-2 ${navLinkClass} ${navLinkStyle('/learn')}`}>
+                Learn
               </Link>
-            ))}
-          </nav>
-          <div className="mt-3 pt-3 border-t border-gray-100">
-            {user ? (
-              <div className="space-y-2">
-                <div className="flex gap-2 px-3">
-                  <Link
-                    href="/dashboard"
-                    className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/settings/profile"
-                    className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                  >
-                    Profile
-                  </Link>
+            </nav>
+            <div className="mt-auto px-4 pb-6" style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
+              {user ? (
+                <div className="flex flex-col gap-2">
+                  <Link href="/dashboard" className={`${navLinkClass} text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-1`}>Dashboard</Link>
+                  <Link href="/settings/profile" className={`${navLinkClass} text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-1`}>Profile</Link>
                   {isAdmin && (
-                    <Link
-                      href="/admin"
-                      className="text-sm font-medium text-amber-600 hover:text-amber-800 transition-colors"
-                    >
-                      Admin
-                    </Link>
+                    <Link href="/admin" className={`${navLinkClass} text-[var(--gold)] py-1`}>Admin</Link>
                   )}
-                </div>
-                <div className="flex items-center justify-between px-3">
-                  <span className="text-xs text-gray-400 truncate">{user.email}</span>
-                  <button
-                    onClick={handleSignOut}
-                    className="text-xs text-gray-500 hover:text-gray-700"
-                  >
-                    Sign out
+                  <button onClick={handleSignOut} className={`${navLinkClass} text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-1 text-left`}>
+                    Sign Out
                   </button>
                 </div>
-              </div>
-            ) : (
-              <Link
-                href="/auth/signin"
-                className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
-              >
-                Sign in / Create account
-              </Link>
-            )}
+              ) : (
+                <Link href="/auth/signin" className={`${navLinkClass} text-[var(--gold)] py-1`}>
+                  Sign In
+                </Link>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </header>
   )
