@@ -53,7 +53,36 @@ async function getChapterData(bookName: string, chapter: number) {
 
   const nextBookName: string | null = nextBookResult.data?.book_name ?? null
 
-  return { book_name: book.book_name, chapter, maxChapter, verses, prevBookName, prevBookMaxChapter, nextBookName }
+  // Fetch Strong's word data
+  const { data: wordsRaw } = await supabase
+    .from('verse_words')
+    .select('verse, word_position, word_text, strongs_number')
+    .eq('book', book.book_name)
+    .eq('chapter', chapter)
+    .order('verse')
+    .order('word_position')
+    .limit(10000)
+
+  // Collect unique strongs numbers and fetch definitions
+  const strongsNums = Array.from(new Set((wordsRaw ?? []).filter(w => w.strongs_number).map(w => w.strongs_number as string)))
+  const { data: strongsEntries } = strongsNums.length > 0
+    ? await supabase.from('strongs_entries').select('strongs_number, original_word, transliteration, definition').in('strongs_number', strongsNums)
+    : { data: [] }
+
+  // Build lookup
+  const strongsLookup: Record<string, { original_word: string; transliteration: string | null; definition: string | null }> = {}
+  for (const e of (strongsEntries ?? [])) {
+    strongsLookup[e.strongs_number] = { original_word: e.original_word, transliteration: e.transliteration, definition: e.definition }
+  }
+
+  // Group words by verse
+  const verseWords: Record<number, Array<{ word_position: number; word_text: string; strongs_number: string | null }>> = {}
+  for (const w of (wordsRaw ?? [])) {
+    if (!verseWords[w.verse]) verseWords[w.verse] = []
+    verseWords[w.verse].push(w)
+  }
+
+  return { book_name: book.book_name, chapter, maxChapter, verses, prevBookName, prevBookMaxChapter, nextBookName, verseWords, strongsLookup }
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ book: string; chapter: string }> }) {
@@ -75,7 +104,7 @@ export default async function ChapterPage({ params }: { params: Promise<{ book: 
   const data = await getChapterData(bookName, chapter)
   if (!data) notFound()
 
-  const { book_name, maxChapter, verses, prevBookName, prevBookMaxChapter, nextBookName } = data
+  const { book_name, maxChapter, verses, prevBookName, prevBookMaxChapter, nextBookName, verseWords, strongsLookup } = data
   const hasPrev = chapter > 1
   const hasNext = chapter < maxChapter
 
@@ -113,6 +142,8 @@ export default async function ChapterPage({ params }: { params: Promise<{ book: 
         totalChapters={maxChapter}
         prevHref={prevHref}
         nextHref={nextHref}
+        verseWords={verseWords}
+        strongsLookup={strongsLookup}
       />
 
       {/* Ask banner */}

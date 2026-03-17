@@ -16,6 +16,18 @@ interface Verse {
   has_twi: boolean
 }
 
+interface WordData {
+  word_position: number
+  word_text: string
+  strongs_number: string | null
+}
+
+interface StrongsEntry {
+  original_word: string
+  transliteration: string | null
+  definition: string | null
+}
+
 interface BibleReaderProps {
   verses: Verse[]
   bookName: string
@@ -23,13 +35,15 @@ interface BibleReaderProps {
   totalChapters: number
   prevHref: string | null
   nextHref: string | null
+  verseWords?: Record<number, WordData[]>
+  strongsLookup?: Record<string, StrongsEntry>
 }
 
 function cleanKjvText(text: string): string {
   return text.replace(/\s*\{[^}]*\}\s*/g, ' ').replace(/\s{2,}/g, ' ').trim()
 }
 
-export default function BibleReader({ verses, bookName, chapter, totalChapters, prevHref, nextHref }: BibleReaderProps) {
+export default function BibleReader({ verses, bookName, chapter, totalChapters, prevHref, nextHref, verseWords, strongsLookup }: BibleReaderProps) {
   const router = useRouter()
   const { languageName } = useLanguage()
   const chapterHasTwi = verses.some((v) => v.twi_text !== null)
@@ -39,6 +53,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const pageTurnRef = useRef<PageTurnHandle>(null)
   const { fontSize, setFontSize, onTouchStart: pinchStart, onTouchMove: pinchMove, onTouchEnd: pinchEnd } = usePinchFontSize()
   const [showSizeIndicator, setShowSizeIndicator] = useState(false)
+  const [strongsPopup, setStrongsPopup] = useState<{ number: string; entry: StrongsEntry; x: number; y: number } | null>(null)
   const sizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Prefetch adjacent chapters for instant navigation
@@ -154,6 +169,83 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     )
   }, [glossaryMatchers])
 
+  // Dismiss Strong's popup on outside click
+  useEffect(() => {
+    if (!strongsPopup) return
+    function dismiss() { setStrongsPopup(null) }
+    document.addEventListener('mousedown', dismiss)
+    return () => document.removeEventListener('mousedown', dismiss)
+  }, [strongsPopup])
+
+  function renderVerseWords(v: Verse, isFirst: boolean) {
+    const words = verseWords?.[v.verse]
+    if (!words || words.length === 0) {
+      // Fallback to plain text
+      const text = cleanKjvText(v.kjv_text)
+      if (isFirst && text.length > 0) {
+        return (
+          <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: '#2C1810', lineHeight: 1.9 }}>
+            <span style={{ float: 'left', fontFamily: 'var(--font-display)', fontSize: '72px', lineHeight: 0.75, paddingRight: '8px', paddingTop: '4px', color: 'var(--gold-muted)' }}>{text[0]}</span>
+            {text.slice(1)}{' '}
+          </span>
+        )
+      }
+      return (
+        <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: '#2C1810', lineHeight: 1.9 }}>
+          <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: 500, color: '#8B6914', verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>{v.verse}</sup>
+          {text}{' '}
+        </span>
+      )
+    }
+
+    const cleaned = words.map(w => ({ ...w, word_text: w.word_text.replace(/\{[^}]*\}?/g, '').trim() })).filter(w => w.word_text.length > 0)
+
+    return (
+      <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: '#2C1810', lineHeight: 1.9 }}>
+        {!isFirst && (
+          <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: 500, color: '#8B6914', verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>{v.verse}</sup>
+        )}
+        {cleaned.map((w, wi) => {
+          if (isFirst && wi === 0) {
+            return (
+              <span key={w.word_position}>
+                <span style={{ float: 'left', fontFamily: 'var(--font-display)', fontSize: '72px', lineHeight: 0.75, paddingRight: '8px', paddingTop: '4px', color: 'var(--gold-muted)' }}>{w.word_text[0]}</span>
+                {w.word_text.slice(1)}
+              </span>
+            )
+          }
+          const hasStrongs = w.strongs_number && strongsLookup?.[w.strongs_number]
+          return (
+            <span key={w.word_position}>
+              {wi > 0 || !isFirst ? ' ' : ''}
+              {hasStrongs ? (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    setStrongsPopup({
+                      number: w.strongs_number!,
+                      entry: strongsLookup![w.strongs_number!],
+                      x: rect.left + rect.width / 2,
+                      y: rect.bottom + 8,
+                    })
+                  }}
+                  style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: '#8B6914', textUnderlineOffset: '3px', transition: 'color 150ms' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#8B6914')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#2C1810')}
+                >
+                  {w.word_text}
+                </span>
+              ) : (
+                w.word_text
+              )}
+            </span>
+          )
+        })}{' '}
+      </span>
+    )
+  }
+
   return (
     <div style={{ background: 'var(--bg-primary)', padding: '2rem 1rem' }} className="relative">
       {/* Fixed side arrows — desktop only */}
@@ -251,29 +343,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
             <div className={chapterHasTwi ? 'lg:grid lg:grid-cols-2 lg:gap-0' : ''}>
               {/* KJV Column */}
               <div className={chapterHasTwi ? 'lg:pr-8' : ''} style={{ color: '#2C1810' }}>
-                {verses.map((v, i) => {
-                  const text = cleanKjvText(v.kjv_text)
-                  if (i === 0 && text.length > 0) {
-                    const firstLetter = text[0]
-                    const rest = text.slice(1)
-                    return (
-                      <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: '#2C1810', lineHeight: 1.9 }}>
-                        <span style={{ float: 'left', fontFamily: 'var(--font-display)', fontSize: '72px', lineHeight: 0.75, paddingRight: '8px', paddingTop: '4px', color: 'var(--gold-muted)' }}>
-                          {firstLetter}
-                        </span>
-                        {rest}{' '}
-                      </span>
-                    )
-                  }
-                  return (
-                    <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: '#2C1810', lineHeight: 1.9 }}>
-                      <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: 500, color: '#8B6914', verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>
-                        {v.verse}
-                      </sup>
-                      {text}{' '}
-                    </span>
-                  )
-                })}
+                {verses.map((v, i) => renderVerseWords(v, i === 0))}
               </div>
 
               {/* Twi Column — desktop */}
@@ -332,6 +402,39 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
           </button>
         ) : <span />}
       </div>
+
+      {/* Strong's Popup */}
+      {strongsPopup && (
+        <div
+          onMouseDown={(e) => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            left: Math.min(strongsPopup.x, typeof window !== 'undefined' ? window.innerWidth - 260 : 300),
+            top: Math.min(strongsPopup.y, typeof window !== 'undefined' ? window.innerHeight - 200 : 400),
+            zIndex: 60,
+            background: 'var(--bg-warm)',
+            border: '1px solid rgba(139,107,20,0.3)',
+            borderRadius: 4,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+            padding: '12px 16px',
+            maxWidth: 260,
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, fontWeight: 600, color: '#8B6914', letterSpacing: '1px' }}>{strongsPopup.number}</span>
+            <button onClick={() => setStrongsPopup(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8B6914', fontSize: 16 }}>&times;</button>
+          </div>
+          {strongsPopup.entry.original_word && (
+            <p style={{ fontFamily: 'serif', fontSize: 22, color: '#2C1810', marginBottom: 4 }}>{strongsPopup.entry.original_word}</p>
+          )}
+          {strongsPopup.entry.transliteration && (
+            <p style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 13, color: '#5A3A1A', marginBottom: 8 }}>{strongsPopup.entry.transliteration}</p>
+          )}
+          {strongsPopup.entry.definition && (
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#2C1810', lineHeight: 1.5 }}>{strongsPopup.entry.definition.slice(0, 200)}{strongsPopup.entry.definition.length > 200 ? '…' : ''}</p>
+          )}
+        </div>
+      )}
 
       {/* Glossary Term Modal */}
       {selectedGlossary && (

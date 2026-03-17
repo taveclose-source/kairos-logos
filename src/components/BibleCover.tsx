@@ -1,22 +1,40 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { playPageTurn } from '@/lib/paperSound'
 import { useSwipe } from '@/hooks/useSwipe'
 
 const emboss = '0 1px 2px rgba(0,0,0,0.6), 0 -1px 1px rgba(255,200,80,0.2)'
+const goldLine = 'linear-gradient(to right, rgba(240,192,80,0.6), rgba(255,220,120,1.0), rgba(240,192,80,0.6))'
+const goldLineShadow = '0 1px 2px rgba(0,0,0,0.5), 0 -0.5px 1px rgba(255,220,120,0.3)'
 
 export default function BibleCover({ onOpen }: { onOpen: () => void }) {
   const [loggedIn, setLoggedIn] = useState(false)
   const [showHint, setShowHint] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const sb = createSupabaseBrowser()
     sb.auth.getUser().then(({ data }) => setLoggedIn(!!data.user))
     if (!localStorage.getItem('logos_cover_swiped')) setShowHint(true)
   }, [])
+
+  // Close menu on outside click or Escape
+  useEffect(() => {
+    if (!menuOpen) return
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKey)
+    return () => { document.removeEventListener('mousedown', handleClick); document.removeEventListener('keydown', handleKey) }
+  }, [menuOpen])
 
   const handleOpen = useCallback(() => {
     if (showHint) {
@@ -29,6 +47,15 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
 
   const noop = useCallback(() => {}, [])
   const swipe = useSwipe(handleOpen, noop)
+
+  const menuItems = [
+    { href: '/ask', label: 'Ask' },
+    { href: '/why-kjv', label: 'Why KJV?' },
+    { href: '/translation', label: 'Translation' },
+    { href: '/learn', label: 'Learn' },
+    null, // divider
+    loggedIn ? { href: '/dashboard', label: 'Dashboard' } : { href: '/auth/signin', label: 'Sign In' },
+  ]
 
   return (
     <div
@@ -61,6 +88,88 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
         <div style={{ position: 'absolute', inset: 24, border: '1px solid rgba(200,160,80,0.35)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', inset: 30, border: '1px solid rgba(200,160,80,0.15)', pointerEvents: 'none' }} />
 
+        {/* Gold hamburger menu — top right */}
+        <div ref={menuRef} style={{ position: 'absolute', top: 24, right: 24, zIndex: 100 }} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="transition-all duration-200"
+            style={{
+              border: '1px solid rgba(240,192,80,0.25)',
+              padding: '8px 10px',
+              borderRadius: 3,
+              background: 'rgba(0,0,0,0.1)',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 5,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(240,192,80,0.5)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(240,192,80,0.25)' }}
+          >
+            {[0, 1, 2].map((i) => (
+              <div key={i} style={{ width: 22, height: 2, background: goldLine, boxShadow: goldLineShadow, borderRadius: 1 }} />
+            ))}
+          </button>
+
+          {/* Dropdown */}
+          {menuOpen && (
+            <div
+              className="transition-all duration-200"
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 8px)',
+                right: 0,
+                background: '#5A2A0A',
+                backgroundImage: 'var(--leather-texture)',
+                border: '1px solid rgba(240,192,80,0.4)',
+                borderRadius: 3,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,220,120,0.15)',
+                padding: '6px 0',
+                minWidth: 180,
+                zIndex: 100,
+                opacity: 1,
+                transform: 'translateY(0)',
+              }}
+            >
+              {menuItems.map((item, i) =>
+                item === null ? (
+                  <div key={`div-${i}`} style={{ borderBottom: '0.5px solid rgba(240,192,80,0.12)', margin: '2px 0' }} />
+                ) : (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    style={{
+                      display: 'block',
+                      padding: '10px 20px',
+                      fontFamily: 'var(--font-ui)',
+                      fontSize: 11,
+                      letterSpacing: '3px',
+                      textTransform: 'uppercase',
+                      color: 'rgba(240,192,80,0.85)',
+                      textDecoration: 'none',
+                      transition: 'all 150ms',
+                      borderBottom: i < menuItems.length - 1 && menuItems[i + 1] !== null ? '0.5px solid rgba(240,192,80,0.12)' : 'none',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'rgba(255,220,120,1.0)'
+                      e.currentTarget.style.background = 'rgba(255,200,80,0.06)'
+                      e.currentTarget.style.textShadow = '0 0 8px rgba(255,200,80,0.3)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = 'rgba(240,192,80,0.85)'
+                      e.currentTarget.style.background = 'transparent'
+                      e.currentTarget.style.textShadow = 'none'
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                )
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Swipe hint chevron */}
         {showHint && (
           <div style={{ position: 'absolute', right: 20, top: '50%', color: 'rgba(240,192,96,0.65)', fontSize: 20, pointerEvents: 'none', animation: 'coverPulse 6s ease-in-out infinite', zIndex: 2 }}>
@@ -89,28 +198,8 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
           </p>
         </div>
 
-        {/* Bottom nav + button */}
+        {/* Bottom: Open button only */}
         <div style={{ position: 'absolute', bottom: 60, left: 0, right: 0, textAlign: 'center' }}>
-          <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginBottom: 20 }}>
-            {[
-              { href: '/ask', label: 'Ask' },
-              { href: '/why-kjv', label: 'Why KJV?' },
-              { href: '/translation', label: 'Translation' },
-              { href: '/learn', label: 'Learn' },
-              { href: loggedIn ? '/dashboard' : '/auth/signin', label: loggedIn ? 'Dashboard' : 'Sign In' },
-            ].map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(240,192,96,0.65)', textDecoration: 'none', transition: 'color 200ms' }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(240,192,96,0.95)')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(240,192,96,0.65)')}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
           <button
             onClick={handleOpen}
             style={{
@@ -124,7 +213,6 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
           >
             Open the Bible
           </button>
-
           {showHint && (
             <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', color: 'rgba(240,192,96,0.55)', marginTop: 8 }}>
               or swipe to open
