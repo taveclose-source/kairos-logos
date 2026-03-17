@@ -1,10 +1,12 @@
 'use client'
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import PageTurn from '@/components/PageTurn'
 import { playPageTurn } from '@/lib/paperSound'
+import GlossaryModal from '@/components/GlossaryModal'
+import type { GlossaryTerm } from '@/components/GlossaryModal'
 
 interface Verse {
   verse: number
@@ -31,6 +33,8 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const { languageName } = useLanguage()
   const chapterHasTwi = verses.some((v) => v.twi_text !== null)
   const progress = totalChapters > 0 ? (chapter / totalChapters) * 100 : 0
+  const [glossaryTerms, setGlossaryTerms] = useState<GlossaryTerm[]>([])
+  const [selectedGlossary, setSelectedGlossary] = useState<GlossaryTerm | null>(null)
 
   const goNext = useCallback(() => {
     if (nextHref) router.push(nextHref)
@@ -49,6 +53,62 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
   }, [nextHref, prevHref, router])
+
+  // Fetch glossary terms once
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/glossary')
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+      .then((data) => { if (!cancelled && Array.isArray(data)) setGlossaryTerms(data) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
+  const glossaryMatchers = useMemo(() => {
+    return glossaryTerms.filter((t) => t.twi_term).sort((a, b) => b.twi_term.length - a.twi_term.length)
+  }, [glossaryTerms])
+
+  const renderTwiWithGlossary = useCallback((text: string) => {
+    if (glossaryMatchers.length === 0) return <>{text}</>
+    type Segment = { text: string; term: GlossaryTerm | null }
+    const segments: Segment[] = [{ text, term: null }]
+    for (const term of glossaryMatchers) {
+      const pattern = new RegExp(`(${term.twi_term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+      for (let i = segments.length - 1; i >= 0; i--) {
+        const seg = segments[i]
+        if (seg.term) continue
+        const parts = seg.text.split(pattern)
+        if (parts.length <= 1) continue
+        const newSegs: Segment[] = []
+        for (const part of parts) {
+          if (!part) continue
+          if (part.toLowerCase() === term.twi_term.toLowerCase()) {
+            newSegs.push({ text: part, term })
+          } else {
+            newSegs.push({ text: part, term: null })
+          }
+        }
+        segments.splice(i, 1, ...newSegs)
+      }
+    }
+    return (
+      <>
+        {segments.map((seg, i) =>
+          seg.term ? (
+            <span
+              key={i}
+              onClick={() => setSelectedGlossary(seg.term)}
+              className="cursor-pointer underline decoration-emerald-500 decoration-2 underline-offset-2 hover:decoration-emerald-700 hover:bg-emerald-50/50 rounded-sm transition-colors"
+            >
+              {seg.text}
+            </span>
+          ) : (
+            <span key={i}>{seg.text}</span>
+          )
+        )}
+      </>
+    )
+  }, [glossaryMatchers])
 
   return (
     <div style={{ background: 'var(--bg-primary)', padding: '2rem 1rem' }} className="relative">
@@ -162,11 +222,11 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
               {chapterHasTwi && (
                 <div className="hidden lg:block" style={{ borderLeft: '1px solid rgba(139,107,20,0.2)', paddingLeft: '2rem' }}>
                   {verses.map((v) => (
-                    <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: '16px', fontWeight: 400, color: '#3C2415', lineHeight: 1.9 }}>
+                    <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: '16px', fontWeight: 400, color: v.twi_text ? '#3C2415' : '#B8A88A', lineHeight: 1.9, fontStyle: v.twi_text ? 'normal' : 'italic' }}>
                       <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: 500, color: '#8B6914', verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>
                         {v.verse}
                       </sup>
-                      {v.twi_text || ''}{' '}
+                      {v.twi_text ? renderTwiWithGlossary(v.twi_text) : 'Translation coming'}{' '}
                     </span>
                   ))}
                 </div>
@@ -181,11 +241,11 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                 </summary>
                 <div className="mt-4" style={{ borderTop: '1px solid rgba(139,107,20,0.2)', paddingTop: '1rem' }}>
                   {verses.map((v) => (
-                    <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: '16px', fontWeight: 400, color: '#3C2415', lineHeight: 1.9 }}>
+                    <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: '16px', fontWeight: 400, color: v.twi_text ? '#3C2415' : '#B8A88A', lineHeight: 1.9, fontStyle: v.twi_text ? 'normal' : 'italic' }}>
                       <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: 500, color: '#8B6914', verticalAlign: 'super', marginRight: '3px' }}>
                         {v.verse}
                       </sup>
-                      {v.twi_text || ''}{' '}
+                      {v.twi_text ? renderTwiWithGlossary(v.twi_text) : 'Translation coming'}{' '}
                     </span>
                   ))}
                 </div>
@@ -216,6 +276,14 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
           </button>
         ) : <span />}
       </div>
+
+      {/* Glossary Term Modal */}
+      {selectedGlossary && (
+        <GlossaryModal
+          term={selectedGlossary}
+          onClose={() => setSelectedGlossary(null)}
+        />
+      )}
     </div>
   )
 }
