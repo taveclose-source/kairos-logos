@@ -294,14 +294,16 @@ function AskPageInner() {
     <div style={{
       position: 'relative',
       minHeight: '100vh',
-      backgroundImage: "url('/images/ask-backdrop.png')",
-      backgroundSize: 'cover',
-      backgroundPosition: 'center 75%',
-      backgroundRepeat: 'no-repeat',
       overflow: 'hidden',
     }}>
+      {/* Background image — direct img tag for reliability */}
+      <img
+        src="/images/ask-backdrop.png"
+        alt=""
+        style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', objectFit: 'cover', objectPosition: 'center 75%', zIndex: -1 }}
+      />
       {/* Dark overlay */}
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,6,2,0.55)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,6,2,0.55)', pointerEvents: 'none', zIndex: 0 }} />
 
       {/* Inner layout wrapper */}
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', paddingBottom: 80 }}>
