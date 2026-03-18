@@ -12,8 +12,8 @@ export default function HomePage() {
     function handleOpenTOC() {
       setIsOpening(true)
     }
-    window.addEventListener('logos:openTOC', handleOpenTOC)
-    return () => window.removeEventListener('logos:openTOC', handleOpenTOC)
+    window.addEventListener('logos:openMainTOC', handleOpenTOC)
+    return () => window.removeEventListener('logos:openMainTOC', handleOpenTOC)
   }, [])
 
   return (

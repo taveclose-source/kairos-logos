@@ -13,6 +13,7 @@ import StrongsPanel from '@/components/StrongsPanel'
 import ChapterSheet from '@/components/ChapterSheet'
 import { getShuffleDuration } from '@/lib/biblePosition'
 import PageShuffleOverlay from '@/components/PageShuffleOverlay'
+import { openMainTOC } from '@/lib/tocEvents'
 
 interface Verse {
   verse: number
@@ -335,15 +336,29 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
           />
 
           <div className="px-6 py-8 sm:px-10 sm:py-12 lg:px-12 lg:py-14">
-            {/* Contents back button */}
-            <button
-              onClick={() => { playPageTurn('back'); router.push('/') }}
-              style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.5)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px 0 8px 4px', marginBottom: '0.5rem', transition: 'color 150ms' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.9)')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.5)')}
-            >
-              &lsaquo; Contents
-            </button>
+            {/* Top nav — All Books / All Chapters */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+              <button
+                onClick={() => {
+                  playPageTurn('back')
+                  const duration = getShuffleDuration(bookName, 'Genesis')
+                  setBackShuffle({ duration })
+                }}
+                style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.5)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px 0 8px 4px', transition: 'color 150ms' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.9)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.5)')}
+              >
+                &lsaquo; All Books
+              </button>
+              <button
+                onClick={() => { playPageTurn('forward'); setChapterSheetOpen(true) }}
+                style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.5)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px 4px 8px 0', transition: 'color 150ms' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.9)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.5)')}
+              >
+                All Chapters &rsaquo;
+              </button>
+            </div>
             {/* Chapter heading */}
             <p style={{ fontFamily: 'var(--font-display)', fontSize: '13px', letterSpacing: '4px', color: 'var(--gold-muted)', textTransform: 'uppercase', textAlign: 'center', marginBottom: '0.5rem' }}>
               {bookName}
@@ -448,8 +463,8 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         <button
           onClick={() => {
             playPageTurn('back')
-            const duration = getShuffleDuration(bookName, 'Genesis')
-            setBackShuffle({ duration })
+            const dur = getShuffleDuration(bookName, 'Genesis')
+            setBackShuffle({ duration: dur })
           }}
           style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(240,192,80,0.7)', background: 'transparent', border: 'none', padding: '0 20px', height: 44, cursor: 'pointer' }}
         >
@@ -475,8 +490,8 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         direction="back"
         onComplete={() => {
           setBackShuffle(null)
+          openMainTOC()
           router.push('/')
-          setTimeout(() => window.dispatchEvent(new CustomEvent('logos:openTOC')), 100)
         }}
       />
     </div>

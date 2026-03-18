@@ -11,7 +11,6 @@ export async function POST(req: NextRequest) {
   const offset = page * limit
 
   if (strongsNumber) {
-    // Strong's concordance: find all verses with this Strong's number
     const { data: words } = await supabase
       .from('verse_words')
       .select('book, chapter, verse')
@@ -21,7 +20,6 @@ export async function POST(req: NextRequest) {
       .order('verse')
       .range(offset, offset + limit - 1)
 
-    // Count total
     const { count } = await supabase
       .from('verse_words')
       .select('*', { count: 'exact', head: true })
@@ -31,7 +29,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ results: [], total: 0 })
     }
 
-    // Deduplicate (same verse can have multiple words with same strongs)
     const seen = new Set<string>()
     const unique = words.filter(w => {
       const key = `${w.book}:${w.chapter}:${w.verse}`
@@ -40,7 +37,6 @@ export async function POST(req: NextRequest) {
       return true
     })
 
-    // Filter by testament if provided (for KJV concordance tab)
     let filtered = unique
     if (testament) {
       const bookTestaments: Record<string, string> = {}
@@ -53,8 +49,7 @@ export async function POST(req: NextRequest) {
       filtered = unique.filter(w => bookTestaments[w.book] === testament)
     }
 
-    // Fetch verse texts
-    const results = await Promise.all(filtered.map(async (w) => {
+    const results = await Promise.all(filtered.slice(0, 100).map(async (w) => {
       const { data: book } = await supabase.from('bible_books').select('id').eq('book_name', w.book).single()
       if (!book) return null
       const { data: verse } = await supabase.from('bible_verses').select('kjv_text').eq('book_id', book.id).eq('chapter', w.chapter).eq('verse', w.verse).single()
@@ -65,36 +60,34 @@ export async function POST(req: NextRequest) {
   }
 
   if (englishWord && testament) {
-    // English concordance: index-friendly pattern matching
-    const cleanWord = englishWord.replace(/[^a-zA-Z'-]/g, '')
+    const cleanWord = englishWord.replace(/[^a-zA-Z'-]/g, '').toLowerCase()
     if (!cleanWord) return NextResponse.json({ results: [], total: 0 })
 
-    // Use OR patterns that leverage btree index on word_text
-    const patterns = [cleanWord, `${cleanWord}.`, `${cleanWord},`, `${cleanWord};`, `${cleanWord}:`, `${cleanWord}?`, `${cleanWord}!`]
-
+    // Use ilike with % wildcard to catch word + trailing punctuation
     const { data: words } = await supabase
       .from('verse_words')
-      .select('book, chapter, verse')
-      .or(patterns.map(p => `word_text.ilike.${p}`).join(','))
+      .select('book, chapter, verse, word_text')
+      .ilike('word_text', `${cleanWord}%`)
       .order('book')
       .order('chapter')
       .order('verse')
       .limit(1000)
 
-    const { count } = await supabase
-      .from('verse_words')
-      .select('*', { count: 'exact', head: true })
-      .or(patterns.map(p => `word_text.ilike.${p}`).join(','))
-
     if (!words || words.length === 0) {
       return NextResponse.json({ results: [], total: 0 })
     }
 
-    // Filter by testament and deduplicate, cap at 100
+    // Filter: only exact word matches (word_text stripped of punctuation must equal cleanWord)
+    const exactMatches = words.filter(w => {
+      const stripped = w.word_text.replace(/[^a-zA-Z'-]/g, '').toLowerCase()
+      return stripped === cleanWord
+    })
+
+    // Filter by testament, deduplicate, cap at 100
     const seen = new Set<string>()
-    const filtered: typeof words = []
+    const filtered: typeof exactMatches = []
     const bookTestaments: Record<string, string> = {}
-    for (const w of words) {
+    for (const w of exactMatches) {
       if (filtered.length >= 100) break
       const key = `${w.book}:${w.chapter}:${w.verse}`
       if (seen.has(key)) continue
@@ -113,7 +106,8 @@ export async function POST(req: NextRequest) {
       return { book: w.book, chapter: w.chapter, verse: w.verse, kjv_text: verse?.kjv_text ?? '' }
     }))
 
-    return NextResponse.json({ results: results.filter(Boolean), total: count ?? 0 })
+    // Count total (approximate — based on unfiltered ilike matches for the testament)
+    return NextResponse.json({ results: results.filter(Boolean), total: filtered.length })
   }
 
   return NextResponse.json({ error: 'Missing parameters' }, { status: 400 })
