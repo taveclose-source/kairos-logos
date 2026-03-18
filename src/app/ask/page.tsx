@@ -291,11 +291,23 @@ function AskPageInner() {
       </div>
     )}
 
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] bg-white">
+    <div className="flex flex-col" style={{
+      minHeight: '100vh',
+      position: 'relative',
+      backgroundImage: "url('/images/ask-backdrop.png')",
+      backgroundSize: 'cover',
+      backgroundPosition: 'center 30%',
+      backgroundRepeat: 'no-repeat',
+      backgroundAttachment: 'scroll',
+    }}>
+      {/* Dark overlay */}
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(15, 6, 2, 0.55)', pointerEvents: 'none', zIndex: 0 }} />
+      {/* Content wrapper — above overlay */}
+      <div className="flex flex-col flex-1" style={{ position: 'relative', zIndex: 1 }}>
       {/* Page header (below SiteHeader which is h-14 / 3.5rem) */}
       <header className="shrink-0 border-b border-gray-100 px-4 sm:px-6 py-4">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-xl sm:text-2xl font-bold">Ask the Word</h1>
+          <h1 className="text-xl sm:text-2xl font-bold" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>Ask the Word</h1>
           <p className="text-xs text-gray-400 mt-0.5">
             Confessional Bible assistant &middot; KJV &amp; Textus Receptus
           </p>
@@ -434,6 +446,7 @@ function AskPageInner() {
           Logos by Kai&apos;Ros &middot; &ldquo;Sanctify them through thy truth: thy word is truth.&rdquo; &mdash; John 17:17
         </p>
       </div>
+      </div>{/* end content wrapper */}
     </div>
     </>
   )
