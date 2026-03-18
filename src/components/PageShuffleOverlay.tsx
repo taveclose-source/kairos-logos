@@ -1,32 +1,23 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import { playPageTurn } from '@/lib/paperSound'
 
 interface PageShuffleOverlayProps {
   active: boolean
-  duration: number
+  pageCount: number
   direction: 'forward' | 'back'
   onComplete: () => void
 }
 
-const PAGE_DURATION = 180
-const PAGE_STAGGER = 120
-const MAX_PAGES = 12
+const PAGE_DURATION = 180 // ms per page turn
+const PAGE_STAGGER = 120  // ms between page starts
 
-export default function PageShuffleOverlay({ active, duration, direction, onComplete }: PageShuffleOverlayProps) {
+export default function PageShuffleOverlay({ active, pageCount, direction, onComplete }: PageShuffleOverlayProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number>(0)
   const completedRef = useRef(false)
   const soundFiredRef = useRef<Set<number>>(new Set())
-
-  const numPages = Math.min(MAX_PAGES, Math.max(1, Math.floor(duration / PAGE_STAGGER)))
-
-  const getPagePath = useCallback((progress: number) => {
-    const bendX = direction === 'forward' ? 400 - (progress * 400) : progress * 400
-    const bendY = Math.sin(progress * Math.PI) * 80
-    return `M 0,0 Q ${bendX},${bendY} 400,0 L 400,600 Q ${bendX},${600 - bendY} 0,600 Z`
-  }, [direction])
 
   useEffect(() => {
     if (!active || !containerRef.current) return
@@ -35,11 +26,12 @@ export default function PageShuffleOverlay({ active, duration, direction, onComp
     soundFiredRef.current = new Set()
     const container = containerRef.current
     const startTime = performance.now()
+    const ns = 'http://www.w3.org/2000/svg'
+    const count = Math.min(pageCount, 20)
 
-    // Create SVG elements directly in DOM
+    // Create SVG pages
     const svgs: SVGSVGElement[] = []
-    for (let i = 0; i < numPages; i++) {
-      const ns = 'http://www.w3.org/2000/svg'
+    for (let i = 0; i < count; i++) {
       const svg = document.createElementNS(ns, 'svg')
       svg.setAttribute('viewBox', '0 0 400 600')
       svg.setAttribute('preserveAspectRatio', 'xMidYMid meet')
@@ -52,30 +44,37 @@ export default function PageShuffleOverlay({ active, duration, direction, onComp
 
       const defs = document.createElementNS(ns, 'defs')
       const grad = document.createElementNS(ns, 'linearGradient')
-      grad.id = `pgo${i}`; grad.setAttribute('x1', '0'); grad.setAttribute('y1', '0'); grad.setAttribute('x2', '1'); grad.setAttribute('y2', '0')
-      const s1 = document.createElementNS(ns, 'stop'); s1.setAttribute('offset', '0%'); s1.setAttribute('stop-color', '#F5EDD9')
-      const s2 = document.createElementNS(ns, 'stop'); s2.setAttribute('offset', '70%'); s2.setAttribute('stop-color', '#EDE0C4')
-      const s3 = document.createElementNS(ns, 'stop'); s3.setAttribute('offset', '100%'); s3.setAttribute('stop-color', '#C8B89A')
-      grad.append(s1, s2, s3)
-
-      const shGrad = document.createElementNS(ns, 'linearGradient')
-      shGrad.id = `sho${i}`; shGrad.setAttribute('x1', '0'); shGrad.setAttribute('y1', '0'); shGrad.setAttribute('x2', '1'); shGrad.setAttribute('y2', '0')
-      const sh1 = document.createElementNS(ns, 'stop'); sh1.setAttribute('offset', '0%'); sh1.setAttribute('stop-color', 'rgba(0,0,0,0.3)')
-      const sh2 = document.createElementNS(ns, 'stop'); sh2.setAttribute('offset', '100%'); sh2.setAttribute('stop-color', 'rgba(0,0,0,0)')
-      shGrad.append(sh1, sh2)
-      defs.append(grad, shGrad)
+      grad.id = `pg${i}`
+      grad.setAttribute('x1', '0'); grad.setAttribute('y1', '0')
+      grad.setAttribute('x2', '1'); grad.setAttribute('y2', '0')
+      const stops = [
+        { offset: '0%', color: '#F5EDD9' },
+        { offset: '70%', color: '#EDE0C4' },
+        { offset: '100%', color: '#C8B89A' },
+      ]
+      stops.forEach(s => {
+        const stop = document.createElementNS(ns, 'stop')
+        stop.setAttribute('offset', s.offset)
+        stop.setAttribute('stop-color', s.color)
+        grad.appendChild(stop)
+      })
+      defs.appendChild(grad)
 
       const path = document.createElementNS(ns, 'path')
-      path.id = `page-${i}`
+      path.id = `path${i}`
+      path.setAttribute('fill', `url(#pg${i})`)
       path.setAttribute('d', 'M 0,0 L 400,0 L 400,600 L 0,600 Z')
-      path.setAttribute('fill', `url(#pgo${i})`)
 
       const shadow = document.createElementNS(ns, 'rect')
-      shadow.id = `shadow-${i}`
-      shadow.setAttribute('x', '0'); shadow.setAttribute('y', '0'); shadow.setAttribute('width', '40'); shadow.setAttribute('height', '600')
-      shadow.setAttribute('fill', `url(#sho${i})`); shadow.setAttribute('opacity', '0')
+      shadow.id = `sh${i}`
+      shadow.setAttribute('x', '0'); shadow.setAttribute('y', '0')
+      shadow.setAttribute('width', '40'); shadow.setAttribute('height', '600')
+      shadow.setAttribute('fill', 'rgba(0,0,0,0.25)')
+      shadow.setAttribute('opacity', '0')
 
-      svg.append(defs, path, shadow)
+      svg.appendChild(defs)
+      svg.appendChild(path)
+      svg.appendChild(shadow)
       container.appendChild(svg)
       svgs.push(svg)
     }
@@ -83,34 +82,41 @@ export default function PageShuffleOverlay({ active, duration, direction, onComp
     function animate(timestamp: number) {
       const elapsed = timestamp - startTime
 
-      for (let i = 0; i < numPages; i++) {
-        const pageElapsed = elapsed - i * PAGE_STAGGER
+      for (let i = 0; i < count; i++) {
+        const pageStart = i * PAGE_STAGGER
+        const pageElapsed = elapsed - pageStart
         if (pageElapsed < 0) { svgs[i].style.opacity = '0'; continue }
         const progress = Math.min(1, pageElapsed / PAGE_DURATION)
 
+        // Same bezier curl as PageTurn
+        const bendX = direction === 'forward' ? 400 - (progress * 400) : progress * 400
+        const bendY = Math.sin(progress * Math.PI) * 80
+        const d = `M 0,0 Q ${bendX},${bendY} 400,0 L 400,600 Q ${bendX},${600 - bendY} 0,600 Z`
+
         svgs[i].style.opacity = progress >= 1 ? '0' : '1'
-        const pathEl = svgs[i].querySelector(`#page-${i}`)
-        if (pathEl) pathEl.setAttribute('d', getPagePath(progress))
-        const shadowEl = svgs[i].querySelector(`#shadow-${i}`)
+        const pathEl = svgs[i].querySelector(`#path${i}`)
+        if (pathEl) pathEl.setAttribute('d', d)
+        const shadowEl = svgs[i].querySelector(`#sh${i}`)
         if (shadowEl) shadowEl.setAttribute('opacity', String(Math.sin(progress * Math.PI) * 0.4))
 
-        // Sound at peak
+        // Sound at peak (progress ~0.5)
         if (progress >= 0.45 && progress <= 0.55 && !soundFiredRef.current.has(i)) {
           soundFiredRef.current.add(i)
           playPageTurn(direction)
         }
       }
 
-      const lastPageEnd = (numPages - 1) * PAGE_STAGGER + PAGE_DURATION
-      if (elapsed >= lastPageEnd && !completedRef.current) {
+      const totalDuration = (count - 1) * PAGE_STAGGER + PAGE_DURATION
+      if (elapsed >= totalDuration && !completedRef.current) {
         completedRef.current = true
+        container.style.transition = 'opacity 100ms ease'
         container.style.opacity = '0'
         setTimeout(() => {
-          // Cleanup SVGs
           svgs.forEach(s => s.remove())
           container.style.opacity = '1'
+          container.style.transition = ''
           onComplete()
-        }, 150)
+        }, 100)
         return
       }
 
@@ -124,19 +130,16 @@ export default function PageShuffleOverlay({ active, duration, direction, onComp
       cancelAnimationFrame(rafRef.current)
       svgs.forEach(s => s.remove())
     }
-  }, [active, duration, direction, numPages, getPagePath, onComplete])
+  }, [active, pageCount, direction, onComplete])
 
   return (
     <div
       ref={containerRef}
       style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 100,
+        position: 'fixed', inset: 0, zIndex: 100,
         pointerEvents: active ? 'all' : 'none',
         visibility: active ? 'visible' : 'hidden',
         opacity: active ? 1 : 0,
-        transition: 'opacity 150ms ease',
       }}
     />
   )

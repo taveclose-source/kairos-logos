@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
-import { getShuffleDuration, getShuffleDirection, getLastRead } from '@/lib/biblePosition'
+import { getPageCount, getLastReadBook } from '@/lib/navigationDistance'
 import PageShuffleOverlay from '@/components/PageShuffleOverlay'
 
 interface ChapterEntry { chapter: number; summary: string }
@@ -11,7 +11,7 @@ interface ChapterEntry { chapter: number; summary: string }
 export default function ChapterSheet({ bookName, onClose }: { bookName: string; onClose: () => void }) {
   const [chapters, setChapters] = useState<ChapterEntry[]>([])
   const [loading, setLoading] = useState(true)
-  const [shuffle, setShuffle] = useState<{ duration: number; direction: 'forward' | 'back'; chapter: number } | null>(null)
+  const [shuffle, setShuffle] = useState<{ pageCount: number; direction: 'forward' | 'back'; chapter: number } | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -28,10 +28,8 @@ export default function ChapterSheet({ bookName, onClose }: { bookName: string; 
 
   function handleChapterSelect(chapter: number) {
     router.prefetch(`/bible/${encodeURIComponent(bookName)}/${chapter}`)
-    const lastRead = getLastRead()
-    const duration = getShuffleDuration(lastRead?.book ?? null, bookName)
-    const dir = getShuffleDirection(lastRead?.book ?? null, bookName)
-    setShuffle({ duration, direction: dir, chapter })
+    const { pageCount, direction } = getPageCount(getLastReadBook(), bookName)
+    setShuffle({ pageCount, direction, chapter })
   }
 
   return (
@@ -82,7 +80,7 @@ export default function ChapterSheet({ bookName, onClose }: { bookName: string; 
       {/* Shuffle overlay */}
       <PageShuffleOverlay
         active={!!shuffle}
-        duration={shuffle?.duration ?? 200}
+        pageCount={shuffle?.pageCount ?? 2}
         direction={shuffle?.direction ?? 'forward'}
         onComplete={() => {
           if (shuffle) {

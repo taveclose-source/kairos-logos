@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { playPageTurn } from '@/lib/paperSound'
 import { useSwipe } from '@/hooks/useSwipe'
-import { getShuffleDuration, getShuffleDirection, getLastRead } from '@/lib/biblePosition'
+import { getPageCount, getLastReadBook } from '@/lib/navigationDistance'
 import PageShuffleOverlay from '@/components/PageShuffleOverlay'
 
 interface BookEntry { book_name: string; testament: string; sort_order: number }
@@ -35,7 +35,7 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
   const [view, setView] = useState<View>('books')
   const [transitioning, setTransitioning] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const [shuffle, setShuffle] = useState<{ duration: number; direction: 'forward' | 'back'; book: string; chapter: number } | null>(null)
+  const [shuffle, setShuffle] = useState<{ pageCount: number; direction: 'forward' | 'back'; book: string; chapter: number } | null>(null)
   const [tocHidden, setTocHidden] = useState(false)
   const router = useRouter()
 
@@ -108,10 +108,8 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
     if (!selectedBook) return
     setTocHidden(true)
     router.prefetch(`/bible/${encodeURIComponent(selectedBook)}/1`)
-    const lastRead = getLastRead()
-    const duration = getShuffleDuration(lastRead?.book ?? null, selectedBook)
-    const dir = getShuffleDirection(lastRead?.book ?? null, selectedBook)
-    setShuffle({ duration, direction: dir, book: selectedBook, chapter: 1 })
+    const { pageCount, direction } = getPageCount(getLastReadBook(), selectedBook)
+    setShuffle({ pageCount, direction, book: selectedBook, chapter: 1 })
   }, [selectedBook, router])
 
   const swipeChapterRight = useCallback(() => {
@@ -228,10 +226,8 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
                   onClick={() => {
                     setTocHidden(true)
                     router.prefetch(`/bible/${encodeURIComponent(selectedBook!)}/${c.chapter}`)
-                    const lastRead = getLastRead()
-                    const duration = getShuffleDuration(lastRead?.book ?? null, selectedBook!)
-                    const dir = getShuffleDirection(lastRead?.book ?? null, selectedBook!)
-                    setShuffle({ duration, direction: dir, book: selectedBook!, chapter: c.chapter })
+                    const { pageCount, direction } = getPageCount(getLastReadBook(), selectedBook!)
+                    setShuffle({ pageCount, direction, book: selectedBook!, chapter: c.chapter })
                   }}
                   style={{ padding: '0.75rem 1rem', borderBottom: '0.5px solid rgba(139,107,20,0.15)', background: 'transparent', border: 'none', borderBottomWidth: '0.5px', borderBottomStyle: 'solid', borderBottomColor: 'rgba(139,107,20,0.15)', cursor: 'pointer', textAlign: 'left', transition: 'background 150ms' }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(139,107,20,0.06)')}
@@ -252,7 +248,7 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
       {/* Page shuffle overlay — always mounted, controlled by active prop */}
       <PageShuffleOverlay
         active={!!shuffle}
-        duration={shuffle?.duration ?? 200}
+        pageCount={shuffle?.pageCount ?? 2}
         direction={shuffle?.direction ?? 'forward'}
         onComplete={() => {
           if (shuffle) {
