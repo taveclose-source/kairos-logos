@@ -391,8 +391,19 @@ function AskPageInner() {
               rows={1}
               maxLength={2000}
               disabled={loading}
-              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ minHeight: '42px', maxHeight: '120px' }}
+              className="w-full resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                minHeight: '44px', maxHeight: '120px',
+                background: '#F5EDD9',
+                color: '#2C1810',
+                border: '1px solid rgba(139,107,20,0.4)',
+                borderRadius: '4px',
+                padding: '12px 48px 12px 16px',
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: '16px',
+                caretColor: '#8B6914',
+                outline: 'none',
+              }}
               onInput={(e) => {
                 const el = e.currentTarget
                 el.style.height = 'auto'
@@ -406,7 +417,8 @@ function AskPageInner() {
           <button
             type="submit"
             disabled={!input.trim() || loading}
-            className="px-4 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+            className="shrink-0 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            style={{ padding: '0 20px', minHeight: '44px', borderRadius: '4px', background: 'var(--gold)', color: '#2C1810', fontFamily: 'var(--font-ui)', fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 500, border: 'none', cursor: 'pointer' }}
           >
             {loading ? (
               <span className="flex items-center gap-1.5">
