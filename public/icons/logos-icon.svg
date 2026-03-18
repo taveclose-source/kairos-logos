@@ -1,0 +1,29 @@
+<svg width="512" height="512" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="leather" cx="38%" cy="32%" r="68%">
+      <stop offset="0%" stop-color="#7A3A14"/>
+      <stop offset="100%" stop-color="#2A0E02"/>
+    </radialGradient>
+    <radialGradient id="corners" cx="50%" cy="50%" r="70%">
+      <stop offset="30%" stop-color="transparent"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.5)"/>
+    </radialGradient>
+    <linearGradient id="crossGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE090"/>
+      <stop offset="50%" stop-color="#D4960A"/>
+      <stop offset="100%" stop-color="#FFD060"/>
+    </linearGradient>
+  </defs>
+  <!-- Leather background -->
+  <rect width="120" height="120" rx="26" fill="url(#leather)"/>
+  <rect width="120" height="120" rx="26" fill="url(#corners)"/>
+  <!-- Border -->
+  <rect x="7" y="7" width="106" height="106" rx="20" fill="none" stroke="rgba(255,208,80,0.4)" stroke-width="1"/>
+  <!-- Large prominent cross -->
+  <rect x="53" y="12" width="14" height="96" rx="3" fill="url(#crossGold)" opacity="0.9"/>
+  <rect x="18" y="34" width="84" height="14" rx="3" fill="url(#crossGold)" opacity="0.9"/>
+  <!-- LOGOS carved into crossbeam -->
+  <text x="60" y="46" text-anchor="middle" font-family="Georgia, serif" font-size="16" font-weight="700" fill="#1A0802" letter-spacing="2">LOGOS</text>
+  <!-- by Kai'Ros -->
+  <text x="60" y="104" text-anchor="middle" font-family="Georgia, serif" font-size="8" font-style="italic" fill="rgba(255,208,80,0.7)" letter-spacing="1">by Kai'Ros</text>
+</svg>
