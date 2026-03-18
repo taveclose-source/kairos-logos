@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { playPageTurn } from '@/lib/paperSound'
 import { useSwipe } from '@/hooks/useSwipe'
@@ -35,6 +36,8 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
   const [transitioning, setTransitioning] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [shuffle, setShuffle] = useState<{ duration: number; direction: 'forward' | 'back'; book: string; chapter: number } | null>(null)
+  const [tocHidden, setTocHidden] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -103,11 +106,13 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
   // Swipe on chapter view
   const swipeChapterLeft = useCallback(() => {
     if (!selectedBook) return
+    setTocHidden(true)
+    router.prefetch(`/bible/${encodeURIComponent(selectedBook)}/1`)
     const lastRead = getLastRead()
     const duration = getShuffleDuration(lastRead?.book ?? null, selectedBook)
     const dir = getShuffleDirection(lastRead?.book ?? null, selectedBook)
     setShuffle({ duration, direction: dir, book: selectedBook, chapter: 1 })
-  }, [selectedBook])
+  }, [selectedBook, router])
 
   const swipeChapterRight = useCallback(() => {
     playPageTurn('back')
@@ -124,7 +129,7 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
   const headingSpacing = isMobile ? '2px' : '3px'
 
   return (
-    <div className="mx-auto relative" style={{ maxWidth: 900, width: '100%', background: 'var(--bg-warm)', borderRadius: 4, boxShadow: '-8px 0 20px rgba(0,0,0,0.5), 8px 0 20px rgba(0,0,0,0.3), 0 4px 40px rgba(0,0,0,0.6)', minHeight: '70vh', overflow: 'hidden' }}>
+    <div className="mx-auto relative" style={{ maxWidth: 900, width: '100%', background: 'var(--bg-warm)', borderRadius: 4, boxShadow: '-8px 0 20px rgba(0,0,0,0.5), 8px 0 20px rgba(0,0,0,0.3), 0 4px 40px rgba(0,0,0,0.6)', minHeight: '70vh', overflow: 'hidden', visibility: tocHidden ? 'hidden' : 'visible' }}>
       {/* Close button */}
       <button onClick={onClose} style={{ position: 'absolute', top: 12, right: 16, zIndex: 10, background: 'none', border: 'none', cursor: 'pointer', color: '#8B6914', fontSize: 20 }}>
         &times;
@@ -221,6 +226,8 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
                 <button
                   key={c.chapter}
                   onClick={() => {
+                    setTocHidden(true)
+                    router.prefetch(`/bible/${encodeURIComponent(selectedBook!)}/${c.chapter}`)
                     const lastRead = getLastRead()
                     const duration = getShuffleDuration(lastRead?.book ?? null, selectedBook!)
                     const dir = getShuffleDirection(lastRead?.book ?? null, selectedBook!)

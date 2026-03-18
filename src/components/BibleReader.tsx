@@ -4,6 +4,7 @@ import { useEffect, useCallback, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import PageTurn from '@/components/PageTurn'
+import { playPageTurn } from '@/lib/paperSound'
 import type { PageTurnHandle } from '@/components/PageTurn'
 import GlossaryModal from '@/components/GlossaryModal'
 import type { GlossaryTerm } from '@/components/GlossaryModal'
@@ -329,6 +330,15 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
           />
 
           <div className="px-6 py-8 sm:px-10 sm:py-12 lg:px-12 lg:py-14">
+            {/* Contents back button */}
+            <button
+              onClick={() => { playPageTurn('back'); router.push('/') }}
+              style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.5)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px 0 8px 4px', marginBottom: '0.5rem', transition: 'color 150ms' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.9)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.5)')}
+            >
+              &lsaquo; Contents
+            </button>
             {/* Chapter heading */}
             <p style={{ fontFamily: 'var(--font-display)', fontSize: '13px', letterSpacing: '4px', color: 'var(--gold-muted)', textTransform: 'uppercase', textAlign: 'center', marginBottom: '0.5rem' }}>
               {bookName}
