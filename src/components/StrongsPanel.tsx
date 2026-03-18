@@ -18,6 +18,9 @@ interface StrongsEntry {
   pronunciation: string | null
   derivation: string | null
   root_words: string | null
+  total_nt_occurrences: number | null
+  total_ot_occurrences: number | null
+  all_kjv_translations: string | null
   webster: { word: string; definition: string; part_of_speech: string | null; etymology: string | null } | null
 }
 
@@ -271,13 +274,23 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
                   </div>
                 </div>
               )}
-              {/* TODO: kjv_usage will be enriched after OpenScriptures upgrade */}
-              {entry.kjv_usage && (
-                <div style={{ marginBottom: '1rem' }}>
+              {/* KJV Translations — prefer computed all_kjv_translations */}
+              {(entry.all_kjv_translations || entry.kjv_usage) && (
+                <div style={{ marginBottom: '0.75rem' }}>
                   <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: 4 }}>KJV Translations</p>
-                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: '#5C3D11', lineHeight: 1.8 }}>{entry.kjv_usage}</p>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: '#5C3D11', lineHeight: 1.8 }}>{entry.all_kjv_translations || entry.kjv_usage}</p>
                 </div>
               )}
+              {/* Occurrence counts */}
+              {(entry.total_nt_occurrences || entry.total_ot_occurrences) ? (
+                <div style={{ marginBottom: '1rem' }}>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: '#8B6914' }}>
+                    {entry.total_nt_occurrences ? `Used ${entry.total_nt_occurrences} times in the NT` : ''}
+                    {entry.total_nt_occurrences && entry.total_ot_occurrences ? ' · ' : ''}
+                    {entry.total_ot_occurrences ? `Used ${entry.total_ot_occurrences} times in the OT` : ''}
+                  </p>
+                </div>
+              ) : null}
               {/* Root words from derivation or root_words field */}
               {(() => {
                 const refs = new Set<string>()
