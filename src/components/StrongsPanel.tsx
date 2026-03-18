@@ -180,9 +180,31 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
           {numberStack.length > 0 && (
             <button onClick={navigateBack} style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', background: 'none', border: 'none', cursor: 'pointer', marginBottom: 4 }}>&larr; Back to {numberStack[numberStack.length - 1]}</button>
           )}
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: '#8B6914', letterSpacing: '3px' }}>{currentNumber}</p>
-          {entry?.original_word && <p style={{ fontFamily: 'var(--font-reading)', fontSize: 28, color: '#2C1810', margin: '4px 0 2px' }}>{entry.original_word}</p>}
-          {entry?.transliteration && <p style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic', fontSize: 14, color: '#8B6914' }}>{entry.transliteration}</p>}
+          {/* Language label */}
+          <span style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.6)', display: 'block', marginBottom: 4 }}>
+            {currentNumber.startsWith('G') ? 'Greek' : 'Hebrew'}
+          </span>
+          {/* Original word */}
+          {entry?.original_word && <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, color: '#2C1810', display: 'block', marginBottom: 6 }}>{entry.original_word}</span>}
+          {/* Transliteration + Pronunciation side by side */}
+          {(entry?.transliteration || entry?.pronunciation) && (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: 6 }}>
+              {entry.transliteration && (
+                <div>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.5)', display: 'block', marginBottom: 2 }}>Transliteration</span>
+                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: '#8B6914' }}>{entry.transliteration}</span>
+                </div>
+              )}
+              {entry.pronunciation && (
+                <div>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.5)', display: 'block', marginBottom: 2 }}>Pronunciation</span>
+                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: '#8B6914' }}>({entry.pronunciation})</span>
+                </div>
+              )}
+            </div>
+          )}
+          {/* Strong's number */}
+          <span style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '3px', color: 'rgba(139,107,20,0.8)', display: 'block' }}>{currentNumber}</span>
         </div>
 
         {/* Tabs */}
@@ -220,21 +242,7 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
           {/* ── TAB 2: STRONG'S CONCORDANCE ── */}
           {tab === 'strongs' && entry && (
             <>
-              {/* Original language header */}
-              <div style={{ textAlign: 'center', marginBottom: 16 }}>
-                {entry.original_word && (
-                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, color: '#2C1810', display: 'block', marginBottom: 4 }}>{entry.original_word}</span>
-                )}
-                {entry.transliteration && (
-                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 16, color: '#8B6914', display: 'block', marginBottom: 2 }}>{entry.transliteration}</span>
-                )}
-                {entry.pronunciation && (
-                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#8B6914', display: 'block', marginBottom: 8 }}>({entry.pronunciation})</span>
-                )}
-                <span style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '3px', color: 'rgba(139,107,20,0.8)', display: 'block', marginBottom: 16 }}>{entry.strongs_number}</span>
-              </div>
-
-              {/* Strong's exhaustive entry */}
+              {/* Strong's exhaustive entry — header info shown above tabs */}
               {entry.part_of_speech && (
                 <div style={{ marginBottom: '0.75rem' }}>
                   <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: 4 }}>Part of Speech</p>
