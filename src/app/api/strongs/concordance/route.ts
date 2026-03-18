@@ -6,19 +6,20 @@ function db() {
 }
 
 export async function POST(req: NextRequest) {
-  const { strongsNumber, englishWord, testament, page = 0, limit = 50 } = await req.json()
+  const { strongsNumber, englishWord, testament } = await req.json()
   const supabase = db()
-  const offset = page * limit
+
+  // Fetch book sort orders for biblical ordering
+  const { data: allBooks } = await supabase.from('bible_books').select('book_name, sort_order')
+  const bookOrder: Record<string, number> = {}
+  for (const b of (allBooks ?? [])) bookOrder[b.book_name] = b.sort_order
 
   if (strongsNumber) {
     const { data: words } = await supabase
       .from('verse_words')
       .select('book, chapter, verse')
       .eq('strongs_number', strongsNumber)
-      .order('book')
-      .order('chapter')
-      .order('verse')
-      .range(offset, offset + limit - 1)
+      .limit(1000)
 
     const { count } = await supabase
       .from('verse_words')
@@ -35,6 +36,11 @@ export async function POST(req: NextRequest) {
       if (seen.has(key)) return false
       seen.add(key)
       return true
+    }).sort((a, b) => {
+      const oa = bookOrder[a.book] ?? 999; const ob = bookOrder[b.book] ?? 999
+      if (oa !== ob) return oa - ob
+      if (a.chapter !== b.chapter) return a.chapter - b.chapter
+      return a.verse - b.verse
     })
 
     let filtered = unique
@@ -98,6 +104,14 @@ export async function POST(req: NextRequest) {
       }
       if (bookTestaments[w.book] === testament) filtered.push(w)
     }
+
+    // Sort by biblical order
+    filtered.sort((a, b) => {
+      const oa = bookOrder[a.book] ?? 999; const ob = bookOrder[b.book] ?? 999
+      if (oa !== ob) return oa - ob
+      if (a.chapter !== b.chapter) return a.chapter - b.chapter
+      return a.verse - b.verse
+    })
 
     const results = await Promise.all(filtered.map(async (w) => {
       const { data: book } = await supabase.from('bible_books').select('id').eq('book_name', w.book).single()

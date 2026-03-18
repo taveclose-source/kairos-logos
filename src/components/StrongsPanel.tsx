@@ -15,6 +15,7 @@ interface StrongsEntry {
   testament: string
   strongs_def: string | null
   outline_of_biblical_usage: string | null
+  pronunciation: string | null
   derivation: string | null
   root_words: string | null
   webster: { word: string; definition: string; part_of_speech: string | null; etymology: string | null } | null
@@ -219,6 +220,20 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
           {/* ── TAB 2: STRONG'S CONCORDANCE ── */}
           {tab === 'strongs' && entry && (
             <>
+              {/* Original language header */}
+              <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                {entry.original_word && (
+                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, color: '#2C1810', display: 'block', marginBottom: 4 }}>{entry.original_word}</span>
+                )}
+                {entry.transliteration && (
+                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 16, color: '#8B6914', display: 'block', marginBottom: 2 }}>{entry.transliteration}</span>
+                )}
+                {entry.pronunciation && (
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#8B6914', display: 'block', marginBottom: 8 }}>({entry.pronunciation})</span>
+                )}
+                <span style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '3px', color: 'rgba(139,107,20,0.8)', display: 'block', marginBottom: 16 }}>{entry.strongs_number}</span>
+              </div>
+
               {/* Strong's exhaustive entry */}
               {entry.part_of_speech && (
                 <div style={{ marginBottom: '0.75rem' }}>
@@ -248,6 +263,7 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
                   </div>
                 </div>
               )}
+              {/* TODO: kjv_usage will be enriched after OpenScriptures upgrade */}
               {entry.kjv_usage && (
                 <div style={{ marginBottom: '1rem' }}>
                   <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: 4 }}>KJV Translations</p>
