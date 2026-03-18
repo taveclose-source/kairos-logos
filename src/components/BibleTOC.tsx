@@ -242,17 +242,18 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
           )}
         </div>
       </div>
-      {/* Page shuffle overlay */}
-      {shuffle && (
-        <PageShuffleOverlay
-          duration={shuffle.duration}
-          direction={shuffle.direction}
-          onComplete={() => {
+      {/* Page shuffle overlay — always mounted, controlled by active prop */}
+      <PageShuffleOverlay
+        active={!!shuffle}
+        duration={shuffle?.duration ?? 200}
+        direction={shuffle?.direction ?? 'forward'}
+        onComplete={() => {
+          if (shuffle) {
             onSelect(shuffle.book, shuffle.chapter)
             setShuffle(null)
-          }}
-        />
-      )}
+          }
+        }}
+      />
     </div>
   )
 }
