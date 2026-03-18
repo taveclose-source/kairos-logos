@@ -12,7 +12,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ numb
 
   const { data, error } = await supabase
     .from('strongs_entries')
-    .select('strongs_number, original_word, transliteration, definition, part_of_speech, kjv_usage, testament')
+    .select('strongs_number, original_word, transliteration, definition, part_of_speech, kjv_usage, testament, strongs_def, outline_of_biblical_usage, derivation, root_words')
     .eq('strongs_number', number)
     .single()
 

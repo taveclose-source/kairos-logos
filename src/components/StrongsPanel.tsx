@@ -13,6 +13,10 @@ interface StrongsEntry {
   part_of_speech: string | null
   kjv_usage: string | null
   testament: string
+  strongs_def: string | null
+  outline_of_biblical_usage: string | null
+  derivation: string | null
+  root_words: string | null
   webster: { word: string; definition: string; part_of_speech: string | null; etymology: string | null } | null
 }
 
@@ -245,10 +249,26 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
                   <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: '#2C1810', lineHeight: 1.6 }}>{renderWithStrongsLinks(entry.part_of_speech)}</p>
                 </div>
               )}
-              {entry.definition && (
+              {(entry.strongs_def || entry.definition) && (
                 <div style={{ marginBottom: '0.75rem' }}>
                   <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: 4 }}>Definition</p>
-                  <p style={{ fontFamily: 'var(--font-reading)', fontSize: 17, color: '#2C1810', lineHeight: 1.9 }}>{entry.definition}</p>
+                  <p style={{ fontFamily: 'var(--font-reading)', fontSize: 17, color: '#2C1810', lineHeight: 1.9 }}>{entry.strongs_def || entry.definition}</p>
+                </div>
+              )}
+              {entry.derivation && (
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: 4 }}>Derivation</p>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: '#2C1810', lineHeight: 1.6 }}>{renderWithStrongsLinks(entry.derivation)}</p>
+                </div>
+              )}
+              {entry.outline_of_biblical_usage && (
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: 4 }}>Outline of Biblical Usage</p>
+                  <div style={{ fontFamily: 'var(--font-reading)', fontSize: 15, color: '#2C1810', lineHeight: 1.8 }}>
+                    {entry.outline_of_biblical_usage.split('\n').map((line, i) => (
+                      <p key={i} style={{ marginBottom: 4 }}>{line}</p>
+                    ))}
+                  </div>
                 </div>
               )}
               {entry.kjv_usage && (
@@ -257,16 +277,26 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
                   <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: '#5C3D11', lineHeight: 1.8 }}>{entry.kjv_usage}</p>
                 </div>
               )}
-              {entry.part_of_speech && /[GH]\d+/.test(entry.part_of_speech) && (
-                <div style={{ marginBottom: '1rem' }}>
-                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: 4 }}>Root Words</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    {(entry.part_of_speech.match(/[GH]\d+/g) ?? []).map((num, i) => (
-                      <button key={i} onClick={() => navigateToRoot(num)} style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: '#8B6914', background: 'rgba(139,107,20,0.08)', border: '1px solid rgba(139,107,20,0.25)', borderRadius: 3, padding: '4px 10px', cursor: 'pointer', letterSpacing: '1px' }}>{num}</button>
-                    ))}
+              {/* Root words from derivation or root_words field */}
+              {(() => {
+                const refs = new Set<string>()
+                if (entry.part_of_speech) (entry.part_of_speech.match(/[GH]\d+/g) ?? []).forEach(r => refs.add(r))
+                if (entry.derivation) (entry.derivation.match(/[GH]\d+/g) ?? []).forEach(r => refs.add(r))
+                if (entry.root_words) {
+                  try { const arr = JSON.parse(entry.root_words); if (Array.isArray(arr)) arr.forEach((r: string) => { if (/^[GH]\d+$/.test(r)) refs.add(r) }) } catch {}
+                }
+                if (refs.size === 0) return null
+                return (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B6914', marginBottom: 4 }}>Root Words</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {Array.from(refs).map((num, i) => (
+                        <button key={i} onClick={() => navigateToRoot(num)} style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: '#8B6914', background: 'rgba(139,107,20,0.08)', border: '1px solid rgba(139,107,20,0.25)', borderRadius: 3, padding: '4px 10px', cursor: 'pointer', letterSpacing: '1px' }}>{num}</button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )
+              })()}
 
               {/* Every verse in Bible with this Strong's number */}
               <div style={{ borderTop: '1px solid rgba(139,107,20,0.2)', paddingTop: '1rem' }}>
