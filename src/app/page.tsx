@@ -1,15 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import BibleCover from '@/components/BibleCover'
 import BibleOpening from '@/components/BibleOpening'
 
 export default function HomePage() {
   const [isOpening, setIsOpening] = useState(false)
 
+  // Listen for direct TOC open event (from mobile "All Books" button)
+  useEffect(() => {
+    function handleOpenTOC() {
+      setIsOpening(true)
+    }
+    window.addEventListener('logos:openTOC', handleOpenTOC)
+    return () => window.removeEventListener('logos:openTOC', handleOpenTOC)
+  }, [])
+
   return (
     <>
-      <BibleCover onOpen={() => setIsOpening(true)} />
+      {!isOpening && <BibleCover onOpen={() => setIsOpening(true)} />}
       {isOpening && (
         <BibleOpening
           isOpen={isOpening}

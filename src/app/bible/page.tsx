@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
+import MobileRedirect from '@/components/MobileRedirect'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -59,6 +60,7 @@ export default async function BiblePage() {
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <MobileRedirect to="/" />
       <h1 className="text-3xl sm:text-4xl font-bold mt-2 mb-1">Bible</h1>
       <p className="text-gray-500 mb-8">
         English &amp; Companion Translation &middot; Select a book to begin reading
