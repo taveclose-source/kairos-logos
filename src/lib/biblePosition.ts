@@ -32,7 +32,8 @@ export function getShuffleDuration(
   const fromPos = fromBook ? (BOOK_START[fromBook] ?? 0) : 0
   const toPos = BOOK_START[toBook] ?? 0
   const distance = Math.abs(toPos - fromPos) / TOTAL_VERSES
-  return Math.round(200 + (distance * 3800))
+  // 150ms min (same book), 2000ms max (full Bible)
+  return Math.round(150 + (distance * 1850))
 }
 
 export function getShuffleDirection(
@@ -56,27 +57,4 @@ export function getLastRead(): { book: string; chapter: number } | null {
 export function saveLastRead(book: string, chapter: number) {
   if (typeof window === 'undefined') return
   localStorage.setItem('logos_last_read', JSON.stringify({ book, chapter }))
-}
-
-export function playShuffleSounds(duration: number, direction: 'forward' | 'back', turnFn?: (dir: 'forward' | 'back') => void) {
-  const play = turnFn ?? (() => {})
-  const interval80 = Math.floor(duration * 0.8)
-  let t = 0
-  const sounds: ReturnType<typeof setTimeout>[] = []
-
-  // Fast phase: every 120ms for first 80% of duration
-  while (t < interval80) {
-    const delay = t
-    sounds.push(setTimeout(() => play(direction), delay))
-    t += 120
-  }
-
-  // Slow phase: every 220ms for last 20%
-  while (t < duration) {
-    const delay = t
-    sounds.push(setTimeout(() => play(direction), delay))
-    t += 220
-  }
-
-  return sounds
 }
