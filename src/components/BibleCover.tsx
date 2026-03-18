@@ -6,7 +6,7 @@ import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { playPageTurn } from '@/lib/paperSound'
 import { useSwipe } from '@/hooks/useSwipe'
 
-const emboss = '0 1px 2px rgba(0,0,0,0.6), 0 -1px 1px rgba(255,200,80,0.2)'
+const emboss = '0 2px 4px rgba(0,0,0,0.7), 0 -1px 2px rgba(255,220,100,0.5), 0 0 12px rgba(255,200,60,0.2)'
 const goldLine = 'linear-gradient(to right, rgba(240,192,80,0.6), rgba(255,220,120,1.0), rgba(240,192,80,0.6))'
 const goldLineShadow = '0 1px 2px rgba(0,0,0,0.5), 0 -0.5px 1px rgba(255,220,120,0.3)'
 
@@ -85,8 +85,8 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
         }}
       >
         {/* Decorative border */}
-        <div style={{ position: 'absolute', inset: 24, border: '1px solid rgba(200,160,80,0.35)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', inset: 30, border: '1px solid rgba(200,160,80,0.15)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: 24, border: '1px solid rgba(255,200,80,0.6)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: 30, border: '1px solid rgba(255,200,80,0.25)', pointerEvents: 'none' }} />
 
         {/* Gold hamburger menu — top right */}
         <div ref={menuRef} style={{ position: 'absolute', top: 24, right: 24, zIndex: 100 }} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
@@ -146,7 +146,7 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
                       fontSize: 11,
                       letterSpacing: '3px',
                       textTransform: 'uppercase',
-                      color: 'rgba(240,192,80,0.85)',
+                      color: 'rgba(255,208,96,0.88)',
                       textDecoration: 'none',
                       transition: 'all 150ms',
                       borderBottom: i < menuItems.length - 1 && menuItems[i + 1] !== null ? '0.5px solid rgba(240,192,80,0.12)' : 'none',
@@ -179,21 +179,21 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
 
         {/* Cover text */}
         <div style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 700, color: '#F0C060', letterSpacing: '8px', marginBottom: 8, textShadow: emboss }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 700, color: '#FFD060', letterSpacing: '7px', marginBottom: 8, textShadow: emboss }}>
             HOLY BIBLE
           </h1>
-          <p style={{ fontFamily: 'var(--font-reading)', fontStyle: 'italic', fontSize: 'clamp(14px, 2vw, 22px)', color: 'rgba(240,192,96,0.90)', letterSpacing: '3px', marginBottom: 32, textShadow: emboss }}>
+          <p style={{ fontFamily: 'var(--font-reading)', fontStyle: 'italic', fontSize: 'clamp(16px, 2.2vw, 24px)', color: '#F5C860', letterSpacing: '3px', marginBottom: 32, textShadow: emboss }}>
             King James Version
           </p>
-          <div style={{ width: 120, height: 1, background: 'rgba(240,192,96,0.55)', margin: '0 auto 24px' }} />
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(12px, 1.5vw, 18px)', color: 'rgba(240,192,96,0.80)', letterSpacing: '5px', marginBottom: 40, textShadow: emboss }}>
+          <div style={{ width: 100, height: 1, background: 'rgba(255,200,80,0.65)', margin: '0 auto 24px' }} />
+          <p style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(14px, 1.8vw, 20px)', color: '#EDB850', letterSpacing: '6px', marginBottom: 40, textShadow: emboss }}>
             LOGOS BY KAI&apos;ROS
           </p>
-          <div style={{ width: 120, height: 1, background: 'rgba(240,192,96,0.55)', margin: '0 auto 24px' }} />
-          <p style={{ fontFamily: 'var(--font-reading)', fontStyle: 'italic', fontSize: 'clamp(11px, 1.3vw, 16px)', color: 'rgba(240,192,96,0.78)', lineHeight: 1.8, textAlign: 'center', maxWidth: 320, margin: '0 auto 4px', textShadow: emboss }}>
+          <div style={{ width: 100, height: 1, background: 'rgba(255,200,80,0.65)', margin: '0 auto 24px' }} />
+          <p style={{ fontFamily: 'var(--font-reading)', fontStyle: 'italic', fontSize: 'clamp(13px, 1.5vw, 18px)', color: '#E8B048', lineHeight: 1.8, textAlign: 'center', maxWidth: 320, margin: '0 auto 4px', textShadow: emboss }}>
             He must increase, but I must decrease.
           </p>
-          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '3px', color: 'rgba(240,192,96,0.60)' }}>
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '4px', color: '#D8A040' }}>
             JOHN 3:30
           </p>
         </div>
@@ -204,12 +204,12 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
             onClick={handleOpen}
             style={{
               fontFamily: 'var(--font-ui)', fontSize: 11, letterSpacing: '3px', textTransform: 'uppercase',
-              color: 'rgba(240,192,96,0.90)', background: 'transparent',
-              border: '1px solid rgba(240,192,96,0.55)', padding: '10px 28px',
+              color: '#FFD060', background: 'transparent',
+              border: '1px solid rgba(255,200,80,0.6)', padding: '10px 28px',
               borderRadius: 2, cursor: 'pointer', transition: 'all 300ms',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(240,192,96,1)'; e.currentTarget.style.borderColor = 'rgba(240,192,96,0.8)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(240,192,96,0.90)'; e.currentTarget.style.borderColor = 'rgba(240,192,96,0.55)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#FFE080'; e.currentTarget.style.borderColor = 'rgba(255,220,80,0.9)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#FFD060'; e.currentTarget.style.borderColor = 'rgba(255,200,80,0.6)' }}
           >
             Open the Bible
           </button>
