@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import LastReadTracker from '@/components/LastReadTracker'
 import BibleReader from '@/components/BibleReader'
@@ -123,17 +122,6 @@ export default async function ChapterPage({ params }: { params: Promise<{ book: 
   return (
     <div style={{ background: 'var(--bg-primary)' }}>
       <LastReadTracker book={book_name} chapter={chapter} />
-
-      {/* Back link */}
-      <div className="max-w-[900px] mx-auto px-4 pt-6">
-        <Link
-          href="/bible"
-          className="transition-colors duration-200 hover:text-[var(--gold)]"
-          style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}
-        >
-          &larr; All Books
-        </Link>
-      </div>
 
       <BibleReader
         verses={verses}
