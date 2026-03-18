@@ -11,7 +11,7 @@ import type { GlossaryTerm } from '@/components/GlossaryModal'
 import { usePinchFontSize, DEFAULT_SIZE } from '@/hooks/usePinchFontSize'
 import StrongsPanel from '@/components/StrongsPanel'
 import ChapterSheet from '@/components/ChapterSheet'
-// biblePosition used by child components
+// Navigation handled by child sheets
 import BookSheet from '@/components/BookSheet'
 
 interface Verse {

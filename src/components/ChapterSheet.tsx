@@ -3,15 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
-import { getPageCount, getLastReadBook } from '@/lib/navigationDistance'
-import PageShuffleOverlay from '@/components/PageShuffleOverlay'
+import { playPageTurn } from '@/lib/paperSound'
 
 interface ChapterEntry { chapter: number; summary: string }
 
 export default function ChapterSheet({ bookName, onClose }: { bookName: string; onClose: () => void }) {
   const [chapters, setChapters] = useState<ChapterEntry[]>([])
   const [loading, setLoading] = useState(true)
-  const [shuffle, setShuffle] = useState<{ pageCount: number; direction: 'forward' | 'back'; chapter: number } | null>(null)
+  const [fading, setFading] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -27,9 +26,12 @@ export default function ChapterSheet({ bookName, onClose }: { bookName: string; 
   }, [bookName])
 
   function handleChapterSelect(chapter: number) {
+    playPageTurn('forward')
     router.prefetch(`/bible/${encodeURIComponent(bookName)}/${chapter}`)
-    const { pageCount, direction } = getPageCount(getLastReadBook(), bookName)
-    setShuffle({ pageCount, direction, chapter })
+    setFading(true)
+    setTimeout(() => {
+      router.push(`/bible/${encodeURIComponent(bookName)}/${chapter}`)
+    }, 200)
   }
 
   return (
@@ -46,7 +48,8 @@ export default function ChapterSheet({ bookName, onClose }: { bookName: string; 
         borderTop: '2px solid rgba(139,107,20,0.4)',
         overflowY: 'auto',
         animation: 'sheetUp 300ms ease-out',
-        visibility: shuffle ? 'hidden' : 'visible',
+        opacity: fading ? 0 : 1,
+        transition: 'opacity 200ms ease',
       }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem 0.75rem', borderBottom: '1px solid rgba(139,107,20,0.25)' }}>
@@ -77,17 +80,7 @@ export default function ChapterSheet({ bookName, onClose }: { bookName: string; 
         </div>
       </div>
 
-      {/* Shuffle overlay */}
-      <PageShuffleOverlay
-        active={!!shuffle}
-        pageCount={shuffle?.pageCount ?? 2}
-        direction={shuffle?.direction ?? 'forward'}
-        onComplete={() => {
-          if (shuffle) {
-            router.push(`/bible/${encodeURIComponent(bookName)}/${shuffle.chapter}`)
-          }
-        }}
-      />
+      {/* Navigation handled via fade + setTimeout above */}
 
       <style jsx>{`
         @keyframes sheetUp {
