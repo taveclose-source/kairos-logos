@@ -34,7 +34,7 @@ interface StrongsPanelProps {
 }
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'kjv', label: 'KJV Concordance' },
+  { id: 'kjv', label: "Webster's 1828" },
   { id: 'strongs', label: "Strong's Concordance" },
   { id: 'english', label: 'English Concordance' },
 ]
@@ -45,12 +45,6 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
   const [currentWord] = useState(englishWord)
   const [numberStack, setNumberStack] = useState<string[]>([])
   const [tab, setTab] = useState<Tab>('kjv')
-
-  // KJV concordance (root word across testament)
-  const [kjvResults, setKjvResults] = useState<ConcordanceResult[]>([])
-  const [kjvTotal, setKjvTotal] = useState(0)
-  const [loadingKjv, setLoadingKjv] = useState(false)
-  const [kjvFetched, setKjvFetched] = useState(false)
 
   // Strong's concordance (entire Bible)
   const [strongsResults, setStrongsResults] = useState<ConcordanceResult[]>([])
@@ -74,20 +68,6 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
       .then(data => { if (data.strongs_number) setEntry(data) })
       .catch(() => {})
   }, [currentNumber, currentWord])
-
-  // Lazy load KJV concordance (root word across testament) on tab open
-  useEffect(() => {
-    if (tab !== 'kjv' || kjvFetched || !entry) return
-    setLoadingKjv(true)
-    fetch('/api/strongs/concordance', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ strongsNumber: currentNumber, testament: entry.testament, page: 0, limit: 100 }),
-    })
-      .then(r => r.json())
-      .then(data => { setKjvResults(data.results ?? []); setKjvTotal(data.total ?? 0); setKjvFetched(true); setLoadingKjv(false) })
-      .catch(() => setLoadingKjv(false))
-  }, [tab, currentNumber, entry, kjvFetched])
 
   // Lazy load Strong's concordance (entire Bible)
   useEffect(() => {
@@ -127,7 +107,7 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
     setNumberStack(prev => [...prev, currentNumber])
     setCurrentNumber(num)
     setTab('strongs')
-    setKjvFetched(false); setStrongsFetched(false); setEnglishFetched(false)
+    setStrongsFetched(false); setEnglishFetched(false)
   }
 
   function navigateBack() {
@@ -136,7 +116,7 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
       setNumberStack(s => s.slice(0, -1))
       setCurrentNumber(prev)
       setTab('kjv')
-      setKjvFetched(false); setStrongsFetched(false); setEnglishFetched(false)
+      setStrongsFetched(false); setEnglishFetched(false)
     }
   }
 
@@ -232,10 +212,7 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
                 )}
               </div>
 
-              {/* Root word occurrences across testament */}
-              <div style={{ borderTop: '1px solid rgba(139,107,20,0.2)', paddingTop: '1rem' }}>
-                {renderResults(kjvResults, kjvTotal, loadingKjv, currentWord, `Every occurrence of this root word in the ${testamentLabel}`)}
-              </div>
+              {/* Verse list removed — lives in Tab 2 and Tab 3 */}
             </>
           )}
 
