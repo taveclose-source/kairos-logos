@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import { MEMORY_CREDIT_BUNDLES } from '@/lib/memoryCredits'
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -95,6 +96,20 @@ export async function POST(req: NextRequest) {
             stripe_subscription_id: subscriptionId,
             subscription_expires_at: expiresAt,
           }).eq('id', userId)
+        }
+
+        // Memory credit purchase
+        const priceId = session.metadata?.price_id
+        if (priceId && MEMORY_CREDIT_BUNDLES[priceId] && session.metadata?.type === 'memory_credits') {
+          const bundle = MEMORY_CREDIT_BUNDLES[priceId]
+          // Upsert credits
+          const { data: existing } = await db.from('memory_credits').select('credits_remaining').eq('user_id', userId).maybeSingle()
+          await db.from('memory_credits').upsert({
+            user_id: userId,
+            credits_remaining: (existing?.credits_remaining ?? 0) + bundle.credits,
+          }, { onConflict: 'user_id' })
+          // Enable memory
+          await db.from('user_memories').upsert({ user_id: userId, memory_enabled: true }, { onConflict: 'user_id' })
         }
         break
       }

@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { canUseUnlimitedAsk } from '@/lib/permissions'
+import MemoryBanner from '@/components/MemoryBanner'
+import CreditPurchaseModal from '@/components/CreditPurchaseModal'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -57,6 +59,9 @@ function AskPageInner() {
   const [userTier, setUserTier] = useState('free')
   const [queryCount, setQueryCount] = useState(0)
   const [showLimitModal, setShowLimitModal] = useState(false)
+  const [memoryCredits, setMemoryCredits] = useState<number | null>(null)
+  const [memoryEnabled, setMemoryEnabled] = useState(false)
+  const [showCreditModal, setShowCreditModal] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -73,6 +78,13 @@ function AskPageInner() {
           .eq('id', user.id)
           .single()
         setUserTier(data?.subscription_tier ?? 'free')
+        // Fetch memory credits
+        if (['scholar', 'ministry', 'missions'].includes(data?.subscription_tier ?? '')) {
+          fetch('/api/memory').then(r => r.json()).then(m => {
+            setMemoryEnabled(m.memory_enabled)
+            setMemoryCredits(m.credits_remaining)
+          }).catch(() => {})
+        }
       }
       setAuthChecked(true)
     })
@@ -311,7 +323,14 @@ function AskPageInner() {
       {/* Page header */}
       <header style={{ padding: '1rem 1.5rem', borderBottom: '1px solid rgba(139,107,20,0.2)', flexShrink: 0 }}>
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-xl sm:text-2xl font-bold" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>Ask the Word</h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h1 className="text-xl sm:text-2xl font-bold" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>Ask the Word</h1>
+            {memoryEnabled && memoryCredits !== null && (
+              <a href="/settings/memory" style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'var(--gold)', textDecoration: 'none' }}>
+                ⚡ {memoryCredits} credits
+              </a>
+            )}
+          </div>
           <p className="text-xs text-gray-400 mt-0.5">
             Confessional Bible assistant &middot; KJV &amp; Textus Receptus
           </p>
@@ -382,6 +401,10 @@ function AskPageInner() {
               )}
             </div>
           ))}
+          {/* Memory banner — show after first response for Scholar+ without memory */}
+          {messages.length >= 2 && !memoryEnabled && ['scholar', 'ministry', 'missions'].includes(userTier) && (
+            <MemoryBanner onEnable={() => setShowCreditModal(true)} />
+          )}
           {/* Error banner */}
           {error && (
             <div className="max-w-3xl mx-auto rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700 mt-2">
@@ -449,6 +472,8 @@ function AskPageInner() {
           Logos by Kai&apos;Ros &middot; &ldquo;Sanctify them through thy truth: thy word is truth.&rdquo; &mdash; John 17:17
         </p>
       </div>
+      {/* Credit purchase modal */}
+      {showCreditModal && <CreditPurchaseModal onClose={() => setShowCreditModal(false)} />}
       {/* end outer container */}
     </div>
     </>

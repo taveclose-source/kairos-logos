@@ -27,6 +27,8 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [questions, setQuestions] = useState<QueueItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [memoryEnabled, setMemoryEnabled] = useState(false)
+  const [memoryCredits, setMemoryCredits] = useState(0)
   const router = useRouter()
 
   useEffect(() => {
@@ -40,6 +42,11 @@ export default function DashboardPage() {
       ])
       setProfile(profileRes.data)
       setQuestions(questionsRes.data ?? [])
+      // Fetch memory status
+      fetch('/api/memory').then(r => r.json()).then(m => {
+        setMemoryEnabled(m.memory_enabled)
+        setMemoryCredits(m.credits_remaining)
+      }).catch(() => {})
       setLoading(false)
     })
   }, [router])
@@ -109,6 +116,23 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
+
+        {/* Memory status card */}
+        <a href={tier === 'free' ? '/pricing' : '/settings/memory'} className="block mb-8 transition-all duration-200" style={{ background: 'var(--bg-secondary)', border: memoryEnabled ? '1px solid var(--gold)' : '1px solid var(--border-subtle)', borderRadius: 4, padding: '1rem 1.25rem', textDecoration: 'none' }}>
+          {tier === 'free' ? (
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--text-secondary)' }}>Upgrade to Scholar to enable Logos Memory</p>
+          ) : !memoryEnabled ? (
+            <>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--gold)' }}>Enable Memory — Logos remembers your study context</p>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'var(--text-tertiary)', marginTop: 4 }}>Get Started &rarr;</p>
+            </>
+          ) : (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--gold)' }}>⚡ {memoryCredits} credits remaining</p>
+              <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'var(--text-tertiary)' }}>Manage &rarr;</span>
+            </div>
+          )}
+        </a>
 
         <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '14px', letterSpacing: '2px', color: 'var(--text-primary)', textTransform: 'uppercase', marginBottom: '1rem' }}>Your Questions</h2>
 

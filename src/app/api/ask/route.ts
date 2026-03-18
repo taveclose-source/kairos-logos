@@ -100,11 +100,36 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Memory + model selection
+    const userId = await getSessionUserId()
+    const serviceDb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+
+    let memoryContext = ''
+    let memoryEnabled = false
+    let userTierLocal = 'free'
+    if (userId) {
+      const [memRes, credRes, userRes] = await Promise.all([
+        serviceDb.from('user_memories').select('memory_enabled, memory_data').eq('user_id', userId).maybeSingle(),
+        serviceDb.from('memory_credits').select('credits_remaining').eq('user_id', userId).maybeSingle(),
+        serviceDb.from('users').select('subscription_tier').eq('id', userId).single(),
+      ])
+      memoryEnabled = memRes.data?.memory_enabled === true && (credRes.data?.credits_remaining ?? 0) > 0
+      if (memoryEnabled && memRes.data?.memory_data) {
+        memoryContext = `\n\nUser study context:\n${JSON.stringify(memRes.data.memory_data)}`
+      }
+      // Save session for downloads
+      const sessionId = body.sessionId || crypto.randomUUID()
+      await serviceDb.from('ask_sessions').upsert({ id: sessionId, user_id: userId, messages: body.messages || [], updated_at: new Date().toISOString() }, { onConflict: 'id' })
+      // Model by tier
+      userTierLocal = userRes.data?.subscription_tier ?? 'free'
+    }
+    const model = userTierLocal !== 'free' ? AGENT_MODEL : 'claude-haiku-4-5-20251001'
+
     // Stream from Claude API
     const stream = anthropic.messages.stream({
-      model: AGENT_MODEL,
+      model,
       max_tokens: 2048,
-      system: AGENT_SYSTEM_PROMPT,
+      system: AGENT_SYSTEM_PROMPT + memoryContext,
       messages,
     })
 
@@ -129,6 +154,17 @@ export async function POST(req: NextRequest) {
             )
           )
           controller.close()
+
+          // Deduct memory credits if enabled
+          if (memoryEnabled && userId) {
+            try {
+              const { calculateCreditsUsed } = await import('@/lib/memoryCredits')
+              const creditsUsed = calculateCreditsUsed(2500, fullAnswer.length / 4)
+              await serviceDb.from('memory_credits').update({
+                credits_remaining: Math.max(0, (await serviceDb.from('memory_credits').select('credits_remaining').eq('user_id', userId).single()).data?.credits_remaining - creditsUsed)
+              }).eq('user_id', userId)
+            } catch {}
+          }
 
           // Queue insertion (fire-and-forget after stream ends)
           if (routed_to_queue) {
