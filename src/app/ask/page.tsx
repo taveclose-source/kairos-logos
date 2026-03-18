@@ -291,21 +291,19 @@ function AskPageInner() {
       </div>
     )}
 
-    <div className="flex flex-col" style={{
-      minHeight: '100vh',
-      position: 'relative',
+    <div style={{
+      position: 'fixed', inset: 0,
       backgroundImage: "url('/images/ask-backdrop.png')",
       backgroundSize: 'cover',
-      backgroundPosition: 'center 30%',
+      backgroundPosition: typeof window !== 'undefined' && window.innerWidth < 768 ? 'center 85%' : 'center 75%',
       backgroundRepeat: 'no-repeat',
-      backgroundAttachment: 'scroll',
+      overflow: 'hidden',
     }}>
       {/* Dark overlay */}
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(15, 6, 2, 0.55)', pointerEvents: 'none', zIndex: 0 }} />
-      {/* Content wrapper — above overlay */}
-      <div className="flex flex-col flex-1" style={{ position: 'relative', zIndex: 1 }}>
-      {/* Page header (below SiteHeader which is h-14 / 3.5rem) */}
-      <header className="shrink-0 border-b border-gray-100 px-4 sm:px-6 py-4">
+
+      {/* Page header */}
+      <header style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 2, padding: '1rem 1.5rem', borderBottom: '1px solid rgba(139,107,20,0.2)' }}>
         <div className="max-w-3xl mx-auto">
           <h1 className="text-xl sm:text-2xl font-bold" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>Ask the Word</h1>
           <p className="text-xs text-gray-400 mt-0.5">
@@ -314,8 +312,8 @@ function AskPageInner() {
         </div>
       </header>
 
-      {/* Chat area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
+      {/* Chat area — scrolls inside fixed bounds */}
+      <div ref={scrollRef} style={{ position: 'absolute', top: 80, bottom: 80, left: 0, right: 0, overflowY: 'auto', padding: '0 1rem', zIndex: 1 }}>
         <div className="max-w-3xl mx-auto space-y-4">
           {messages.length === 0 && (
             <div className="text-center py-20">
@@ -378,20 +376,17 @@ function AskPageInner() {
               )}
             </div>
           ))}
+          {/* Error banner */}
+          {error && (
+            <div className="max-w-3xl mx-auto rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700 mt-2">
+              {error}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Error banner */}
-      {error && (
-        <div className="shrink-0 px-4 sm:px-6">
-          <div className="max-w-3xl mx-auto rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700 mb-2">
-            {error}
-          </div>
-        </div>
-      )}
-
       {/* Input bar — fixed at bottom */}
-      <div className="shrink-0 border-t border-gray-100 bg-white px-4 sm:px-6 py-3">
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 2, padding: '12px 16px', background: 'rgba(15,6,2,0.7)', backdropFilter: 'blur(8px)' }}>
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex gap-2 items-end">
           <div className="flex-1 relative">
             <textarea
@@ -446,7 +441,7 @@ function AskPageInner() {
           Logos by Kai&apos;Ros &middot; &ldquo;Sanctify them through thy truth: thy word is truth.&rdquo; &mdash; John 17:17
         </p>
       </div>
-      </div>{/* end content wrapper */}
+      {/* end fixed layout */}
     </div>
     </>
   )
