@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { playPageTurn } from '@/lib/paperSound'
+import { getShuffleDuration, getShuffleDirection, getLastRead, playShuffleSounds } from '@/lib/biblePosition'
 import BibleTOC from '@/components/BibleTOC'
 
 type Stage = 'opening' | 'toc' | 'closing' | 'shuffling'
@@ -35,13 +36,14 @@ export default function BibleOpening({ isOpen, onClose }: { isOpen: boolean; onC
     setStage('shuffling')
     setShuffling(true)
 
-    playPageTurn('forward')
-    setTimeout(() => playPageTurn('forward'), 120)
-    setTimeout(() => playPageTurn('forward'), 240)
+    const lastRead = getLastRead()
+    const duration = getShuffleDuration(lastRead?.book ?? null, book)
+    const dir = getShuffleDirection(lastRead?.book ?? null, book)
+    playShuffleSounds(duration, dir, playPageTurn)
 
     setTimeout(() => {
       router.push(`/bible/${encodeURIComponent(book)}/${chapter}`)
-    }, 360)
+    }, duration)
   }, [router])
 
   // Closing animation — reverse of open

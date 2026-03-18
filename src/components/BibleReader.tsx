@@ -91,6 +91,13 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     return () => window.removeEventListener('keydown', handleKey)
   }, [turnNext, turnPrev])
 
+  // Save last read position
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('logos_last_read', JSON.stringify({ book: bookName, chapter }))
+    }
+  }, [bookName, chapter])
+
   // Keyboard font size: Ctrl+Plus, Ctrl+Minus, Ctrl+0
   useEffect(() => {
     function handleFontKey(e: KeyboardEvent) {

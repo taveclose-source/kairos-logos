@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { playPageTurn } from '@/lib/paperSound'
 import { useSwipe } from '@/hooks/useSwipe'
+import { getShuffleDuration, getShuffleDirection, getLastRead, playShuffleSounds } from '@/lib/biblePosition'
 
 interface BookEntry { book_name: string; testament: string; sort_order: number }
 interface ChapterEntry { chapter: number; summary: string }
@@ -103,10 +104,11 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
   // Swipe on chapter view
   const swipeChapterLeft = useCallback(() => {
     if (!selectedBook) return
-    playPageTurn('forward')
-    setTimeout(() => playPageTurn('forward'), 120)
-    setTimeout(() => playPageTurn('forward'), 240)
-    setTimeout(() => router.push(`/bible/${encodeURIComponent(selectedBook)}/1`), 400)
+    const lastRead = getLastRead()
+    const duration = getShuffleDuration(lastRead?.book ?? null, selectedBook)
+    const dir = getShuffleDirection(lastRead?.book ?? null, selectedBook)
+    playShuffleSounds(duration, dir, playPageTurn)
+    setTimeout(() => router.push(`/bible/${encodeURIComponent(selectedBook)}/1`), duration)
   }, [selectedBook, router])
 
   const swipeChapterRight = useCallback(() => {
@@ -221,10 +223,11 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
                 <button
                   key={c.chapter}
                   onClick={() => {
-                    playPageTurn('forward')
-                    setTimeout(() => playPageTurn('forward'), 120)
-                    setTimeout(() => playPageTurn('forward'), 240)
-                    setTimeout(() => onSelect(selectedBook!, c.chapter), 400)
+                    const lastRead = getLastRead()
+                    const duration = getShuffleDuration(lastRead?.book ?? null, selectedBook!)
+                    const dir = getShuffleDirection(lastRead?.book ?? null, selectedBook!)
+                    playShuffleSounds(duration, dir, playPageTurn)
+                    setTimeout(() => onSelect(selectedBook!, c.chapter), duration)
                   }}
                   style={{ padding: '0.75rem 1rem', borderBottom: '0.5px solid rgba(139,107,20,0.15)', background: 'transparent', border: 'none', borderBottomWidth: '0.5px', borderBottomStyle: 'solid', borderBottomColor: 'rgba(139,107,20,0.15)', cursor: 'pointer', textAlign: 'left', transition: 'background 150ms' }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(139,107,20,0.06)')}
