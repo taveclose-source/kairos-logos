@@ -65,37 +65,45 @@ export async function POST(req: NextRequest) {
   }
 
   if (englishWord && testament) {
-    // English concordance: find all verses with this English word in the same testament
-    const cleanWord = englishWord.replace(/[^a-zA-Z'-]/g, '').toLowerCase()
+    // English concordance: index-friendly pattern matching
+    const cleanWord = englishWord.replace(/[^a-zA-Z'-]/g, '')
     if (!cleanWord) return NextResponse.json({ results: [], total: 0 })
+
+    // Use OR patterns that leverage btree index on word_text
+    const patterns = [cleanWord, `${cleanWord}.`, `${cleanWord},`, `${cleanWord};`, `${cleanWord}:`, `${cleanWord}?`, `${cleanWord}!`]
 
     const { data: words } = await supabase
       .from('verse_words')
       .select('book, chapter, verse')
-      .ilike('word_text', cleanWord)
+      .or(patterns.map(p => `word_text.ilike.${p}`).join(','))
       .order('book')
       .order('chapter')
       .order('verse')
-      .range(offset, offset + limit - 1)
+      .limit(1000)
 
     const { count } = await supabase
       .from('verse_words')
       .select('*', { count: 'exact', head: true })
-      .ilike('word_text', cleanWord)
+      .or(patterns.map(p => `word_text.ilike.${p}`).join(','))
 
     if (!words || words.length === 0) {
       return NextResponse.json({ results: [], total: 0 })
     }
 
-    // Filter by testament and deduplicate
+    // Filter by testament and deduplicate, cap at 100
     const seen = new Set<string>()
     const filtered: typeof words = []
+    const bookTestaments: Record<string, string> = {}
     for (const w of words) {
+      if (filtered.length >= 100) break
       const key = `${w.book}:${w.chapter}:${w.verse}`
       if (seen.has(key)) continue
       seen.add(key)
-      const { data: bb } = await supabase.from('bible_books').select('testament').eq('book_name', w.book).single()
-      if (bb?.testament === testament) filtered.push(w)
+      if (!bookTestaments[w.book]) {
+        const { data: bb } = await supabase.from('bible_books').select('testament').eq('book_name', w.book).single()
+        bookTestaments[w.book] = bb?.testament ?? ''
+      }
+      if (bookTestaments[w.book] === testament) filtered.push(w)
     }
 
     const results = await Promise.all(filtered.map(async (w) => {
