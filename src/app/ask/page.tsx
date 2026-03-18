@@ -292,18 +292,22 @@ function AskPageInner() {
     )}
 
     <div style={{
-      position: 'fixed', inset: 0,
+      position: 'relative',
+      minHeight: '100vh',
       backgroundImage: "url('/images/ask-backdrop.png')",
       backgroundSize: 'cover',
-      backgroundPosition: typeof window !== 'undefined' && window.innerWidth < 768 ? 'center 85%' : 'center 75%',
+      backgroundPosition: 'center 75%',
       backgroundRepeat: 'no-repeat',
       overflow: 'hidden',
     }}>
       {/* Dark overlay */}
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(15, 6, 2, 0.55)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,6,2,0.55)', pointerEvents: 'none', zIndex: 0 }} />
+
+      {/* Inner layout wrapper */}
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', paddingBottom: 80 }}>
 
       {/* Page header */}
-      <header style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 2, padding: '1rem 1.5rem', borderBottom: '1px solid rgba(139,107,20,0.2)' }}>
+      <header style={{ padding: '1rem 1.5rem', borderBottom: '1px solid rgba(139,107,20,0.2)', flexShrink: 0 }}>
         <div className="max-w-3xl mx-auto">
           <h1 className="text-xl sm:text-2xl font-bold" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>Ask the Word</h1>
           <p className="text-xs text-gray-400 mt-0.5">
@@ -312,8 +316,8 @@ function AskPageInner() {
         </div>
       </header>
 
-      {/* Chat area — scrolls inside fixed bounds */}
-      <div ref={scrollRef} style={{ position: 'absolute', top: 80, bottom: 80, left: 0, right: 0, overflowY: 'auto', padding: '0 1rem', zIndex: 1 }}>
+      {/* Chat area */}
+      <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 1rem', maxHeight: 'calc(100vh - 240px)' }}>
         <div className="max-w-3xl mx-auto space-y-4">
           {messages.length === 0 && (
             <div className="text-center py-20">
@@ -385,8 +389,10 @@ function AskPageInner() {
         </div>
       </div>
 
+      </div>{/* end inner layout wrapper */}
+
       {/* Input bar — fixed at bottom */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 2, padding: '12px 16px', background: 'rgba(15,6,2,0.7)', backdropFilter: 'blur(8px)' }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10, padding: '12px 16px', background: 'rgba(15,6,2,0.75)', backdropFilter: 'blur(8px)' }}>
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex gap-2 items-end">
           <div className="flex-1 relative">
             <textarea
@@ -441,7 +447,7 @@ function AskPageInner() {
           Logos by Kai&apos;Ros &middot; &ldquo;Sanctify them through thy truth: thy word is truth.&rdquo; &mdash; John 17:17
         </p>
       </div>
-      {/* end fixed layout */}
+      {/* end outer container */}
     </div>
     </>
   )
