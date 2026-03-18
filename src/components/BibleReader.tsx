@@ -11,9 +11,8 @@ import type { GlossaryTerm } from '@/components/GlossaryModal'
 import { usePinchFontSize, DEFAULT_SIZE } from '@/hooks/usePinchFontSize'
 import StrongsPanel from '@/components/StrongsPanel'
 import ChapterSheet from '@/components/ChapterSheet'
-import { getShuffleDuration } from '@/lib/biblePosition'
-import PageShuffleOverlay from '@/components/PageShuffleOverlay'
-import { openMainTOC } from '@/lib/tocEvents'
+// biblePosition used by child components
+import BookSheet from '@/components/BookSheet'
 
 interface Verse {
   verse: number
@@ -63,7 +62,8 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const [showSizeIndicator, setShowSizeIndicator] = useState(false)
   const [strongsPanel, setStrongsPanel] = useState<{ number: string; word: string } | null>(null)
   const [chapterSheetOpen, setChapterSheetOpen] = useState(false)
-  const [backShuffle, setBackShuffle] = useState<{ duration: number } | null>(null)
+  const [chapterSheetBook, setChapterSheetBook] = useState(bookName)
+  const [bookSheetOpen, setBookSheetOpen] = useState(false)
   const sizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Prefetch adjacent chapters for instant navigation
@@ -339,11 +339,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
             {/* Top nav — All Books / All Chapters */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
               <button
-                onClick={() => {
-                  playPageTurn('back')
-                  const duration = getShuffleDuration(bookName, 'Genesis')
-                  setBackShuffle({ duration })
-                }}
+                onClick={() => { playPageTurn('back'); setBookSheetOpen(true) }}
                 style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.5)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px 0 8px 4px', transition: 'color 150ms' }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.9)')}
                 onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.5)')}
@@ -351,7 +347,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                 &lsaquo; All Books
               </button>
               <button
-                onClick={() => { playPageTurn('forward'); setChapterSheetOpen(true) }}
+                onClick={() => { playPageTurn('forward'); setChapterSheetBook(bookName); setChapterSheetOpen(true) }}
                 style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.5)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px 4px 8px 0', transition: 'color 150ms' }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.9)')}
                 onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.5)')}
@@ -461,37 +457,33 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         }}
       >
         <button
-          onClick={() => {
-            playPageTurn('back')
-            const dur = getShuffleDuration(bookName, 'Genesis')
-            setBackShuffle({ duration: dur })
-          }}
+          onClick={() => { playPageTurn('back'); setBookSheetOpen(true) }}
           style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(240,192,80,0.7)', background: 'transparent', border: 'none', padding: '0 20px', height: 44, cursor: 'pointer' }}
         >
           &lsaquo; All Books
         </button>
         <button
-          onClick={() => { playPageTurn('forward'); setChapterSheetOpen(true) }}
+          onClick={() => { playPageTurn('forward'); setChapterSheetBook(bookName); setChapterSheetOpen(true) }}
           style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(240,192,80,0.7)', background: 'transparent', border: 'none', padding: '0 20px', height: 44, cursor: 'pointer' }}
         >
           All Chapters &rsaquo;
         </button>
       </div>
 
-      {/* Chapter sheet (mobile) */}
+      {/* Chapter sheet */}
       {chapterSheetOpen && (
-        <ChapterSheet bookName={bookName} onClose={() => setChapterSheetOpen(false)} />
+        <ChapterSheet bookName={chapterSheetBook} onClose={() => setChapterSheetOpen(false)} />
       )}
 
-      {/* Back to TOC shuffle (mobile) */}
-      <PageShuffleOverlay
-        active={!!backShuffle}
-        duration={backShuffle?.duration ?? 200}
-        direction="back"
-        onComplete={() => {
-          setBackShuffle(null)
-          openMainTOC()
-          router.push('/')
+      {/* Book sheet */}
+      <BookSheet
+        isOpen={bookSheetOpen}
+        onClose={() => setBookSheetOpen(false)}
+        currentBook={bookName}
+        onBookSelect={(book) => {
+          setBookSheetOpen(false)
+          setChapterSheetBook(book)
+          setChapterSheetOpen(true)
         }}
       />
     </div>
