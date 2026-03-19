@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useTheme } from '@/contexts/ThemeContext'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import type { User } from '@supabase/supabase-js'
 
@@ -29,6 +30,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [memoryEnabled, setMemoryEnabled] = useState(false)
   const [memoryCredits, setMemoryCredits] = useState(0)
+  useTheme() // theme-aware via CSS vars
   const router = useRouter()
 
   useEffect(() => {

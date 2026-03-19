@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import CreditPurchaseModal from '@/components/CreditPurchaseModal'
+// Theme handled by CSS variables
 
 export default function MemorySettingsPage() {
   const [loading, setLoading] = useState(true)

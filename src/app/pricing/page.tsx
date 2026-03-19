@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { useTheme } from '@/contexts/ThemeContext'
 
 type Billing = 'monthly' | 'annual'
 
@@ -55,6 +56,8 @@ function PricingContent() {
   const [loading, setLoading] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const searchParams = useSearchParams()
+  const { theme } = useTheme()
+  const m = theme === 'modern'
   const success = searchParams.get('success')
   const canceled = searchParams.get('canceled')
 
@@ -87,7 +90,7 @@ function PricingContent() {
   }
 
   return (
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12" style={{ background: m ? '#FAFAF9' : undefined, minHeight: '100vh' }}>
       <p className="text-sm font-medium text-emerald-700 tracking-wide uppercase text-center">
         Logos by Kai&rsquo;Ros
       </p>
