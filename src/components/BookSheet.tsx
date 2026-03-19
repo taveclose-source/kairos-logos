@@ -58,7 +58,7 @@ export default function BookSheet({ isOpen, onClose, currentBook, onBookSelect }
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0,
         height: '70vh', zIndex: 30,
-        background: '#F5EDD9',
+        background: '#F8F2E2',
         borderRadius: '16px 16px 0 0',
         borderTop: '2px solid rgba(139,107,20,0.4)',
         overflowY: 'auto',
@@ -67,18 +67,18 @@ export default function BookSheet({ isOpen, onClose, currentBook, onBookSelect }
         scrollbarColor: 'rgba(139,107,20,0.3) transparent',
       }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem 0.75rem', borderBottom: '1px solid rgba(139,107,20,0.25)', position: 'sticky', top: 0, background: '#F5EDD9', zIndex: 2 }}>
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: 16, color: '#2C1810' }}>Books of the Bible</p>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8B6914', fontSize: 20 }}>&times;</button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem 0.75rem', borderBottom: '1px solid rgba(139,107,20,0.25)', position: 'sticky', top: 0, background: '#F8F2E2', zIndex: 2 }}>
+          <p style={{ fontFamily: 'var(--font-display)', fontSize: 16, color: '#1A0A04' }}>Books of the Bible</p>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C8960A', fontSize: 20 }}>&times;</button>
         </div>
 
         <div style={{ padding: '0.5rem 1rem' }}>
           {loading ? (
-            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#8B6914', textAlign: 'center', padding: '2rem 0' }}>Loading...</p>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#C8960A', textAlign: 'center', padding: '2rem 0' }}>Loading...</p>
           ) : (
             <>
               {/* Old Testament */}
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: '3px', color: '#8B6914', textTransform: 'uppercase', marginTop: '0.75rem', marginBottom: '0.5rem' }}>Old Testament</p>
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: '3px', color: '#C8960A', textTransform: 'uppercase', marginTop: '0.75rem', marginBottom: '0.5rem' }}>Old Testament</p>
               {otBooks.map(b => (
                 <button
                   key={b.book_name}
@@ -93,14 +93,14 @@ export default function BookSheet({ isOpen, onClose, currentBook, onBookSelect }
                   <span style={{ fontFamily: 'var(--font-reading)', fontSize: 16, color: b.book_name === currentBook ? '#8B6914' : '#2C1810', fontWeight: b.book_name === currentBook ? 600 : 400 }}>
                     {b.book_name}
                   </span>
-                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: '#8B6914', opacity: 0.6 }}>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: '#C8960A', opacity: 0.6 }}>
                     {b.chapter_count} ch
                   </span>
                 </button>
               ))}
 
               {/* New Testament */}
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: '3px', color: '#8B6914', textTransform: 'uppercase', marginTop: '1.25rem', marginBottom: '0.5rem' }}>New Testament</p>
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: '3px', color: '#C8960A', textTransform: 'uppercase', marginTop: '1.25rem', marginBottom: '0.5rem' }}>New Testament</p>
               {ntBooks.map(b => (
                 <button
                   key={b.book_name}
@@ -115,7 +115,7 @@ export default function BookSheet({ isOpen, onClose, currentBook, onBookSelect }
                   <span style={{ fontFamily: 'var(--font-reading)', fontSize: 16, color: b.book_name === currentBook ? '#8B6914' : '#2C1810', fontWeight: b.book_name === currentBook ? 600 : 400 }}>
                     {b.book_name}
                   </span>
-                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: '#8B6914', opacity: 0.6 }}>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: '#C8960A', opacity: 0.6 }}>
                     {b.chapter_count} ch
                   </span>
                 </button>

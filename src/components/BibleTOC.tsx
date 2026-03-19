@@ -128,7 +128,7 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
   return (
     <div className="mx-auto relative" style={{ maxWidth: 900, width: '100%', background: 'var(--bg-warm)', borderRadius: 4, boxShadow: '-8px 0 20px rgba(0,0,0,0.5), 8px 0 20px rgba(0,0,0,0.3), 0 4px 40px rgba(0,0,0,0.6)', minHeight: '70vh', overflow: 'hidden', visibility: tocHidden ? 'hidden' : 'visible' }}>
       {/* Close button */}
-      <button onClick={onClose} style={{ position: 'absolute', top: 12, right: 16, zIndex: 10, background: 'none', border: 'none', cursor: 'pointer', color: '#8B6914', fontSize: 20 }}>
+      <button onClick={onClose} style={{ position: 'absolute', top: 12, right: 16, zIndex: 10, background: 'none', border: 'none', cursor: 'pointer', color: '#C8960A', fontSize: 20 }}>
         &times;
       </button>
 
@@ -151,11 +151,11 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: '70vh' }}>
           {/* Left page — OT */}
-          <div style={{ padding: pad, color: '#2C1810' }}>
-            <p style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? 10 : 13, letterSpacing: isMobile ? '2px' : '4px', color: '#8B6914', textTransform: 'uppercase', textAlign: 'center', marginBottom: isMobile ? '0.75rem' : '1.5rem' }}>
+          <div style={{ padding: pad, color: '#1A0A04' }}>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? 10 : 13, letterSpacing: isMobile ? '2px' : '4px', color: '#C8960A', textTransform: 'uppercase', textAlign: 'center', marginBottom: isMobile ? '0.75rem' : '1.5rem' }}>
               Table of Contents
             </p>
-            <p style={{ fontFamily: 'var(--font-display)', fontSize: headingSize, letterSpacing: headingSpacing, color: '#8B6914', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Old Testament</p>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: headingSize, letterSpacing: headingSpacing, color: '#C8960A', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Old Testament</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isMobile ? '0 0.5rem' : '0 1rem' }}>
               {otBooks.map((b) => (
                 <BookButton key={b.book_name} name={b.book_name} selected={selectedBook === b.book_name} onClick={() => handleBookSelect(b)} small={isMobile} />
@@ -164,8 +164,8 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
           </div>
 
           {/* Right page — NT */}
-          <div style={{ padding: pad, borderLeft: '1px solid rgba(139,107,20,0.2)', color: '#2C1810' }}>
-            <p style={{ fontFamily: 'var(--font-display)', fontSize: headingSize, letterSpacing: headingSpacing, color: '#8B6914', textTransform: 'uppercase', marginBottom: '0.5rem' }}>New Testament</p>
+          <div style={{ padding: pad, borderLeft: '1px solid rgba(139,107,20,0.2)', color: '#1A0A04' }}>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: headingSize, letterSpacing: headingSpacing, color: '#C8960A', textTransform: 'uppercase', marginBottom: '0.5rem' }}>New Testament</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isMobile ? '0 0.5rem' : '0 1rem' }}>
               {ntBooks.map((b) => (
                 <BookButton key={b.book_name} name={b.book_name} selected={selectedBook === b.book_name} onClick={() => handleBookSelect(b)} small={isMobile} />
@@ -197,16 +197,16 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <button
               onClick={handleBack}
-              style={{ fontFamily: 'var(--font-ui)', fontSize: 11, letterSpacing: '2px', color: '#8B6914', background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase' }}
+              style={{ fontFamily: 'var(--font-ui)', fontSize: 11, letterSpacing: '2px', color: '#C8960A', background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase' }}
               onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
               onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
             >
               &larr; All Books
             </button>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? 14 : 18, color: '#2C1810', letterSpacing: '3px' }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? 14 : 18, color: '#1A0A04', letterSpacing: '3px' }}>
               {selectedBook}
             </span>
-            <span style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', color: '#8B6914', textTransform: 'uppercase' }}>
+            <span style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', color: '#C8960A', textTransform: 'uppercase' }}>
               {selectedTestament}
             </span>
           </div>
@@ -216,7 +216,7 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
         {/* Chapter grid — scrollable */}
         <div style={{ flex: 1, overflowY: 'auto', padding: pad, maxHeight: '70vh', scrollbarWidth: 'thin', scrollbarColor: 'rgba(139,107,20,0.3) transparent' }}>
           {loadingChapters ? (
-            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#8B6914', textAlign: 'center', paddingTop: '2rem' }}>Loading...</p>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#C8960A', textAlign: 'center', paddingTop: '2rem' }}>Loading...</p>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: 0 }}>
               {chapters.map((c) => (
@@ -233,10 +233,10 @@ export default function BibleTOC({ onSelect, onClose }: { onSelect: (book: strin
                   onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(139,107,20,0.06)')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                 >
-                  <span style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? 9 : 11, letterSpacing: '2px', color: '#8B6914', display: 'block', marginBottom: 4 }}>
+                  <span style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? 9 : 11, letterSpacing: '2px', color: '#C8960A', display: 'block', marginBottom: 4 }}>
                     CHAPTER {c.chapter}
                   </span>
-                  <span style={{ fontFamily: 'var(--font-reading)', fontStyle: 'italic', fontSize: isMobile ? 12 : 14, color: '#2C1810', lineHeight: 1.5, display: 'block' }}>
+                  <span style={{ fontFamily: 'var(--font-reading)', fontStyle: 'italic', fontSize: isMobile ? 12 : 14, color: '#1A0A04', lineHeight: 1.5, display: 'block' }}>
                     {c.summary}
                   </span>
                 </button>

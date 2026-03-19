@@ -60,8 +60,8 @@ export default function SiteHeader() {
   const navLinkStyle = (href: string) =>
     `transition-colors duration-200 ${
       pathname.startsWith(href)
-        ? 'text-[#F5C878]'
-        : 'text-[#E8B878] hover:text-[#FFF8F0]'
+        ? 'text-[#FFD060]'
+        : 'text-[rgba(255,208,64,0.9)] hover:text-[#FFFFFF]'
     }`
 
   const navLinkClass = 'font-[var(--font-ui)] text-[11px] tracking-[2px] uppercase'
