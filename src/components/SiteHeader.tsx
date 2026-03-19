@@ -64,7 +64,7 @@ export default function SiteHeader() {
         : 'text-[rgba(255,208,64,0.9)] hover:text-[#FFFFFF]'
     }`
 
-  const navLinkClass = 'font-[var(--font-ui)] text-[11px] tracking-[2px] uppercase'
+  const navLinkClass = 'font-[var(--font-ui)] text-[13px] tracking-[2px] uppercase'
 
   const avatarLetter = (displayName || user?.email || '?')[0].toUpperCase()
 

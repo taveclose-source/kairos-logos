@@ -188,20 +188,20 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
             {currentNumber.startsWith('G') ? 'Greek' : 'Hebrew'}
           </span>
           {/* Original word */}
-          {entry?.original_word && <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, color: '#1A0A04', display: 'block', marginBottom: 6 }}>{entry.original_word}</span>}
+          {entry?.original_word && <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 34, color: '#1A0A04', display: 'block', marginBottom: 6 }}>{entry.original_word}</span>}
           {/* Transliteration + Pronunciation side by side */}
           {(entry?.transliteration || entry?.pronunciation) && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: 6 }}>
               {entry.transliteration && (
                 <div>
                   <span style={{ fontFamily: 'var(--font-ui)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.5)', display: 'block', marginBottom: 2 }}>Transliteration</span>
-                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: '#8B5E10' }}>{entry.transliteration}</span>
+                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 17, color: '#C8960A' }}>{entry.transliteration}</span>
                 </div>
               )}
               {entry.pronunciation && (
                 <div>
                   <span style={{ fontFamily: 'var(--font-ui)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.5)', display: 'block', marginBottom: 2 }}>Pronunciation</span>
-                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: '#8B5E10' }}>({entry.pronunciation})</span>
+                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 17, color: '#C8960A' }}>({entry.pronunciation})</span>
                 </div>
               )}
             </div>
@@ -231,7 +231,7 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
                     <p style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: '#8B5E10', marginBottom: 2 }}>{entry.webster.word}</p>
                     {entry.webster.part_of_speech && <p style={{ fontFamily: 'var(--font-ui)', fontStyle: 'italic', fontSize: 10, color: '#8B5E10', marginBottom: 2 }}>{entry.webster.part_of_speech}</p>}
                     {entry.webster.etymology && <p style={{ fontFamily: 'var(--font-ui)', fontStyle: 'italic', fontSize: 10, color: '#8B5E10', marginBottom: 6 }}>{entry.webster.etymology}</p>}
-                    <p style={{ fontFamily: 'var(--font-reading)', fontSize: 17, color: '#1A0A04', lineHeight: 1.9 }}>{entry.webster.definition}</p>
+                    <p style={{ fontFamily: 'var(--font-reading)', fontSize: 15, color: '#1A0A04', lineHeight: 1.9 }}>{entry.webster.definition}</p>
                   </>
                 ) : (
                   <p style={{ fontFamily: 'var(--font-reading)', fontStyle: 'italic', fontSize: 14, color: '#8B5E10', opacity: 0.6 }}>Not found in Webster&apos;s 1828</p>
@@ -255,7 +255,7 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
               {(entry.strongs_def || entry.definition) && (
                 <div style={{ marginBottom: '0.75rem' }}>
                   <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#8B5E10', marginBottom: 4 }}>Definition</p>
-                  <p style={{ fontFamily: 'var(--font-reading)', fontSize: 17, color: '#1A0A04', lineHeight: 1.9 }}>{entry.strongs_def || entry.definition}</p>
+                  <p style={{ fontFamily: 'var(--font-reading)', fontSize: 15, color: '#1A0A04', lineHeight: 1.9 }}>{entry.strongs_def || entry.definition}</p>
                 </div>
               )}
               {entry.derivation && (

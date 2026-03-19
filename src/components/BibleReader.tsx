@@ -196,14 +196,14 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
       if (isFirst && text.length > 0) {
         return (
           <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: '#1A0A04', lineHeight: 1.9 }}>
-            <span style={{ float: 'left', fontFamily: 'var(--font-display)', fontSize: '72px', lineHeight: 0.75, paddingRight: '8px', paddingTop: '4px', color: 'var(--gold-muted)' }}>{text[0]}</span>
+            <span style={{ float: 'left', fontFamily: 'var(--font-display)', fontSize: '52px', lineHeight: 0.8, paddingRight: '8px', paddingTop: '4px', color: '#1A0A04' }}>{text[0]}</span>
             {text.slice(1)}{' '}
           </span>
         )
       }
       return (
         <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: '#1A0A04', lineHeight: 1.9 }}>
-          <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: 500, color: '#C8960A', verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>{v.verse}</sup>
+          <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: '#C8960A', verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>{v.verse}</sup>
           {text}{' '}
         </span>
       )
@@ -214,13 +214,13 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     return (
       <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: '#1A0A04', lineHeight: 1.9 }}>
         {!isFirst && (
-          <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: 500, color: '#C8960A', verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>{v.verse}</sup>
+          <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: '#C8960A', verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>{v.verse}</sup>
         )}
         {cleaned.map((w, wi) => {
           if (isFirst && wi === 0) {
             return (
               <span key={w.word_position}>
-                <span style={{ float: 'left', fontFamily: 'var(--font-display)', fontSize: '72px', lineHeight: 0.75, paddingRight: '8px', paddingTop: '4px', color: 'var(--gold-muted)' }}>{w.word_text[0]}</span>
+                <span style={{ float: 'left', fontFamily: 'var(--font-display)', fontSize: '52px', lineHeight: 0.8, paddingRight: '8px', paddingTop: '4px', color: '#1A0A04' }}>{w.word_text[0]}</span>
                 {w.word_text.slice(1)}
               </span>
             )
@@ -356,7 +356,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
               </button>
             </div>
             {/* Chapter heading */}
-            <p style={{ fontFamily: 'var(--font-display)', fontSize: '13px', letterSpacing: '4px', color: 'var(--gold-muted)', textTransform: 'uppercase', textAlign: 'center', marginBottom: '0.5rem' }}>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: '13px', letterSpacing: '4px', color: 'rgba(200,160,40,0.9)', textTransform: 'uppercase', textAlign: 'center', marginBottom: '0.5rem' }}>
               {bookName}
             </p>
             <p style={{ fontFamily: 'var(--font-reading)', fontSize: '11px', letterSpacing: '3px', color: '#C8960A', textTransform: 'uppercase', textAlign: 'center', marginBottom: '2.5rem' }}>
@@ -375,7 +375,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                 <div className="hidden lg:block" style={{ borderLeft: '1px solid rgba(139,107,20,0.2)', paddingLeft: '2rem', color: '#1A0A04' }}>
                   {verses.map((v) => (
                     <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${Math.round(fontSize * 0.89)}px`, fontWeight: 400, color: v.twi_text ? '#3C2415' : '#B8A88A', lineHeight: 1.9, fontStyle: v.twi_text ? 'normal' : 'italic' }}>
-                      <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: 500, color: '#C8960A', verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>
+                      <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: '#C8960A', verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>
                         {v.verse}
                       </sup>
                       {v.twi_text ? renderTwiWithGlossary(v.twi_text) : 'Translation coming'}{' '}
@@ -393,7 +393,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                 </p>
                 {verses.map((v) => (
                   <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${Math.round(fontSize * 0.89)}px`, fontWeight: 400, color: v.twi_text ? '#3C2415' : '#B8A88A', lineHeight: 1.9, fontStyle: v.twi_text ? 'normal' : 'italic' }}>
-                    <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: 500, color: '#C8960A', verticalAlign: 'super', marginRight: '3px' }}>
+                    <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: '#C8960A', verticalAlign: 'super', marginRight: '3px' }}>
                       {v.verse}
                     </sup>
                     {v.twi_text ? renderTwiWithGlossary(v.twi_text) : 'Translation coming'}{' '}
