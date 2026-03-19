@@ -147,13 +147,19 @@ export default function AdminTabs({
   }
 
   async function updateTier(userId: string, newTier: string) {
+    // Optimistic update — update single user in state
+    setUsers(prev => prev.map(u =>
+      u.id === userId ? { ...u, subscription_tier: newTier, subscription_status: newTier === 'free' ? null : 'active' } : u
+    ))
     const res = await fetch(`/api/admin/users/${userId}/tier`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tier: newTier }),
     })
-    if (res.ok) reloadUsers()
-    else console.error('Tier update failed:', await res.text())
+    if (!res.ok) {
+      console.error('Tier update failed:', await res.text())
+      reloadUsers() // Revert on failure
+    }
   }
 
   async function approveMission(userId: string) {
