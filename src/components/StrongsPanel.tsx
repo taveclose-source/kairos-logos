@@ -283,12 +283,9 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
               )}
               {/* Occurrence counts */}
               {(entry.total_nt_occurrences || entry.total_ot_occurrences) ? (
-                <div style={{ marginBottom: '1rem' }}>
-                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: '#8B6914' }}>
-                    {entry.total_nt_occurrences ? `Used ${entry.total_nt_occurrences} times in the NT` : ''}
-                    {entry.total_nt_occurrences && entry.total_ot_occurrences ? ' · ' : ''}
-                    {entry.total_ot_occurrences ? `Used ${entry.total_ot_occurrences} times in the OT` : ''}
-                  </p>
+                <div style={{ marginBottom: '0.75rem' }}>
+                  {entry.total_nt_occurrences ? <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, fontStyle: 'italic', color: '#8B6914' }}>Used {entry.total_nt_occurrences} times in the New Testament</p> : null}
+                  {entry.total_ot_occurrences ? <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, fontStyle: 'italic', color: '#8B6914' }}>Used {entry.total_ot_occurrences} times in the Old Testament</p> : null}
                 </div>
               ) : null}
               {/* Root words from derivation or root_words field */}
