@@ -36,3 +36,38 @@
     repeating-linear-gradient(12deg,rgba(0,0,0,0.04) 0px,rgba(0,0,0,0.04) 1px,transparent 1px,transparent 22px),
     repeating-linear-gradient(-12deg,rgba(255,180,80,0.02) 0px,rgba(255,180,80,0.02) 1px,transparent 1px,transparent 22px);
 }
+
+[data-theme="modern"] {
+  --bg-primary: #FAFAF9;
+  --bg-secondary: #FFFFFF;
+  --bg-warm: #FFFFFF;
+  --bg-hero: #0F3460;
+  --bg-hero-gradient: linear-gradient(180deg, #0F3460 0%, #16213E 100%);
+  --text-primary: #1A1A1A;
+  --text-secondary: #555555;
+  --text-tertiary: #888888;
+  --text-parchment: #1A1A1A;
+  --gold: #FFD060;
+  --gold-light: #FFE080;
+  --gold-muted: #FFD060;
+  --gold-bright: #FFD060;
+  --gold-border: #ECEAE6;
+  --gold-accent: #FFD060;
+  --verse-number: #0F3460;
+  --accent: #FFD060;
+  --accent-text: #0F3460;
+  --border-subtle: #ECEAE6;
+  --border-medium: #D8D8D4;
+  --font-display: 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-ui: 'Inter', sans-serif;
+  --font-reading: 'Cormorant Garamond', serif;
+  --leather-texture: none;
+  --card-radius: 10px;
+  --btn-radius: 8px;
+}
+
+[data-theme="modern"] body {
+  background-color: #FAFAF9;
+  background-image: none;
+}

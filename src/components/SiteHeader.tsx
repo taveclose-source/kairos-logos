@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import type { User } from '@supabase/supabase-js'
+import { useTheme } from '@/contexts/ThemeContext'
 
 const ADMIN_ID = '2f4cc459-6fdd-4f41-be4b-754770b28529'
 
@@ -22,6 +23,7 @@ export default function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
 
   useEffect(() => {
     const supabase = createSupabaseBrowser()
@@ -209,6 +211,32 @@ export default function SiteHeader() {
                   Sign In
                 </Link>
               )}
+            {/* Theme toggle */}
+            <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-subtle)' }}>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 6 }}>Appearance</p>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  onClick={() => setTheme('classic')}
+                  style={{
+                    padding: '6px 16px', borderRadius: 4, cursor: 'pointer',
+                    fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: '2px',
+                    background: theme === 'classic' ? 'rgba(139,107,20,0.3)' : 'transparent',
+                    border: theme === 'classic' ? '1px solid rgba(255,208,64,0.5)' : '1px solid var(--border-subtle)',
+                    color: theme === 'classic' ? '#FFD060' : 'var(--text-tertiary)',
+                  }}
+                >Classic</button>
+                <button
+                  onClick={() => setTheme('modern')}
+                  style={{
+                    padding: '6px 16px', borderRadius: 4, cursor: 'pointer',
+                    fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 500,
+                    background: theme === 'modern' ? 'rgba(15,52,96,0.8)' : 'transparent',
+                    border: theme === 'modern' ? '1px solid rgba(255,255,255,0.3)' : '1px solid var(--border-subtle)',
+                    color: theme === 'modern' ? '#FFFFFF' : 'var(--text-tertiary)',
+                  }}
+                >Modern</button>
+              </div>
+            </div>
             </div>
           </div>
         </>
