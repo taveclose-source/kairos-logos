@@ -57,7 +57,9 @@ export default function SiteHeader() {
     router.refresh()
   }
 
-  if (pathname.startsWith('/auth') || pathname === '/') return null
+  // Hide on auth pages. Hide on home only in classic theme (Bible cover replaces it)
+  if (pathname.startsWith('/auth')) return null
+  if (pathname === '/' && theme === 'classic') return null
 
   const navLinkStyle = (href: string) =>
     `transition-colors duration-200 ${

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { playPageTurn } from '@/lib/paperSound'
 import { useSwipe } from '@/hooks/useSwipe'
+import { useTheme } from '@/contexts/ThemeContext'
 
 const emboss = '0 2px 4px rgba(0,0,0,0.7), 0 -1px 2px rgba(255,220,100,0.5), 0 0 12px rgba(255,200,60,0.2)'
 const goldLine = 'linear-gradient(to right, rgba(240,192,80,0.6), rgba(255,220,120,1.0), rgba(240,192,80,0.6))'
@@ -15,6 +16,7 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
   const [showHint, setShowHint] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const { setTheme } = useTheme()
 
   useEffect(() => {
     const sb = createSupabaseBrowser()
@@ -166,6 +168,14 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
                   </Link>
                 )
               )}
+              {/* Theme toggle */}
+              <div style={{ borderTop: '0.5px solid rgba(240,192,80,0.12)', margin: '4px 0', padding: '6px 20px' }}>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(240,192,80,0.5)', marginBottom: 6 }}>Appearance</p>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => { setMenuOpen(false) }} style={{ padding: '5px 12px', borderRadius: 3, fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: '2px', background: 'rgba(139,107,20,0.3)', border: '1px solid rgba(255,208,64,0.5)', color: '#FFD060', cursor: 'pointer' }}>Classic</button>
+                  <button onClick={() => { setTheme('modern'); setMenuOpen(false) }} style={{ padding: '5px 12px', borderRadius: 3, fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 500, background: 'transparent', border: '1px solid rgba(255,208,64,0.3)', color: 'rgba(255,208,64,0.7)', cursor: 'pointer' }}>Modern</button>
+                </div>
+              </div>
             </div>
           )}
         </div>
