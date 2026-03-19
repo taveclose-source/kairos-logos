@@ -7,6 +7,7 @@ import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { canUseUnlimitedAsk } from '@/lib/permissions'
 import MemoryBanner from '@/components/MemoryBanner'
 import CreditPurchaseModal from '@/components/CreditPurchaseModal'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -62,6 +63,8 @@ function AskPageInner() {
   const [memoryCredits, setMemoryCredits] = useState<number | null>(null)
   const [memoryEnabled, setMemoryEnabled] = useState(false)
   const [showCreditModal, setShowCreditModal] = useState(false)
+  const { theme } = useTheme()
+  const isModern = theme === 'modern'
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -308,12 +311,12 @@ function AskPageInner() {
       minHeight: '100vh',
       overflow: 'hidden',
     }}>
-      {/* Background image — direct img tag for reliability */}
-      <img
-        src="/images/ask-backdrop.png"
-        alt=""
-        style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', objectFit: 'cover', objectPosition: 'center 75%', zIndex: -1 }}
-      />
+      {/* Background */}
+      {isModern ? (
+        <div style={{ position: 'fixed', inset: 0, background: '#0F3460', zIndex: -1 }} />
+      ) : (
+        <img src="/images/ask-backdrop.png" alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', objectFit: 'cover', objectPosition: 'center 75%', zIndex: -1 }} />
+      )}
       {/* Dark overlay */}
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,6,2,0.55)', pointerEvents: 'none', zIndex: 0 }} />
 

@@ -13,6 +13,7 @@ import StrongsPanel from '@/components/StrongsPanel'
 import ChapterSheet from '@/components/ChapterSheet'
 // Navigation handled by child sheets
 import BookSheet from '@/components/BookSheet'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface Verse {
   verse: number
@@ -53,6 +54,14 @@ function cleanKjvText(text: string): string {
 export default function BibleReader({ verses, bookName, chapter, totalChapters, prevHref, nextHref, verseWords, strongsLookup }: BibleReaderProps) {
   const router = useRouter()
   const { languageName } = useLanguage()
+  const { theme } = useTheme()
+  const isModern = theme === 'modern'
+  const parchmentBg = isModern ? '#FFFFFF' : 'var(--bg-warm)'
+  const textColor = isModern ? '#1A1A1A' : '#1A0A04'
+  const verseNumColor = isModern ? '#0F3460' : '#C8960A'
+  // dropCapColor uses textColor directly
+  const navColor = isModern ? 'rgba(15,52,96,0.6)' : 'rgba(139,107,20,0.5)'
+  const navHoverColor = isModern ? 'rgba(15,52,96,1)' : 'rgba(139,107,20,0.9)'
   const chapterHasTwi = verses.some((v) => v.twi_text !== null)
   const progress = totalChapters > 0 ? (chapter / totalChapters) * 100 : 0
   const [glossaryTerms, setGlossaryTerms] = useState<GlossaryTerm[]>([])
@@ -195,15 +204,15 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
       const text = cleanKjvText(v.kjv_text)
       if (isFirst && text.length > 0) {
         return (
-          <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: '#1A0A04', lineHeight: 1.9 }}>
-            <span style={{ float: 'left', fontFamily: 'var(--font-display)', fontSize: '52px', lineHeight: 0.8, paddingRight: '8px', paddingTop: '4px', color: '#1A0A04' }}>{text[0]}</span>
+          <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: textColor, lineHeight: 1.9 }}>
+            <span style={{ float: 'left', fontFamily: 'var(--font-display)', fontSize: '52px', lineHeight: 0.8, paddingRight: '8px', paddingTop: '4px', color: textColor }}>{text[0]}</span>
             {text.slice(1)}{' '}
           </span>
         )
       }
       return (
-        <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: '#1A0A04', lineHeight: 1.9 }}>
-          <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: '#C8960A', verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>{v.verse}</sup>
+        <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: textColor, lineHeight: 1.9 }}>
+          <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: verseNumColor, verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>{v.verse}</sup>
           {text}{' '}
         </span>
       )
@@ -212,15 +221,15 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     const cleaned = words.map(w => ({ ...w, word_text: w.word_text.replace(/\{[^}]*\}?/g, '').trim() })).filter(w => w.word_text.length > 0)
 
     return (
-      <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: '#1A0A04', lineHeight: 1.9 }}>
+      <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: textColor, lineHeight: 1.9 }}>
         {!isFirst && (
-          <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: '#C8960A', verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>{v.verse}</sup>
+          <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: verseNumColor, verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>{v.verse}</sup>
         )}
         {cleaned.map((w, wi) => {
           if (isFirst && wi === 0) {
             return (
               <span key={w.word_position}>
-                <span style={{ float: 'left', fontFamily: 'var(--font-display)', fontSize: '52px', lineHeight: 0.8, paddingRight: '8px', paddingTop: '4px', color: '#1A0A04' }}>{w.word_text[0]}</span>
+                <span style={{ float: 'left', fontFamily: 'var(--font-display)', fontSize: '52px', lineHeight: 0.8, paddingRight: '8px', paddingTop: '4px', color: textColor }}>{w.word_text[0]}</span>
                 {w.word_text.slice(1)}
               </span>
             )
@@ -310,7 +319,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
           onTouchEnd={handlePinchEnd}
           style={{
             maxWidth: '900px',
-            background: 'var(--bg-warm)',
+            background: parchmentBg,
             borderRadius: '4px',
             boxShadow: '-8px 0 20px rgba(0,0,0,0.5), 8px 0 20px rgba(0,0,0,0.3), 0 4px 40px rgba(0,0,0,0.6)',
             touchAction: 'pan-y',
@@ -319,7 +328,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
           {/* Font size indicator */}
           <div style={{
             position: 'absolute', top: 12, right: 16, zIndex: 5,
-            fontFamily: 'var(--font-ui)', fontSize: 10, color: '#C8960A',
+            fontFamily: 'var(--font-ui)', fontSize: 10, color: verseNumColor,
             opacity: showSizeIndicator ? 1 : 0,
             transition: 'opacity 0.5s ease',
             pointerEvents: 'none',
@@ -340,16 +349,16 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
               <button
                 onClick={() => { playPageTurn('back'); setBookSheetOpen(true) }}
-                style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.5)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px 0 8px 4px', transition: 'color 150ms' }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.9)')}
+                style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: navColor, background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px 0 8px 4px', transition: 'color 150ms' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = navHoverColor)}
                 onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.5)')}
               >
                 &lsaquo; All Books
               </button>
               <button
                 onClick={() => { playPageTurn('forward'); setChapterSheetBook(bookName); setChapterSheetOpen(true) }}
-                style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.5)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px 4px 8px 0', transition: 'color 150ms' }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.9)')}
+                style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: navColor, background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px 4px 8px 0', transition: 'color 150ms' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = navHoverColor)}
                 onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.5)')}
               >
                 All Chapters &rsaquo;
@@ -359,23 +368,23 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
             <p style={{ fontFamily: 'var(--font-display)', fontSize: '13px', letterSpacing: '4px', color: 'rgba(200,160,40,0.9)', textTransform: 'uppercase', textAlign: 'center', marginBottom: '0.5rem' }}>
               {bookName}
             </p>
-            <p style={{ fontFamily: 'var(--font-reading)', fontSize: '11px', letterSpacing: '3px', color: '#C8960A', textTransform: 'uppercase', textAlign: 'center', marginBottom: '2.5rem' }}>
+            <p style={{ fontFamily: 'var(--font-reading)', fontSize: '11px', letterSpacing: '3px', color: verseNumColor, textTransform: 'uppercase', textAlign: 'center', marginBottom: '2.5rem' }}>
               Chapter {chapter}
             </p>
 
             {/* Two-column layout on desktop */}
             <div className={chapterHasTwi ? 'lg:grid lg:grid-cols-2 lg:gap-0' : ''}>
               {/* KJV Column */}
-              <div className={chapterHasTwi ? 'lg:pr-8' : ''} style={{ color: '#1A0A04' }}>
+              <div className={chapterHasTwi ? 'lg:pr-8' : ''} style={{ color: textColor }}>
                 {verses.map((v, i) => renderVerseWords(v, i === 0))}
               </div>
 
               {/* Twi Column — desktop */}
               {chapterHasTwi && (
-                <div className="hidden lg:block" style={{ borderLeft: '1px solid rgba(139,107,20,0.2)', paddingLeft: '2rem', color: '#1A0A04' }}>
+                <div className="hidden lg:block" style={{ borderLeft: '1px solid rgba(139,107,20,0.2)', paddingLeft: '2rem', color: textColor }}>
                   {verses.map((v) => (
                     <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${Math.round(fontSize * 0.89)}px`, fontWeight: 400, color: v.twi_text ? '#3C2415' : '#B8A88A', lineHeight: 1.9, fontStyle: v.twi_text ? 'normal' : 'italic' }}>
-                      <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: '#C8960A', verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>
+                      <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: verseNumColor, verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>
                         {v.verse}
                       </sup>
                       {v.twi_text ? renderTwiWithGlossary(v.twi_text) : 'Translation coming'}{' '}
@@ -387,13 +396,13 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
 
             {/* Twi — mobile/tablet (below lg) */}
             {chapterHasTwi && (
-              <div className="lg:hidden mt-6" style={{ borderTop: '1px solid rgba(139,107,20,0.2)', paddingTop: '1rem', color: '#1A0A04' }}>
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', color: '#C8960A', marginBottom: '0.75rem' }}>
+              <div className="lg:hidden mt-6" style={{ borderTop: '1px solid rgba(139,107,20,0.2)', paddingTop: '1rem', color: textColor }}>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', color: verseNumColor, marginBottom: '0.75rem' }}>
                   {languageName}
                 </p>
                 {verses.map((v) => (
                   <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${Math.round(fontSize * 0.89)}px`, fontWeight: 400, color: v.twi_text ? '#3C2415' : '#B8A88A', lineHeight: 1.9, fontStyle: v.twi_text ? 'normal' : 'italic' }}>
-                    <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: '#C8960A', verticalAlign: 'super', marginRight: '3px' }}>
+                    <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: verseNumColor, verticalAlign: 'super', marginRight: '3px' }}>
                       {v.verse}
                     </sup>
                     {v.twi_text ? renderTwiWithGlossary(v.twi_text) : 'Translation coming'}{' '}

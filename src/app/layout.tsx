@@ -3,6 +3,7 @@ import "./globals.css";
 import SiteHeader from "@/components/SiteHeader";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import ThemeNav from "@/components/ThemeNav";
 
 export const metadata: Metadata = {
   title: "Logos by Kai'Ros",
@@ -54,6 +55,7 @@ export default function RootLayout({
           <LanguageProvider>
             <SiteHeader />
             {children}
+            <ThemeNav />
           </LanguageProvider>
         </ThemeProvider>
       </body>
