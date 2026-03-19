@@ -3,6 +3,8 @@
 import { useState, useMemo } from 'react'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
+const ADMIN_UUID = '2f4cc459-6fdd-4f41-be4b-754770b28529'
+
 type Tab = 'users' | 'missions' | 'sponsorships' | 'revenue'
 type SortField = 'display_name' | 'subscription_tier' | 'created_at'
 type SortDir = 'asc' | 'desc'
@@ -145,12 +147,13 @@ export default function AdminTabs({
   }
 
   async function updateTier(userId: string, newTier: string) {
-    const sb = createSupabaseBrowser()
-    await sb.from('users').update({
-      subscription_tier: newTier,
-      subscription_status: newTier === 'free' ? null : 'active',
-    }).eq('id', userId)
-    reloadUsers()
+    const res = await fetch(`/api/admin/users/${userId}/tier`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier: newTier }),
+    })
+    if (res.ok) reloadUsers()
+    else console.error('Tier update failed:', await res.text())
   }
 
   async function approveMission(userId: string) {
@@ -262,16 +265,21 @@ export default function AdminTabs({
                     <td className="py-2.5 pr-3 text-gray-500 text-xs">{u.country ?? '—'}</td>
                     <td className="py-2.5 pr-3 text-gray-400 text-xs">{new Date(u.created_at).toLocaleDateString()}</td>
                     <td className="py-2.5">
-                      <select
-                        value={u.subscription_tier || 'free'}
-                        onChange={(e) => updateTier(u.id, e.target.value)}
-                        className="text-xs rounded-lg border border-gray-200 px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      >
-                        <option value="free">Free</option>
-                        <option value="scholar">Scholar</option>
-                        <option value="ministry">Ministry</option>
-                        <option value="missions">Missions</option>
-                      </select>
+                      <div className="flex items-center gap-1">
+                        <select
+                          value={u.subscription_tier || 'free'}
+                          onChange={(e) => updateTier(u.id, e.target.value)}
+                          className="text-xs rounded-lg border border-gray-200 px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        >
+                          <option value="free">Free</option>
+                          <option value="scholar">Scholar</option>
+                          <option value="ministry">Ministry</option>
+                          <option value="missions">Missions</option>
+                        </select>
+                        {u.id === ADMIN_UUID && (
+                          <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300">ADMIN</span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
