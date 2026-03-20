@@ -220,18 +220,18 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
 
     const cleaned = words.map(w => ({ ...w, word_text: w.word_text.replace(/\{[^}]*\}?/g, '').trim() })).filter(w => w.word_text.length > 0)
 
-    // Detect missing trailing words: compare verse_words coverage to full KJV text
-    const wordsRendered = cleaned.map(w => w.word_text).join(' ')
+    // Detect missing trailing words: check if verse_words covers the end of the verse
     const fullText = cleanKjvText(v.kjv_text)
     let trailingText = ''
-    if (fullText.length > wordsRendered.length) {
-      // Find where the last word from verse_words appears in the full text
-      const lastWord = cleaned[cleaned.length - 1]?.word_text
-      if (lastWord) {
-        const lastIdx = fullText.lastIndexOf(lastWord)
-        if (lastIdx >= 0) {
-          trailingText = fullText.slice(lastIdx + lastWord.length).trim()
-        }
+    const lastWord = cleaned[cleaned.length - 1]?.word_text?.replace(/[^a-zA-Z'-]/g, '').toLowerCase()
+    const fullWords = fullText.split(/\s+/)
+    const lastFullWord = fullWords[fullWords.length - 1]?.replace(/[^a-zA-Z'-]/g, '').toLowerCase()
+    if (lastWord && lastFullWord && lastWord !== lastFullWord) {
+      // Find the last occurrence of the last verse_words word in the full text
+      const lastClean = cleaned[cleaned.length - 1]?.word_text
+      const lastIdx = fullText.lastIndexOf(lastClean)
+      if (lastIdx >= 0) {
+        trailingText = fullText.slice(lastIdx + lastClean.length).trim()
       }
     }
 
