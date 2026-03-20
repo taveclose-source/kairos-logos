@@ -7,8 +7,8 @@ const TABS = [
   { href: '/', label: 'Home', icon: '⌂' },
   { href: '/bible', label: 'Bible', icon: '📖' },
   { href: '/ask', label: 'Ask', icon: '💬' },
-  { href: '/translation', label: 'Search', icon: '🔍' },
-  { href: '/settings/profile', label: 'Profile', icon: '👤' },
+  { href: '/search', label: 'Search', icon: '🔍' },
+  { href: '/dashboard', label: 'Profile', icon: '👤' },
 ]
 
 export default function ModernBottomNav() {
