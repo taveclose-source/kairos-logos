@@ -261,7 +261,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   }
 
   return (
-    <div style={{ background: 'var(--bg-primary)', padding: '2rem 1rem' }} className="relative">
+    <div style={{ background: 'var(--bg-primary)', padding: '2rem 1rem', paddingBottom: 'calc(2rem + 60px)' }} className="relative">
       {/* Fixed side arrows — desktop only */}
       <button
         onClick={turnPrev}
