@@ -220,6 +220,21 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
 
     const cleaned = words.map(w => ({ ...w, word_text: w.word_text.replace(/\{[^}]*\}?/g, '').trim() })).filter(w => w.word_text.length > 0)
 
+    // Detect missing trailing words: compare verse_words coverage to full KJV text
+    const wordsRendered = cleaned.map(w => w.word_text).join(' ')
+    const fullText = cleanKjvText(v.kjv_text)
+    let trailingText = ''
+    if (fullText.length > wordsRendered.length) {
+      // Find where the last word from verse_words appears in the full text
+      const lastWord = cleaned[cleaned.length - 1]?.word_text
+      if (lastWord) {
+        const lastIdx = fullText.lastIndexOf(lastWord)
+        if (lastIdx >= 0) {
+          trailingText = fullText.slice(lastIdx + lastWord.length).trim()
+        }
+      }
+    }
+
     return (
       <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: textColor, lineHeight: 1.9 }}>
         {!isFirst && (
@@ -244,9 +259,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                     e.stopPropagation()
                     setStrongsPanel({ number: w.strongs_number!, word: w.word_text })
                   }}
-                  style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: '#8B6914', textUnderlineOffset: '3px', transition: 'color 150ms' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#8B6914')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#2C1810')}
+                  style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: verseNumColor, textUnderlineOffset: '3px', transition: 'color 150ms' }}
                 >
                   {w.word_text}
                 </span>
@@ -255,7 +268,8 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
               )}
             </span>
           )
-        })}{' '}
+        })}
+        {trailingText ? ` ${trailingText}` : ''}{' '}
       </span>
     )
   }
