@@ -5,7 +5,7 @@ import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
 const ADMIN_UUID = '2f4cc459-6fdd-4f41-be4b-754770b28529'
 
-type Tab = 'users' | 'missions' | 'sponsorships' | 'revenue'
+type Tab = 'users' | 'missions' | 'sponsorships' | 'revenue' | 'feedback'
 type SortField = 'display_name' | 'subscription_tier' | 'created_at'
 type SortDir = 'asc' | 'desc'
 
@@ -36,6 +36,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'missions', label: 'Missions' },
   { id: 'sponsorships', label: 'Sponsorships' },
   { id: 'revenue', label: 'Revenue' },
+  { id: 'feedback', label: 'Feedback' },
 ]
 
 const TIERS = ['all', 'free', 'scholar', 'ministry', 'missions'] as const
@@ -84,6 +85,8 @@ export default function AdminTabs({
   const [users, setUsers] = useState(initialUsers)
   const [sponsorships] = useState(initialSponsorships)
   const [search, setSearch] = useState('')
+  const [feedback, setFeedback] = useState<Array<{ id: string; user_name: string; user_email: string; type: string; subject: string; message: string; page_context: string; status: string; admin_notes: string; created_at: string }>>([])
+  const [feedbackFilter, setFeedbackFilter] = useState('new')
   const [tierFilter, setTierFilter] = useState<string>('all')
   const [sortField, setSortField] = useState<SortField>('created_at')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
@@ -96,6 +99,8 @@ export default function AdminTabs({
       .select('id, email, display_name, username, subscription_tier, subscription_status, missions_status, missions_application, country, created_at')
       .order('created_at', { ascending: false })
     if (data) setUsers(data as UserRow[])
+    // Load feedback
+    fetch('/api/admin/feedback').then(r => r.json()).then(d => { if (Array.isArray(d)) setFeedback(d) }).catch(() => {})
   }
 
   // ── Filter, sort, paginate ──
@@ -206,6 +211,11 @@ export default function AdminTabs({
             {t.id === 'missions' && pendingCount > 0 && (
               <span className="ml-1.5 inline-block w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold leading-5 text-center">
                 {pendingCount}
+              </span>
+            )}
+            {t.id === 'feedback' && feedback.filter(f => f.status === 'new').length > 0 && (
+              <span className="ml-1.5 inline-block w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold leading-5 text-center">
+                {feedback.filter(f => f.status === 'new').length}
               </span>
             )}
             {tab === t.id && (
@@ -443,6 +453,64 @@ export default function AdminTabs({
               <p className="text-xs text-gray-400 mt-1">Scholar × $9.99 + Ministry × $29.99</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── TAB 5: FEEDBACK ── */}
+      {tab === 'feedback' && (
+        <div>
+          <div className="flex gap-2 mb-4 flex-wrap">
+            {['all', 'new', 'reviewing', 'resolved', 'dismissed'].map((f) => (
+              <button key={f} onClick={() => setFeedbackFilter(f)} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${feedbackFilter === f ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>{f.charAt(0).toUpperCase() + f.slice(1)}</button>
+            ))}
+          </div>
+          {feedback.filter(f => feedbackFilter === 'all' || f.status === feedbackFilter).length === 0 ? (
+            <p className="text-gray-400 text-sm">No feedback matching this filter.</p>
+          ) : (
+            <div className="space-y-3">
+              {feedback.filter(f => feedbackFilter === 'all' || f.status === feedbackFilter).map((f) => {
+                const typeColors: Record<string, string> = { bug: 'bg-red-50 text-red-700', feature: 'bg-blue-50 text-blue-700', general: 'bg-gray-100 text-gray-600', praise: 'bg-amber-50 text-amber-700' }
+                const ago = Math.round((Date.now() - new Date(f.created_at).getTime()) / 3600000)
+                return (
+                  <div key={f.id} className="rounded-xl border border-gray-200 bg-white p-4">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div>
+                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-medium ${typeColors[f.type] ?? typeColors.general}`}>{f.type}</span>
+                        <span className="ml-2 text-xs text-gray-400">{f.user_name} ({f.user_email})</span>
+                      </div>
+                      <select
+                        value={f.status}
+                        onChange={async (e) => {
+                          const newStatus = e.target.value
+                          setFeedback(prev => prev.map(x => x.id === f.id ? { ...x, status: newStatus } : x))
+                          await fetch(`/api/admin/feedback/${f.id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus }) })
+                        }}
+                        className="text-xs rounded border border-gray-200 px-2 py-1 bg-white"
+                      >
+                        <option value="new">New</option>
+                        <option value="reviewing">Reviewing</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="dismissed">Dismissed</option>
+                      </select>
+                    </div>
+                    <p className="text-sm font-medium text-gray-900 mb-1">{f.subject}</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{f.message}</p>
+                    {f.page_context && <p className="text-xs text-gray-400 mt-1">Page: {f.page_context}</p>}
+                    <p className="text-xs text-gray-400 mt-1">{ago < 1 ? 'Just now' : ago < 24 ? `${ago}h ago` : `${Math.round(ago / 24)}d ago`}</p>
+                    <textarea
+                      placeholder="Add internal notes..."
+                      defaultValue={f.admin_notes ?? ''}
+                      onBlur={async (e) => {
+                        await fetch(`/api/admin/feedback/${f.id}/notes`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes: e.target.value }) })
+                      }}
+                      className="mt-2 w-full text-xs border border-gray-100 rounded px-2 py-1.5 bg-gray-50 resize-none"
+                      rows={2}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
     </>

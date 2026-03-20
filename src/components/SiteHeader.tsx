@@ -213,8 +213,14 @@ export default function SiteHeader() {
                   Sign In
                 </Link>
               )}
+            {/* Make Us Better link — logged in only */}
+            {user && (
+              <Link href="/contact" className={`${navLinkClass} text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-1 block`} style={{ marginTop: '0.5rem' }}>
+                Make Us Better
+              </Link>
+            )}
             {/* Theme toggle */}
-            <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-subtle)' }}>
+            <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-subtle)' }}>
               <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 6 }}>Appearance</p>
               <div style={{ display: 'flex', gap: 6 }}>
                 <button
