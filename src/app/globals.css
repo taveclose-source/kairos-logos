@@ -49,3 +49,6 @@ body::before {
     text-wrap: balance;
   }
 }
+
+[data-theme="classic"] .modern-only { display: none !important; }
+[data-theme="modern"] .classic-only { display: none !important; }

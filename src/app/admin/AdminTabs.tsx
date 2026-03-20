@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
 const ADMIN_UUID = '2f4cc459-6fdd-4f41-be4b-754770b28529'
@@ -87,6 +87,11 @@ export default function AdminTabs({
   const [search, setSearch] = useState('')
   const [feedback, setFeedback] = useState<Array<{ id: string; user_name: string; user_email: string; type: string; subject: string; message: string; page_context: string; status: string; admin_notes: string; created_at: string }>>([])
   const [feedbackFilter, setFeedbackFilter] = useState('new')
+
+  // Fetch feedback on mount
+  useEffect(() => {
+    fetch('/api/admin/feedback').then(r => r.json()).then(d => { if (Array.isArray(d)) setFeedback(d) }).catch(() => {})
+  }, [])
   const [tierFilter, setTierFilter] = useState<string>('all')
   const [sortField, setSortField] = useState<SortField>('created_at')
   const [sortDir, setSortDir] = useState<SortDir>('desc')

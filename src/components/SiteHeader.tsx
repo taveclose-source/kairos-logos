@@ -106,6 +106,9 @@ export default function SiteHeader() {
               <Link href="/learn" className={`${navLinkClass} ${navLinkStyle('/learn')}`}>
                 Learn
               </Link>
+              <Link href="/contact" className={`${navLinkClass} ${navLinkStyle('/contact')}`}>
+                Feedback
+              </Link>
               {isAdmin && (
                 <Link href="/admin" className={`${navLinkClass} text-[var(--gold)] hover:text-[var(--gold-light)] transition-colors duration-200`}>
                   Admin
@@ -199,8 +202,6 @@ export default function SiteHeader() {
             <div className="mt-auto px-4 pb-6" style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
               {user ? (
                 <div className="flex flex-col gap-2">
-                  <Link href="/dashboard" className={`${navLinkClass} text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-1`}>Dashboard</Link>
-                  <Link href="/settings/profile" className={`${navLinkClass} text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-1`}>Profile</Link>
                   {isAdmin && (
                     <Link href="/admin" className={`${navLinkClass} text-[var(--gold)] py-1`}>Admin</Link>
                   )}
