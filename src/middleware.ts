@@ -30,22 +30,25 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
-  // Protect premium API routes — check tier
+  // Protect premium API routes — check tier (admin bypasses all restrictions)
   if (pathname.startsWith('/api/tts')) {
     if (!user) {
       return NextResponse.json({ error: 'auth_required' }, { status: 401 })
     }
-    const { data: profile } = await supabase
-      .from('users')
-      .select('subscription_tier')
-      .eq('id', user.id)
-      .single()
-    const tier = profile?.subscription_tier ?? 'free'
-    if (!['scholar', 'ministry', 'missions'].includes(tier)) {
-      return NextResponse.json(
-        { error: 'premium_required', tier_needed: 'scholar' },
-        { status: 403 }
-      )
+    const adminId = process.env.NEXT_PUBLIC_ADMIN_USER_ID ?? ''
+    if (user.id !== adminId) {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('subscription_tier')
+        .eq('id', user.id)
+        .single()
+      const tier = profile?.subscription_tier ?? 'free'
+      if (!['scholar', 'ministry', 'missions'].includes(tier)) {
+        return NextResponse.json(
+          { error: 'premium_required', tier_needed: 'scholar' },
+          { status: 403 }
+        )
+      }
     }
   }
 

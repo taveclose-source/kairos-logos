@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { isAdmin } from '@/lib/permissions'
 
 function db() { return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!) }
 
@@ -27,7 +28,7 @@ export async function GET() {
   return NextResponse.json({
     memory_enabled: memRes.data?.memory_enabled ?? false,
     memory_data: memRes.data?.memory_data ?? {},
-    credits_remaining: credRes.data?.credits_remaining ?? 0,
+    credits_remaining: isAdmin(userId) ? 999999 : (credRes.data?.credits_remaining ?? 0),
     auto_reload: credRes.data?.auto_reload ?? false,
   })
 }

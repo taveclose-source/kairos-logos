@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, FormEvent, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
-import { canUseUnlimitedAsk } from '@/lib/permissions'
+import { canUseUnlimitedAsk, isAdmin } from '@/lib/permissions'
 import MemoryBanner from '@/components/MemoryBanner'
 import CreditPurchaseModal from '@/components/CreditPurchaseModal'
 import { useTheme } from '@/contexts/ThemeContext'
@@ -58,6 +58,7 @@ function AskPageInner() {
   const [authChecked, setAuthChecked] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userTier, setUserTier] = useState('free')
+  const [userId, setUserId] = useState<string | null>(null)
   const [queryCount, setQueryCount] = useState(0)
   const [showLimitModal, setShowLimitModal] = useState(false)
   const [memoryCredits, setMemoryCredits] = useState<number | null>(null)
@@ -75,14 +76,15 @@ function AskPageInner() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (user) {
         setIsLoggedIn(true)
+        setUserId(user.id)
         const { data } = await supabase
           .from('users')
           .select('subscription_tier')
           .eq('id', user.id)
           .single()
         setUserTier(data?.subscription_tier ?? 'free')
-        // Fetch memory credits
-        if (['scholar', 'ministry', 'missions'].includes(data?.subscription_tier ?? '')) {
+        // Fetch memory credits — admin always gets access
+        if (isAdmin(user.id) || ['scholar', 'ministry', 'missions'].includes(data?.subscription_tier ?? '')) {
           fetch('/api/memory').then(r => r.json()).then(m => {
             setMemoryEnabled(m.memory_enabled)
             setMemoryCredits(m.credits_remaining)
@@ -114,8 +116,8 @@ function AskPageInner() {
     const trimmed = input.trim()
     if (!trimmed || loading) return
 
-    // Free tier: enforce 10 queries/day
-    if (!canUseUnlimitedAsk(userTier)) {
+    // Free tier: enforce query limit — admin bypasses
+    if (!canUseUnlimitedAsk(userTier, userId)) {
       const newCount = queryCount + 1
       if (newCount > 3) {
         setShowLimitModal(true)

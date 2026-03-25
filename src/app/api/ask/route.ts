@@ -9,6 +9,7 @@ import {
   extractReferences,
 } from '@/lib/theological-agent'
 import { AGENT_SYSTEM_PROMPT } from '@/lib/agent-system-prompt'
+import { isAdmin } from '@/lib/permissions'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -107,23 +108,27 @@ export async function POST(req: NextRequest) {
     let memoryContext = ''
     let memoryEnabled = false
     let userTierLocal = 'free'
+    const userIsAdmin = isAdmin(userId)
     if (userId) {
       const [memRes, credRes, userRes] = await Promise.all([
         serviceDb.from('user_memories').select('memory_enabled, memory_data').eq('user_id', userId).maybeSingle(),
         serviceDb.from('memory_credits').select('credits_remaining').eq('user_id', userId).maybeSingle(),
         serviceDb.from('users').select('subscription_tier').eq('id', userId).single(),
       ])
-      memoryEnabled = memRes.data?.memory_enabled === true && (credRes.data?.credits_remaining ?? 0) > 0
+      // Admin: always enable memory (unlimited credits), skip credit check
+      memoryEnabled = userIsAdmin
+        ? memRes.data?.memory_enabled === true
+        : memRes.data?.memory_enabled === true && (credRes.data?.credits_remaining ?? 0) > 0
       if (memoryEnabled && memRes.data?.memory_data) {
         memoryContext = `\n\nUser study context:\n${JSON.stringify(memRes.data.memory_data)}`
       }
       // Save session for downloads
       const sessionId = body.sessionId || crypto.randomUUID()
       await serviceDb.from('ask_sessions').upsert({ id: sessionId, user_id: userId, messages: body.messages || [], updated_at: new Date().toISOString() }, { onConflict: 'id' })
-      // Model by tier
+      // Model by tier — admin always gets premium model
       userTierLocal = userRes.data?.subscription_tier ?? 'free'
     }
-    const model = userTierLocal !== 'free' ? AGENT_MODEL : 'claude-haiku-4-5-20251001'
+    const model = (userIsAdmin || userTierLocal !== 'free') ? AGENT_MODEL : 'claude-haiku-4-5-20251001'
 
     // Stream from Claude API
     const stream = anthropic.messages.stream({
@@ -155,8 +160,8 @@ export async function POST(req: NextRequest) {
           )
           controller.close()
 
-          // Deduct memory credits if enabled
-          if (memoryEnabled && userId) {
+          // Deduct memory credits if enabled — admin is exempt
+          if (memoryEnabled && userId && !userIsAdmin) {
             try {
               const { calculateCreditsUsed } = await import('@/lib/memoryCredits')
               const creditsUsed = calculateCreditsUsed(2500, fullAnswer.length / 4)
