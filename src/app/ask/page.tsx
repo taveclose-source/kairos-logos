@@ -64,6 +64,9 @@ function AskPageInner() {
   const [memoryCredits, setMemoryCredits] = useState<number | null>(null)
   const [memoryEnabled, setMemoryEnabled] = useState(false)
   const [showCreditModal, setShowCreditModal] = useState(false)
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [pastSessions, setPastSessions] = useState<{ id: string; title: string; messageCount: number; updatedAt: string }[]>([])
+  const [showSessions, setShowSessions] = useState(false)
   const { theme } = useTheme()
   const isModern = theme === 'modern'
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -88,6 +91,12 @@ function AskPageInner() {
           fetch('/api/memory').then(r => r.json()).then(m => {
             setMemoryEnabled(m.memory_enabled)
             setMemoryCredits(m.credits_remaining)
+          }).catch(() => {})
+        }
+        // Admin: load past sessions for cross-session resumption
+        if (isAdmin(user.id)) {
+          fetch('/api/ask/sessions').then(r => r.json()).then(sessions => {
+            if (Array.isArray(sessions)) setPastSessions(sessions)
           }).catch(() => {})
         }
       }
@@ -147,7 +156,7 @@ function AskPageInner() {
       const res = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiMessages }),
+        body: JSON.stringify({ messages: apiMessages, sessionId: sessionId || undefined }),
         signal: controller.signal,
       })
 
@@ -193,6 +202,7 @@ function AskPageInner() {
                 return copy
               })
             } else if (event.type === 'done') {
+              if (event.sessionId) setSessionId(event.sessionId)
               setMessages((prev) => {
                 const copy = [...prev]
                 copy[assistantIdx] = {
@@ -229,6 +239,21 @@ function AskPageInner() {
       e.preventDefault()
       handleSubmit(e as unknown as FormEvent)
     }
+  }
+
+  async function resumeSession(sid: string) {
+    const res = await fetch(`/api/ask/sessions/${sid}`)
+    if (!res.ok) return
+    const data = await res.json()
+    setSessionId(sid)
+    setMessages(data.messages || [])
+    setShowSessions(false)
+  }
+
+  function startNewChat() {
+    setSessionId(null)
+    setMessages([])
+    setShowSessions(false)
   }
 
   // Wait for auth check
@@ -330,17 +355,69 @@ function AskPageInner() {
         <div className="max-w-3xl mx-auto">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h1 className="text-xl sm:text-2xl font-bold" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>Ask the Word</h1>
-            {memoryEnabled && memoryCredits !== null && (
-              <a href="/settings/memory" style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'var(--gold)', textDecoration: 'none' }}>
-                ⚡ {memoryCredits} credits
-              </a>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {isAdmin(userId) && (
+                <>
+                  <button onClick={startNewChat} style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'var(--gold)', background: 'rgba(200,150,10,0.1)', border: '1px solid rgba(200,150,10,0.3)', borderRadius: 3, padding: '3px 8px', cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                    + New
+                  </button>
+                  <button onClick={() => setShowSessions(!showSessions)} style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'var(--gold)', background: 'rgba(200,150,10,0.1)', border: '1px solid rgba(200,150,10,0.3)', borderRadius: 3, padding: '3px 8px', cursor: 'pointer', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                    History ({pastSessions.length})
+                  </button>
+                </>
+              )}
+              {memoryEnabled && memoryCredits !== null && (
+                <a href="/settings/memory" style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'var(--gold)', textDecoration: 'none' }}>
+                  ⚡ {memoryCredits} credits
+                </a>
+              )}
+            </div>
           </div>
           <p className="text-xs text-gray-400 mt-0.5">
             Confessional Bible assistant &middot; KJV &amp; Textus Receptus
           </p>
         </div>
       </header>
+
+      {/* Admin: Past sessions drawer */}
+      {showSessions && isAdmin(userId) && (
+        <div style={{ background: 'rgba(15,6,2,0.9)', borderBottom: '1px solid rgba(139,107,20,0.3)', padding: '0.75rem 1.5rem', maxHeight: '40vh', overflowY: 'auto' }}>
+          <div className="max-w-3xl mx-auto">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <span style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(200,150,10,0.7)' }}>Past Conversations</span>
+              <button onClick={() => setShowSessions(false)} style={{ color: 'rgba(255,208,64,0.6)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>&times;</button>
+            </div>
+            {pastSessions.length === 0 ? (
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>No past sessions found.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {pastSessions.map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => resumeSession(s.id)}
+                    style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '8px 10px', borderRadius: 4, cursor: 'pointer',
+                      background: sessionId === s.id ? 'rgba(200,150,10,0.15)' : 'transparent',
+                      border: sessionId === s.id ? '1px solid rgba(200,150,10,0.3)' : '1px solid transparent',
+                      textAlign: 'left', width: '100%',
+                    }}
+                    onMouseEnter={(e) => { if (sessionId !== s.id) e.currentTarget.style.background = 'rgba(200,150,10,0.08)' }}
+                    onMouseLeave={(e) => { if (sessionId !== s.id) e.currentTarget.style.background = 'transparent' }}
+                  >
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'rgba(255,255,255,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
+                      {s.title}
+                    </span>
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>
+                      {s.messageCount} msgs &middot; {new Date(s.updatedAt).toLocaleDateString()}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Chat area */}
       <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 1rem', maxHeight: 'calc(100vh - 240px)' }}>

@@ -109,6 +109,7 @@ export async function POST(req: NextRequest) {
     let memoryEnabled = false
     let userTierLocal = 'free'
     const userIsAdmin = isAdmin(userId)
+    let activeSessionId = ''
     if (userId) {
       const [memRes, credRes, userRes] = await Promise.all([
         serviceDb.from('user_memories').select('memory_enabled, memory_data').eq('user_id', userId).maybeSingle(),
@@ -122,9 +123,37 @@ export async function POST(req: NextRequest) {
       if (memoryEnabled && memRes.data?.memory_data) {
         memoryContext = `\n\nUser study context:\n${JSON.stringify(memRes.data.memory_data)}`
       }
-      // Save session for downloads
-      const sessionId = body.sessionId || crypto.randomUUID()
-      await serviceDb.from('ask_sessions').upsert({ id: sessionId, user_id: userId, messages: body.messages || [], updated_at: new Date().toISOString() }, { onConflict: 'id' })
+
+      // Admin: inject past conversation summaries for cross-session memory
+      if (userIsAdmin) {
+        try {
+          const { data: pastSessions } = await serviceDb
+            .from('ask_sessions')
+            .select('messages, updated_at')
+            .eq('user_id', userId)
+            .order('updated_at', { ascending: false })
+            .limit(10)
+          if (pastSessions && pastSessions.length > 0) {
+            const summaries = pastSessions.map(s => {
+              const msgs = s.messages as { role: string; content: string }[]
+              if (!msgs || msgs.length === 0) return null
+              const userMsgs = msgs.filter(m => m.role === 'user')
+              const assistantMsgs = msgs.filter(m => m.role === 'assistant')
+              const topic = userMsgs[0]?.content?.slice(0, 120) || ''
+              const lastAnswer = assistantMsgs[assistantMsgs.length - 1]?.content?.slice(0, 200) || ''
+              const date = new Date(s.updated_at).toLocaleDateString()
+              return `[${date}] Q: ${topic}${topic.length >= 120 ? '...' : ''}\nA: ${lastAnswer}${lastAnswer.length >= 200 ? '...' : ''}`
+            }).filter(Boolean)
+            if (summaries.length > 0) {
+              memoryContext += `\n\nPrevious conversations with this user (most recent first):\n${summaries.join('\n\n')}`
+            }
+          }
+        } catch {}
+      }
+
+      // Save session — persist sessionId for resumption
+      activeSessionId = body.sessionId || crypto.randomUUID()
+      await serviceDb.from('ask_sessions').upsert({ id: activeSessionId, user_id: userId, messages: body.messages || [], updated_at: new Date().toISOString() }, { onConflict: 'id' })
       // Model by tier — admin always gets premium model
       userTierLocal = userRes.data?.subscription_tier ?? 'free'
     }
@@ -155,7 +184,7 @@ export async function POST(req: NextRequest) {
 
           controller.enqueue(
             encoder.encode(
-              `data: ${JSON.stringify({ type: 'done', routed_to_queue, references })}\n\n`
+              `data: ${JSON.stringify({ type: 'done', routed_to_queue, references, sessionId: activeSessionId || undefined })}\n\n`
             )
           )
           controller.close()
