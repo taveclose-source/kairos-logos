@@ -9,8 +9,7 @@ import type { PageTurnHandle } from '@/components/PageTurn'
 import GlossaryModal from '@/components/GlossaryModal'
 import type { GlossaryTerm } from '@/components/GlossaryModal'
 import { usePinchFontSize, DEFAULT_SIZE } from '@/hooks/usePinchFontSize'
-import StrongsPanel from '@/components/StrongsPanel'
-import NamesPanel from '@/components/NamesPanel'
+import ResourcesPanel from '@/components/ResourcesPanel'
 import KingsPanel from '@/components/KingsPanel'
 import ChapterSheet from '@/components/ChapterSheet'
 // Navigation handled by child sheets
@@ -71,8 +70,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const pageTurnRef = useRef<PageTurnHandle>(null)
   const { fontSize, setFontSize, onTouchStart: pinchStart, onTouchMove: pinchMove, onTouchEnd: pinchEnd } = usePinchFontSize()
   const [showSizeIndicator, setShowSizeIndicator] = useState(false)
-  const [strongsPanel, setStrongsPanel] = useState<{ number: string; word: string } | null>(null)
-  const [namesPanel, setNamesPanel] = useState<string | null>(null)
+  const [resourcesPanel, setResourcesPanel] = useState<{ word: string; strongsNumber?: string | null; isName?: boolean } | null>(null)
   const [kingsPanel, setKingsPanel] = useState(false)
   const [verseMenu, setVerseMenu] = useState<{ verse: number; x: number; y: number } | null>(null)
   const [knownNames, setKnownNames] = useState<Set<string>>(new Set())
@@ -307,26 +305,26 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
           }
           const hasStrongs = w.strongs_number && strongsLookup?.[w.strongs_number]
           const isName = isProperNoun(w.word_text)
+          const isClickable = hasStrongs || isName
+          // Proper nouns always get dashed underline; Strong's-only words get dotted
+          const decorationStyle = isName ? 'dashed' : 'dotted'
+          const decorationColor = isName
+            ? (isModern ? 'rgba(15,52,96,0.4)' : 'rgba(184,134,11,0.5)')
+            : verseNumColor
           return (
             <span key={w.word_position}>
               {wi > 0 || !isFirst ? ' ' : ''}
-              {hasStrongs ? (
+              {isClickable ? (
                 <span
                   onClick={(e) => {
                     e.stopPropagation()
-                    setStrongsPanel({ number: w.strongs_number!, word: w.word_text })
+                    setResourcesPanel({
+                      word: w.word_text.replace(/[^a-zA-Z'-]/g, ''),
+                      strongsNumber: w.strongs_number,
+                      isName,
+                    })
                   }}
-                  style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: verseNumColor, textUnderlineOffset: '3px', transition: 'color 150ms' }}
-                >
-                  {w.word_text}
-                </span>
-              ) : isName ? (
-                <span
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setNamesPanel(w.word_text.replace(/[^a-zA-Z'-]/g, ''))
-                  }}
-                  style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dashed', textDecorationColor: isModern ? 'rgba(15,52,96,0.4)' : 'rgba(184,134,11,0.5)', textUnderlineOffset: '3px', transition: 'color 150ms' }}
+                  style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: decorationStyle as 'dashed' | 'dotted', textDecorationColor: decorationColor, textUnderlineOffset: '3px', transition: 'color 150ms' }}
                 >
                   {w.word_text}
                 </span>
@@ -558,24 +556,13 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         </div>
       )}
 
-      {/* Strong's Panel */}
-      {strongsPanel && (
-        <StrongsPanel
-          strongsNumber={strongsPanel.number}
-          englishWord={strongsPanel.word}
-          onClose={() => setStrongsPanel(null)}
-        />
-      )}
-
-      {/* Names Lookup Panel */}
-      {namesPanel && (
-        <NamesPanel
-          name={namesPanel}
-          onClose={() => setNamesPanel(null)}
-          onStrongsOpen={(num, word) => {
-            setNamesPanel(null)
-            setStrongsPanel({ number: num, word })
-          }}
+      {/* Resources Panel — unified Strong's, Names, and all reference sources */}
+      {resourcesPanel && (
+        <ResourcesPanel
+          word={resourcesPanel.word}
+          strongsNumber={resourcesPanel.strongsNumber}
+          isName={resourcesPanel.isName}
+          onClose={() => setResourcesPanel(null)}
         />
       )}
 

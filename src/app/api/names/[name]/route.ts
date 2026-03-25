@@ -51,12 +51,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ name
     strongs = s
   }
 
-  if (!hitchcock && !smiths && !gesenius) {
+  // 5. Nave's Topical Bible
+  const { data: naves } = await supabase
+    .from('naves_topical')
+    .select('topic, subtopic, content, scripture_refs, see_also, strongs_numbers')
+    .ilike('topic_normalized', normalized)
+    .limit(5)
+
+  if (!hitchcock && !smiths && !gesenius && (!naves || naves.length === 0)) {
     return NextResponse.json({ error: 'Name not found' }, { status: 404 })
   }
 
   return NextResponse.json(
-    { name: decoded, hitchcock, smiths, gesenius, strongs },
+    { name: decoded, hitchcock, smiths, gesenius, strongs, naves: naves ?? [] },
     { headers: { 'Cache-Control': 'public, s-maxage=86400' } }
   )
 }
