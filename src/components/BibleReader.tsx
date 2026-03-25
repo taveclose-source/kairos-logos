@@ -74,7 +74,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const { fontSize, setFontSize, onTouchStart: pinchStart, onTouchMove: pinchMove, onTouchEnd: pinchEnd } = usePinchFontSize()
   const [showSizeIndicator, setShowSizeIndicator] = useState(false)
   const [resourcesPanel, setResourcesPanel] = useState<{ word: string; strongsNumber?: string | null; isName?: boolean } | null>(null)
-  const [twiPanel, setTwiPanel] = useState<{ word: string; verseReference: string; strongsNumber?: string } | null>(null)
+  const [twiPanel, setTwiPanel] = useState<{ word: string; verseReference: string; strongsNumber?: string; glossaryTerm?: string } | null>(null)
   const [kingsPanel, setKingsPanel] = useState(false)
   const [ctxMenu, setCtxMenu] = useState<{ verse: { reference: string; text: string; book: string; chapter: number; verse_number: number }; position: { x: number; y: number } } | null>(null)
   const [pastorPanel, setPastorPanel] = useState<{ verse: { reference: string; text: string; book: string; chapter: number; verse_number: number }; context: { before: string[]; after: string[] } } | null>(null)
@@ -319,7 +319,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                       key={gi}
                       onClick={(e) => {
                         e.stopPropagation()
-                        setTwiPanel({ word: cleaned, verseReference: verseRef })
+                        setTwiPanel({ word: cleaned, verseReference: verseRef, glossaryTerm: seg.term!.twi_term })
                       }}
                       style={{
                         cursor: 'pointer',
@@ -699,6 +699,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
           word={twiPanel.word}
           verseReference={twiPanel.verseReference}
           strongsNumber={twiPanel.strongsNumber}
+          glossaryTerm={twiPanel.glossaryTerm}
           onClose={() => setTwiPanel(null)}
           onJumpToStrongs={(num, word) => {
             setTwiPanel(null)

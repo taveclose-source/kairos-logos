@@ -60,13 +60,14 @@ interface TwiResourcesPanelProps {
   word: string
   verseReference: string
   strongsNumber?: string
+  glossaryTerm?: string
   onClose: () => void
   onJumpToStrongs?: (number: string, word: string) => void
 }
 
 type TabDef = { id: string; label: string }
 
-export default function TwiResourcesPanel({ word, verseReference, strongsNumber, onClose, onJumpToStrongs }: TwiResourcesPanelProps) {
+export default function TwiResourcesPanel({ word, verseReference, strongsNumber, glossaryTerm, onClose, onJumpToStrongs }: TwiResourcesPanelProps) {
   const router = useRouter()
   const { theme } = useTheme()
   const m = theme === 'modern'
@@ -81,18 +82,18 @@ export default function TwiResourcesPanel({ word, verseReference, strongsNumber,
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('')
 
-  // Fetch all data on mount
+  // Fetch all data on mount — always queries all five sources
   useEffect(() => {
     setLoading(true)
     fetch('/api/twi/lookup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ word, strongs_number: strongsNumber }),
+      body: JSON.stringify({ word, strongs_number: strongsNumber, glossary_term: glossaryTerm }),
     })
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [word, strongsNumber])
+  }, [word, strongsNumber, glossaryTerm])
 
   // Set default tab once data loads
   useEffect(() => {

@@ -6,14 +6,14 @@ function db() {
 }
 
 export async function POST(req: NextRequest) {
-  const { word, strongs_number } = await req.json()
+  const { word, strongs_number, glossary_term } = await req.json()
   if (!word) return NextResponse.json({ error: 'word required' }, { status: 400 })
 
   const cleaned = word.replace(/[^a-zA-ZɔɛɲŋàáèéìíòóùúâêîôûãẽĩõũƆƐ'-]/g, '').trim()
   const lower = cleaned.toLowerCase()
   const supabase = db()
 
-  // Query all sources in parallel
+  // Query all sources in parallel — every word gets ALL five lookups
   const [indexRes, christallerRes, engTwiRes, glossaryRes] = await Promise.all([
     // 1. Translation word index
     supabase
@@ -38,13 +38,23 @@ export async function POST(req: NextRequest) {
       .contains('twi_equivalents', [lower])
       .limit(3),
 
-    // 4. Glossary check
-    supabase
-      .from('twi_glossary')
-      .select('kjv_term, twi_term, locked, notes, strongs_number, category')
-      .ilike('twi_term', lower)
-      .limit(1)
-      .maybeSingle(),
+    // 4. Glossary check — if the caller provides the parent glossary_term (for words
+    //    within multi-word glossary phrases like "ɔsoro ahennie"), search by the full
+    //    phrase so the glossary badge still appears when tapping an individual word.
+    //    Otherwise try exact match, then fall back to partial match.
+    glossary_term
+      ? supabase
+          .from('twi_glossary')
+          .select('kjv_term, twi_term, locked, notes, strongs_number, category')
+          .ilike('twi_term', glossary_term.toLowerCase())
+          .limit(1)
+          .maybeSingle()
+      : supabase
+          .from('twi_glossary')
+          .select('kjv_term, twi_term, locked, notes, strongs_number, category')
+          .ilike('twi_term', lower)
+          .limit(1)
+          .maybeSingle(),
   ])
 
   const idx = indexRes.data
