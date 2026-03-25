@@ -13,6 +13,7 @@ import ResourcesPanel from '@/components/ResourcesPanel'
 import KingsPanel from '@/components/KingsPanel'
 import VerseContextMenu from '@/components/VerseContextMenu'
 import PastorResponsePanel from '@/components/PastorResponsePanel'
+import TwiResourcesPanel from '@/components/TwiResourcesPanel'
 import ChapterSheet from '@/components/ChapterSheet'
 // Navigation handled by child sheets
 import BookSheet from '@/components/BookSheet'
@@ -73,6 +74,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const { fontSize, setFontSize, onTouchStart: pinchStart, onTouchMove: pinchMove, onTouchEnd: pinchEnd } = usePinchFontSize()
   const [showSizeIndicator, setShowSizeIndicator] = useState(false)
   const [resourcesPanel, setResourcesPanel] = useState<{ word: string; strongsNumber?: string | null; isName?: boolean } | null>(null)
+  const [twiPanel, setTwiPanel] = useState<{ word: string; verseReference: string; strongsNumber?: string } | null>(null)
   const [kingsPanel, setKingsPanel] = useState(false)
   const [ctxMenu, setCtxMenu] = useState<{ verse: { reference: string; text: string; book: string; chapter: number; verse_number: number }; position: { x: number; y: number } } | null>(null)
   const [pastorPanel, setPastorPanel] = useState<{ verse: { reference: string; text: string; book: string; chapter: number; verse_number: number }; context: { before: string[]; after: string[] } } | null>(null)
@@ -247,8 +249,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     return glossaryTerms.filter((t) => t.twi_term).sort((a, b) => b.twi_term.length - a.twi_term.length)
   }, [glossaryTerms])
 
-  const renderTwiWithGlossary = useCallback((text: string) => {
-    if (glossaryMatchers.length === 0) return <>{text}</>
+  const renderTwiWithGlossary = useCallback((text: string, verseRef: string) => {
     type Segment = { text: string; term: GlossaryTerm | null }
     const segments: Segment[] = [{ text, term: null }]
     for (const term of glossaryMatchers) {
@@ -270,21 +271,48 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         segments.splice(i, 1, ...newSegs)
       }
     }
+    // Render each segment — glossary terms get emerald underline, all words tappable
     return (
       <>
-        {segments.map((seg, i) =>
-          seg.term ? (
-            <span
-              key={i}
-              onClick={() => setSelectedGlossary(seg.term)}
-              className="cursor-pointer underline decoration-emerald-500 decoration-2 underline-offset-2 hover:decoration-emerald-700 hover:bg-emerald-50/50 rounded-sm transition-colors"
-            >
-              {seg.text}
+        {segments.map((seg, i) => {
+          if (seg.term) {
+            // Glossary term — special emerald styling, tap opens TwiResourcesPanel
+            return (
+              <span
+                key={i}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setTwiPanel({ word: seg.text, verseReference: verseRef })
+                }}
+                className="cursor-pointer underline decoration-emerald-500 decoration-2 underline-offset-2 hover:decoration-emerald-700 hover:bg-emerald-50/50 rounded-sm transition-colors"
+              >
+                {seg.text}
+              </span>
+            )
+          }
+          // Non-glossary text — split into individual words, each tappable
+          const words = seg.text.split(/(\s+)/)
+          return (
+            <span key={i}>
+              {words.map((w, j) => {
+                const cleaned = w.replace(/[^a-zA-ZɔɛɲŋàáèéìíòóùúâêîôûãẽĩõũƆƐ'-]/g, '')
+                if (cleaned.length < 2 || /^\s+$/.test(w)) return w
+                return (
+                  <span
+                    key={j}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setTwiPanel({ word: cleaned, verseReference: verseRef })
+                    }}
+                    style={{ cursor: 'pointer', transition: 'color 150ms' }}
+                  >
+                    {w}
+                  </span>
+                )
+              })}
             </span>
-          ) : (
-            <span key={i}>{seg.text}</span>
           )
-        )}
+        })}
       </>
     )
   }, [glossaryMatchers])
@@ -521,7 +549,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                       <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: verseNumColor, verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>
                         {v.verse}
                       </sup>
-                      {v.twi_text ? renderTwiWithGlossary(v.twi_text) : 'Translation coming'}{' '}
+                      {v.twi_text ? renderTwiWithGlossary(v.twi_text, `${bookName} ${chapter}:${v.verse}`) : 'Translation coming'}{' '}
                     </span>
                   ))}
                 </div>
@@ -539,7 +567,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                     <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: verseNumColor, verticalAlign: 'super', marginRight: '3px' }}>
                       {v.verse}
                     </sup>
-                    {v.twi_text ? renderTwiWithGlossary(v.twi_text) : 'Translation coming'}{' '}
+                    {v.twi_text ? renderTwiWithGlossary(v.twi_text, `${bookName} ${chapter}:${v.verse}`) : 'Translation coming'}{' '}
                   </span>
                 ))}
               </div>
@@ -603,6 +631,20 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
           strongsNumber={resourcesPanel.strongsNumber}
           isName={resourcesPanel.isName}
           onClose={() => setResourcesPanel(null)}
+        />
+      )}
+
+      {/* Twi Resources Panel */}
+      {twiPanel && (
+        <TwiResourcesPanel
+          word={twiPanel.word}
+          verseReference={twiPanel.verseReference}
+          strongsNumber={twiPanel.strongsNumber}
+          onClose={() => setTwiPanel(null)}
+          onJumpToStrongs={(num, word) => {
+            setTwiPanel(null)
+            setResourcesPanel({ word, strongsNumber: num })
+          }}
         />
       )}
 
