@@ -15,17 +15,30 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
+// Paginated fetch — Supabase caps SELECT at 1000 rows by default
+async function fetchAll(table, select, filters) {
+  const PAGE = 1000
+  let all = []
+  let offset = 0
+  while (true) {
+    let q = supabase.from(table).select(select).range(offset, offset + PAGE - 1)
+    if (filters) q = filters(q)
+    const { data, error } = await q
+    if (error) { console.error(`fetchAll ${table}:`, error.message); break }
+    if (!data || data.length === 0) break
+    all = all.concat(data)
+    if (data.length < PAGE) break
+    offset += PAGE
+  }
+  return all
+}
+
 console.log('Building Twi translation word index...\n')
 
 // 1. Fetch all verses with Twi translations
 console.log('Step 1: Fetching Twi translation verses...')
-const { data: twiVerses, error: vErr } = await supabase
-  .from('bible_verses')
-  .select('id, book_id, chapter, verse, kjv_text, twi_text')
-  .eq('has_twi', true)
-  .not('twi_text', 'is', null)
-
-if (vErr) { console.error('Error fetching verses:', vErr.message); process.exit(1) }
+const twiVerses = await fetchAll('bible_verses', 'id, book_id, chapter, verse, kjv_text, twi_text',
+  q => q.eq('has_twi', true).not('twi_text', 'is', null))
 console.log(`  Found ${twiVerses.length} verses with Twi translations`)
 
 // 2. Get book names for each book_id
@@ -57,30 +70,27 @@ console.log(`  ${glossary?.length || 0} glossary terms loaded`)
 
 // 4. Fetch Christaller entries for matching
 console.log('Step 3: Fetching Christaller lexicon...')
-const { data: lexicon } = await supabase
-  .from('twi_lexicon')
-  .select('id, twi_headword, twi_normalized')
+const lexicon = await fetchAll('twi_lexicon', 'id, twi_headword, twi_normalized')
 
 const lexiconMap = {}
-for (const entry of lexicon || []) {
+for (const entry of lexicon) {
   const key = (entry.twi_normalized || entry.twi_headword).toLowerCase()
   lexiconMap[key] = entry.id
 }
-console.log(`  ${lexicon?.length || 0} lexicon entries loaded`)
+console.log(`  ${lexicon.length} lexicon entries loaded`)
 
 // 5. Fetch English-Twi entries
 console.log('Step 4: Fetching English-Twi lexicon...')
-const { data: engTwi } = await supabase
-  .from('english_twi_lexicon')
-  .select('id, english_headword, twi_equivalents')
+const engTwi = await fetchAll('english_twi_lexicon', 'id, english_headword, twi_equivalents')
 
 // Build reverse map: twi word → english_twi_lexicon id
 const engTwiReverseMap = {}
-for (const entry of engTwi || []) {
+for (const entry of engTwi) {
   for (const tw of entry.twi_equivalents || []) {
     engTwiReverseMap[tw.toLowerCase()] = entry.id
   }
 }
+console.log(`  ${engTwi.length} English-Twi entries loaded (${Object.keys(engTwiReverseMap).length} reverse keys)`)
 
 // 6. Fetch verse_words for Strong's alignment
 console.log('Step 5: Fetching verse words for Strong\'s alignment...')
