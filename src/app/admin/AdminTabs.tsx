@@ -22,6 +22,14 @@ interface UserRow {
   created_at: string
 }
 
+// Full credit allocation per tier (for Restore button)
+const TIER_CREDIT_ALLOCATION: Record<string, number> = {
+  free: 0,
+  scholar: 1000,
+  ministry: 2100,
+  missions: 1000,
+}
+
 interface Sponsorship {
   id: string
   sponsor_id: string
@@ -87,11 +95,25 @@ export default function AdminTabs({
   const [search, setSearch] = useState('')
   const [feedback, setFeedback] = useState<Array<{ id: string; user_name: string; user_email: string; type: string; subject: string; message: string; page_context: string; status: string; admin_notes: string; created_at: string }>>([])
   const [feedbackFilter, setFeedbackFilter] = useState('new')
+  const [userCredits, setUserCredits] = useState<Record<string, number>>({})
+  const [creditInputs, setCreditInputs] = useState<Record<string, string>>({})
 
-  // Fetch feedback on mount
+  // Fetch feedback and user credits on mount
   useEffect(() => {
     fetch('/api/admin/feedback').then(r => r.json()).then(d => { if (Array.isArray(d)) setFeedback(d) }).catch(() => {})
-  }, [])
+    // Fetch credits for all users
+    async function loadCredits() {
+      for (const u of initialUsers) {
+        fetch(`/api/admin/users/${u.id}/credits`)
+          .then(r => r.json())
+          .then(d => {
+            setUserCredits(prev => ({ ...prev, [u.id]: d.credits_remaining ?? 0 }))
+          })
+          .catch(() => {})
+      }
+    }
+    loadCredits()
+  }, [initialUsers])
   const [tierFilter, setTierFilter] = useState<string>('all')
   const [sortField, setSortField] = useState<SortField>('created_at')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
@@ -169,6 +191,36 @@ export default function AdminTabs({
     if (!res.ok) {
       console.error('Tier update failed:', await res.text())
       reloadUsers() // Revert on failure
+    }
+  }
+
+  async function addCredits(userId: string) {
+    const amount = parseInt(creditInputs[userId] || '0', 10)
+    if (!amount || amount <= 0) return
+    const res = await fetch(`/api/admin/users/${userId}/credits`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ add_credits: amount }),
+    })
+    if (res.ok) {
+      const d = await res.json()
+      setUserCredits(prev => ({ ...prev, [userId]: d.credits_remaining }))
+      setCreditInputs(prev => ({ ...prev, [userId]: '' }))
+    }
+  }
+
+  async function restoreCredits(userId: string) {
+    const user = users.find(u => u.id === userId)
+    const tier = user?.subscription_tier || 'free'
+    const allocation = TIER_CREDIT_ALLOCATION[tier] ?? 0
+    const res = await fetch(`/api/admin/users/${userId}/credits`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credits: allocation }),
+    })
+    if (res.ok) {
+      const d = await res.json()
+      setUserCredits(prev => ({ ...prev, [userId]: d.credits_remaining }))
     }
   }
 
@@ -272,6 +324,7 @@ export default function AdminTabs({
                   <th className="pb-2 pr-3 font-medium cursor-pointer hover:text-gray-600" onClick={() => toggleSort('created_at')}>
                     Joined {sortField === 'created_at' && (sortDir === 'asc' ? '↑' : '↓')}
                   </th>
+                  <th className="pb-2 pr-3 font-medium">Credits</th>
                   <th className="pb-2 font-medium">Override</th>
                 </tr>
               </thead>
@@ -285,6 +338,39 @@ export default function AdminTabs({
                     <td className="py-2.5 pr-3">{statusBadge(u.subscription_status)}</td>
                     <td className="py-2.5 pr-3 text-gray-500 text-xs">{u.country ?? '—'}</td>
                     <td className="py-2.5 pr-3 text-gray-400 text-xs">{new Date(u.created_at).toLocaleDateString()}</td>
+                    <td className="py-2.5 pr-3">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs font-medium text-gray-700 min-w-[3rem]">
+                          {u.id === ADMIN_UUID ? '∞' : (userCredits[u.id] ?? '—')}
+                        </span>
+                        {u.id !== ADMIN_UUID && (
+                          <>
+                            <input
+                              type="number"
+                              min="1"
+                              placeholder="+"
+                              value={creditInputs[u.id] || ''}
+                              onChange={(e) => setCreditInputs(prev => ({ ...prev, [u.id]: e.target.value }))}
+                              onKeyDown={(e) => { if (e.key === 'Enter') addCredits(u.id) }}
+                              className="w-14 text-xs rounded border border-gray-200 px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            />
+                            <button
+                              onClick={() => addCredits(u.id)}
+                              className="px-2 py-1 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+                            >
+                              Add
+                            </button>
+                            <button
+                              onClick={() => restoreCredits(u.id)}
+                              title={`Restore to ${u.subscription_tier || 'free'} tier allocation: ${TIER_CREDIT_ALLOCATION[u.subscription_tier || 'free'] ?? 0} credits`}
+                              className="px-2 py-1 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                            >
+                              Restore
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
                     <td className="py-2.5">
                       <div className="flex items-center gap-1">
                         <select
