@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
           .limit(5)
       : Promise.resolve({ data: [] })
 
-    // 4. Historical context (Herodotus)
+    // 4. Historical context — Herodotus (legacy table) + all Tier 4 sources (new table)
     const dates = BOOK_DATES[book]
     const herodotusPromise = dates
       ? supabase
@@ -100,6 +100,16 @@ export async function POST(req: NextRequest) {
           .lte('date_range_start', dates[1])
           .gte('date_range_end', dates[0])
           .limit(3)
+      : Promise.resolve({ data: [] })
+
+    const historicalPromise = dates
+      ? supabase
+          .from('historical_sources')
+          .select('source_name, book_name, chapter, content, kingdoms, geographic_region')
+          .not('date_range_start', 'is', null)
+          .lte('date_range_start', dates[1])
+          .gte('date_range_end', dates[0])
+          .limit(6)
       : Promise.resolve({ data: [] })
 
     // 5. Nave's Topical for key terms
@@ -112,8 +122,8 @@ export async function POST(req: NextRequest) {
       : Promise.resolve({ data: [] })
 
     // Execute all in parallel
-    const [wordsRes, hitchcockRes, smithsRes, herodotusRes, navesRes] = await Promise.all([
-      wordsPromise, hitchcockPromise, smithsPromise, herodotusPromise, navesPromise,
+    const [wordsRes, hitchcockRes, smithsRes, herodotusRes, historicalRes, navesRes] = await Promise.all([
+      wordsPromise, hitchcockPromise, smithsPromise, herodotusPromise, historicalPromise, navesPromise,
     ])
 
     // Gather Strong's entries for the words in this verse
@@ -180,11 +190,20 @@ export async function POST(req: NextRequest) {
         ).join('\n'))
     }
 
-    if ((herodotusRes.data ?? []).length > 0) {
-      sections.push('HISTORICAL CONTEXT (Herodotus — secular, Tier 2):\n' +
+    // Combine Herodotus + new historical sources
+    const allHistorical: { label: string; content: string; kingdoms?: string[] }[] = []
+    for (const h of (herodotusRes.data ?? [])) {
+      allHistorical.push({ label: `Herodotus, ${h.book_name} ch.${h.chapter}`, content: h.content, kingdoms: h.kingdoms })
+    }
+    for (const h of (historicalRes.data ?? [])) {
+      const srcLabel = (h.source_name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
+      allHistorical.push({ label: `${srcLabel}, ${h.book_name} ch.${h.chapter}`, content: h.content, kingdoms: h.kingdoms })
+    }
+    if (allHistorical.length > 0) {
+      sections.push('HISTORICAL CONTEXT (secular, Tier 4):\n' +
         'NOTE: This is secular historical context. It carries NO theological authority.\n' +
-        (herodotusRes.data ?? []).map(h =>
-          `• Herodotus, ${h.book_name} ch.${h.chapter}${h.kingdoms ? ' [' + h.kingdoms.join(', ') + ']' : ''}: ${h.content.slice(0, 250)}${h.content.length > 250 ? '...' : ''}`
+        allHistorical.map(h =>
+          `• ${h.label}${h.kingdoms ? ' [' + h.kingdoms.join(', ') + ']' : ''}: ${h.content.slice(0, 250)}${h.content.length > 250 ? '...' : ''}`
         ).join('\n'))
     }
 
@@ -249,7 +268,7 @@ Give a pastoral response drawing from the intelligence sources provided. Follow 
         if ((hitchcockRes.data ?? []).length > 0) sources.push("Hitchcock's")
         if ((smithsRes.data ?? []).length > 0) sources.push("Smith's")
         if ((navesRes.data ?? []).length > 0) sources.push("Nave's")
-        if ((herodotusRes.data ?? []).length > 0) sources.push('Historical')
+        if ((herodotusRes.data ?? []).length > 0 || (historicalRes.data ?? []).length > 0) sources.push('Historical')
 
         controller.enqueue(encoder.encode(
           `data: ${JSON.stringify({ type: 'sources', sources })}\n\n`

@@ -76,31 +76,46 @@ export async function GET(req: NextRequest) {
   const [startDate, endDate] = dates
   const supabase = db()
 
-  // Query herodotus_histories for overlapping date ranges
-  // Herodotus covers roughly -700 to -400 BCE
-  const { data, error } = await supabase
-    .from('herodotus_histories')
-    .select('book_number, book_name, chapter, content, proper_nouns, scripture_connections, kingdoms, date_range_start, date_range_end, source_tier, authority_notice')
-    .or(`and(date_range_start.lte.${endDate},date_range_end.gte.${startDate}),and(date_range_start.is.null,date_range_end.is.null)`)
-    .not('date_range_start', 'is', null)
-    .order('date_range_start', { ascending: true })
-    .limit(25)
+  // Query both herodotus_histories and historical_sources for overlapping date ranges
+  const [herodotusRes, historicalRes] = await Promise.all([
+    supabase
+      .from('herodotus_histories')
+      .select('book_number, book_name, chapter, content, proper_nouns, scripture_connections, kingdoms, date_range_start, date_range_end, source_tier, authority_notice')
+      .not('date_range_start', 'is', null)
+      .lte('date_range_start', endDate)
+      .gte('date_range_end', startDate)
+      .order('date_range_start', { ascending: true })
+      .limit(15),
+    supabase
+      .from('historical_sources')
+      .select('source_name, book_number, book_name, chapter, content, proper_nouns, scripture_connections, kingdoms, geographic_region, date_range_start, date_range_end, source_tier, authority_notice')
+      .not('date_range_start', 'is', null)
+      .lte('date_range_start', endDate)
+      .gte('date_range_end', startDate)
+      .order('date_range_start', { ascending: true })
+      .limit(15),
+  ])
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  if (herodotusRes.error) {
+    return NextResponse.json({ error: herodotusRes.error.message }, { status: 500 })
   }
 
-  // Extract unique kingdoms from results
+  // Merge results — tag Herodotus entries with source_name for consistency
+  const herodotusData = (herodotusRes.data ?? []).map(r => ({ ...r, source_name: 'herodotus' }))
+  const historicalData = historicalRes.data ?? []
+  const allResults = [...herodotusData, ...historicalData]
+
+  // Extract unique kingdoms from combined results
   const kingdomSet = new Set<string>()
-  for (const row of data ?? []) {
+  for (const row of allResults) {
     if (row.kingdoms) {
       for (const k of row.kingdoms) kingdomSet.add(k)
     }
   }
 
   // Group results by kingdom for kingdom-by-kingdom display
-  const byKingdom: Record<string, typeof data> = {}
-  for (const row of data ?? []) {
+  const byKingdom: Record<string, typeof allResults> = {}
+  for (const row of allResults) {
     if (row.kingdoms) {
       for (const k of row.kingdoms) {
         if (!byKingdom[k]) byKingdom[k] = []
@@ -113,7 +128,7 @@ export async function GET(req: NextRequest) {
     book,
     chapter: chapterStr ? parseInt(chapterStr) : null,
     date_range: { start: startDate, end: endDate },
-    results: data ?? [],
+    results: allResults,
     kingdoms: Array.from(kingdomSet).sort(),
     by_kingdom: byKingdom,
     authority_notice: 'These sources are secular historical records. They carry no theological authority. The Bible interprets history. History does not interpret the Bible.',
