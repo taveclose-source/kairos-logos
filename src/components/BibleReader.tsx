@@ -81,6 +81,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressTriggered = useRef(false)
   const [knownNames, setKnownNames] = useState<Set<string>>(new Set())
+  const [twiWordClasses, setTwiWordClasses] = useState<Record<string, string>>({})
   const [chapterSheetOpen, setChapterSheetOpen] = useState(false)
   const [chapterSheetBook, setChapterSheetBook] = useState(bookName)
   const [bookSheetOpen, setBookSheetOpen] = useState(false)
@@ -174,6 +175,31 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
       .catch(() => {})
     return () => { cancelled = true }
   }, [])
+
+  // Fetch Twi word classifications for underline styling
+  useEffect(() => {
+    let cancelled = false
+    // Extract all unique Twi words from verses
+    const allWords: string[] = []
+    for (const v of verses) {
+      if (!v.twi_text) continue
+      const words = v.twi_text.split(/\s+/)
+      for (const w of words) {
+        const cleaned = w.replace(/[^a-zA-ZɔɛɲŋàáèéìíòóùúâêîôûãẽĩõũƆƐ'-]/g, '')
+        if (cleaned.length >= 2) allWords.push(cleaned)
+      }
+    }
+    if (allWords.length === 0) return
+    fetch('/api/twi/batch-classify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ words: allWords }),
+    })
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
+      .then(data => { if (!cancelled) setTwiWordClasses(data) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [verses])
 
   // Build verse info for context menu
   function getVerseInfo(verseNum: number) {
@@ -271,12 +297,17 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         segments.splice(i, 1, ...newSegs)
       }
     }
-    // Render each segment — glossary terms get emerald underline, all words tappable
+    // Underline colors — amber/gold for Twi column (distinct from blue on English side)
+    const amberDashed = 'rgba(184,134,11,0.7)'   // glossary terms
+    const amberDotted = 'rgba(184,134,11,0.6)'   // Strong's link
+    const amberSolid  = 'rgba(184,134,11,0.3)'   // Christaller / English-Twi match
+
+    // Render each segment — glossary terms get dashed amber, classified words get dotted/solid amber
     return (
       <>
         {segments.map((seg, i) => {
           if (seg.term) {
-            // Glossary term — special emerald styling, tap opens TwiResourcesPanel
+            // Glossary term — dashed amber underline, tap opens TwiResourcesPanel
             return (
               <span
                 key={i}
@@ -284,19 +315,29 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                   e.stopPropagation()
                   setTwiPanel({ word: seg.text, verseReference: verseRef })
                 }}
-                className="cursor-pointer underline decoration-emerald-500 decoration-2 underline-offset-2 hover:decoration-emerald-700 hover:bg-emerald-50/50 rounded-sm transition-colors"
+                style={{
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  textDecorationStyle: 'dashed',
+                  textDecorationColor: amberDashed,
+                  textDecorationThickness: '2px',
+                  textUnderlineOffset: '3px',
+                  transition: 'color 150ms',
+                }}
               >
                 {seg.text}
               </span>
             )
           }
-          // Non-glossary text — split into individual words, each tappable
+          // Non-glossary text — split into individual words, each tappable with classification-based styling
           const words = seg.text.split(/(\s+)/)
           return (
             <span key={i}>
               {words.map((w, j) => {
                 const cleaned = w.replace(/[^a-zA-ZɔɛɲŋàáèéìíòóùúâêîôûãẽĩõũƆƐ'-]/g, '')
                 if (cleaned.length < 2 || /^\s+$/.test(w)) return w
+                const cls = twiWordClasses[cleaned.toLowerCase()]
+                const hasUnderline = cls === 'strongs' || cls === 'dictionary'
                 return (
                   <span
                     key={j}
@@ -304,7 +345,16 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                       e.stopPropagation()
                       setTwiPanel({ word: cleaned, verseReference: verseRef })
                     }}
-                    style={{ cursor: 'pointer', transition: 'color 150ms' }}
+                    style={{
+                      cursor: 'pointer',
+                      transition: 'color 150ms',
+                      ...(hasUnderline ? {
+                        textDecoration: 'underline',
+                        textDecorationStyle: cls === 'strongs' ? 'dotted' : 'solid',
+                        textDecorationColor: cls === 'strongs' ? amberDotted : amberSolid,
+                        textUnderlineOffset: '3px',
+                      } as React.CSSProperties : {}),
+                    }}
                   >
                     {w}
                   </span>
@@ -315,7 +365,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         })}
       </>
     )
-  }, [glossaryMatchers])
+  }, [glossaryMatchers, twiWordClasses])
 
   // (Strong's panel handles its own dismiss)
 
