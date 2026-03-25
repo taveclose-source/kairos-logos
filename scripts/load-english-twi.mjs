@@ -3,6 +3,14 @@
  * Source: Internet Archive OCR — public domain
  * Target table: english_twi_lexicon
  * Run: node scripts/load-english-twi.mjs
+ *
+ * OCR format (after line ~636):
+ *   abandon,  v.  gyae,  gyau,  gya  mu,
+ *   pa,  yi..ma;  gya  .kyene.
+ *   abase,  v.  bere  ase;  boto.
+ *
+ * Entries: lowercase headword, comma, POS abbreviation, period, then Twi words.
+ * Lines often wrap. Page headers appear as short all-caps lines or bare numbers.
  */
 import { createClient } from '@supabase/supabase-js'
 
@@ -15,137 +23,190 @@ const URL = 'https://archive.org/download/englishtshiasant00evaniala/englishtshi
 
 console.log('Fetching Basel English-Tshi dictionary OCR...')
 const resp = await fetch(URL)
-const text = await resp.text()
-console.log(`OCR text: ${text.length} chars`)
+const rawText = await resp.text()
+console.log(`OCR text: ${rawText.length} chars`)
 
-const lines = text.split('\n')
+const lines = rawText.split('\n')
 
-// Find where dictionary entries start (after preface/introduction)
+// Find the first "A." section header — this is where entries begin
 let dictStart = 0
-let dictEnd = lines.length
-
-for (let i = 0; i < lines.length; i++) {
-  const l = lines[i].trim()
-  // Look for the start of "A" section
-  if (/^A\s*[.]?\s*$/.test(l) && i > 50) {
-    dictStart = i
-    break
-  }
-  // Fallback: first line that looks like an English headword entry
-  if (i > 100 && /^[A-Z][a-z]+[,.]/.test(l)) {
-    dictStart = i
+for (let i = 500; i < 800; i++) {
+  if (/^A\s*\.\s*$/.test(lines[i]?.trim())) {
+    dictStart = i + 1
     break
   }
 }
 
-for (let i = lines.length - 1; i > dictStart; i--) {
-  const l = lines[i].trim()
-  if (/APPENDIX|ADDENDA|INDEX|ERRATA/i.test(l)) {
+// Find the second "A." which starts the appendix/addenda at line ~24693
+let dictEnd = lines.length
+for (let i = dictStart + 1000; i < lines.length; i++) {
+  if (/^A\s*\.\s*$/.test(lines[i]?.trim())) {
     dictEnd = i
     break
   }
 }
 
-console.log(`Dictionary content: lines ${dictStart}-${dictEnd}`)
+console.log(`Dictionary body: lines ${dictStart}–${dictEnd} (${dictEnd - dictStart} lines)`)
 
-/**
- * English-Tshi format: English headword, followed by Twi equivalent(s)
- * Pattern: "Abandon, v.  gya, gyaw; pa mu"
- */
-
-const entries = []
-let currentEntry = null
+// Join all dictionary lines into one continuous text, preserving entry boundaries
+// First, collapse the multi-line text into a single string
+let body = ''
 let pageNum = 1
+const pageMap = [] // track character positions where pages change
 
-// English headword pattern: Capitalized word followed by comma or period
-const headwordPattern = /^([A-Z][a-z'-]{1,25})\s*[,.:]\s*(.*)/
+for (let i = dictStart; i < dictEnd; i++) {
+  const line = lines[i].trim()
+  if (!line) continue
+
+  // Page numbers: bare digits on their own line (e.g. "86", "132")
+  if (/^\d{1,3}$/.test(line)) {
+    pageNum = parseInt(line)
+    pageMap.push({ pos: body.length, page: pageNum })
+    continue
+  }
+
+  // Skip page headers: short all-caps lines like "gra", "oni", "ord" (column guides)
+  if (line.length <= 4 && /^[a-z]+$/i.test(line)) continue
+
+  // Skip section letter headers: "B.", "C.", etc.
+  if (/^[A-Z]\s*\.\s*$/.test(line)) {
+    body += ' '
+    continue
+  }
+
+  body += ' ' + line
+}
+
+console.log(`Collapsed body: ${body.length} chars`)
+
+// Now parse entries from the collapsed text.
+// Entry pattern: english_word, POS. twi_content
+// An entry starts with a lowercase (or capitalized) English word followed by a comma and POS.
+// POS abbreviations: v. n. a. ad. pr.n. prp. conj. int. num. phr.
+//
+// Strategy: split on the boundary where a new English headword begins.
+// Boundary: one of the POS-terminated patterns followed by Twi content,
+// then a new English word + comma + POS.
+
+const entryPattern = /\b([a-z][a-z'-]{1,25})\s*,\s*(v\.|n\.|a\.|ad\.|s\.|prp?\.|conj\.|int\.|num\.|phr\.|pr\.\s*n\.)\s*/gi
+
+// Find all match positions
+const matches = []
+let m
+while ((m = entryPattern.exec(body)) !== null) {
+  // Validate: headword should be a real English word (no weird OCR fragments)
+  const hw = m[1].toLowerCase()
+  // Skip if it looks like a Twi word (contains ɔ, ɛ, ŋ, etc.) or is too short
+  if (/[ɔɛɲŋ]/.test(hw)) continue
+  if (hw.length < 2) continue
+  // Skip common non-headwords that the POS pattern might catch in running text
+  if (['to', 'be', 'do', 'is', 'he', 'it', 'or', 'of', 'in', 'at', 'on', 'no', 'so', 'up', 'my'].includes(hw)) continue
+
+  matches.push({
+    headword: hw,
+    pos: m[2].replace(/\s+/g, ''),
+    startIdx: m.index,
+    contentStart: m.index + m[0].length,
+  })
+}
+
+console.log(`Found ${matches.length} potential entries`)
+
+// Extract content between entries
+const entries = []
+const commonEnglish = new Set([
+  'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'her', 'was', 'one',
+  'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'its', 'may', 'new', 'now',
+  'old', 'see', 'way', 'who', 'did', 'let', 'say', 'she', 'too', 'use', 'off', 'run',
+  'set', 'try', 'ask', 'own', 'any', 'few', 'got', 'big', 'come', 'make', 'like', 'just',
+  'over', 'such', 'take', 'them', 'than', 'well', 'also', 'been', 'much', 'then', 'some',
+  'very', 'when', 'what', 'your', 'will', 'each', 'from', 'have', 'this', 'with', 'that',
+  'they', 'been', 'said', 'fig', 'pass', 'self'
+])
 
 function extractTwiWords(text) {
-  // Twi equivalents are typically lowercase words with possible diacritics
-  // separated by commas or semicolons
-  const cleaned = text
-    .replace(/\b(?:v\.|n\.|adj\.|adv\.|s\.|a\.|prep\.|conj\.|int\.|pron\.)\s*/gi, '')
-    .replace(/\([^)]*\)/g, '') // Remove parenthetical notes
-    .trim()
-
-  if (!cleaned) return []
-
-  // Split on commas and semicolons, take words that look like Twi
-  const parts = cleaned.split(/[;,]/)
+  // Split on punctuation that separates Twi words
+  const parts = text.split(/[;,]/)
   const twiWords = []
+  const seen = new Set()
+
   for (const p of parts) {
-    const word = p.trim().split(/\s+/)[0] // Take first word of each segment
-    if (word && word.length >= 2 && /^[a-zɔɛɲŋàáèéìíòóùúâêîôûãẽĩõũ'-]+$/i.test(word)) {
-      twiWords.push(word)
+    // Take individual words from each segment
+    const words = p.trim().split(/\s+/)
+    for (const w of words) {
+      const clean = w.replace(/[^a-zA-Zɔɛɲŋàáèéìíòóùúâêîôûãẽĩõũ'-]/g, '').toLowerCase()
+      if (clean.length < 2) continue
+      // Skip English words (common words, or words that appear as headwords)
+      if (commonEnglish.has(clean)) continue
+      // Skip obvious POS/grammar markers
+      if (/^(v|n|a|ad|prp|conj|int|num|phr|pass|fig|inf|der|cf|pi|lit|jud|eccl|euph|anat|obs|caus|perf|part)\.?$/.test(clean)) continue
+      // Skip section references like §74
+      if (/^§?\d+/.test(clean)) continue
+      // Likely Twi if it contains typical Twi patterns or is lowercase non-English
+      if (!seen.has(clean) && twiWords.length < 15) {
+        seen.add(clean)
+        twiWords.push(clean)
+      }
     }
   }
   return twiWords
 }
 
-function flushEntry() {
-  if (!currentEntry || !currentEntry.headword) return
-
-  const fullText = currentEntry.gloss.replace(/\s+/g, ' ').trim()
-  const twiEquivs = extractTwiWords(fullText)
-
-  if (twiEquivs.length === 0) {
-    // If no Twi words extracted, store the whole gloss as one equivalent
-    if (fullText.length >= 2 && fullText.length <= 100) {
-      twiEquivs.push(fullText.split(/[,;.]/)[0].trim())
-    }
+function getPageForPos(charPos) {
+  let p = 1
+  for (const entry of pageMap) {
+    if (entry.pos > charPos) break
+    p = entry.page
   }
+  return p
+}
 
-  if (twiEquivs.length === 0) return
+// POS abbreviation to full name
+const posMap = {
+  'v.': 'verb', 'n.': 'noun', 'a.': 'adjective', 'ad.': 'adverb',
+  's.': 'noun', 'prp.': 'preposition', 'pr.': 'pronoun', 'pr.n.': 'proper noun',
+  'conj.': 'conjunction', 'int.': 'interjection', 'num.': 'numeral', 'phr.': 'phrase',
+}
+
+for (let i = 0; i < matches.length; i++) {
+  const entry = matches[i]
+  const nextStart = i + 1 < matches.length ? matches[i + 1].startIdx : body.length
+  const content = body.slice(entry.contentStart, nextStart).trim()
+
+  // Extract up to the first sentence boundary that looks like end of this entry
+  // (content before the next headword)
+  const usableContent = content.slice(0, 400)
+  const twiWords = extractTwiWords(usableContent)
+
+  if (twiWords.length === 0) continue
 
   entries.push({
-    english_headword: currentEntry.headword.toLowerCase(),
-    twi_equivalents: twiEquivs,
-    usage_context: fullText.length > 3 ? fullText.slice(0, 500) : null,
+    english_headword: entry.headword,
+    twi_equivalents: twiWords,
+    usage_context: usableContent.replace(/\s+/g, ' ').trim().slice(0, 500) || null,
     dialect: 'Asante',
-    basel_page: pageNum,
+    basel_page: getPageForPos(entry.startIdx),
   })
 }
 
-for (let i = dictStart; i < dictEnd; i++) {
-  const line = lines[i].trim()
-  if (line.length < 2) continue
+console.log(`Valid entries with Twi words: ${entries.length}`)
 
-  // Track page numbers
-  const pageMatch = line.match(/^\d{1,3}\s*$/)
-  if (pageMatch) {
-    pageNum = parseInt(pageMatch[0])
-    continue
-  }
-
-  // Skip noise
-  if (line.length < 4 && /^[A-Z.\s]+$/.test(line)) continue
-
-  const m = line.match(headwordPattern)
-  if (m && m[1].length >= 2 && m[1].length <= 25) {
-    flushEntry()
-    currentEntry = {
-      headword: m[1],
-      gloss: m[2] || '',
-    }
-  } else if (currentEntry) {
-    currentEntry.gloss += ' ' + line
-  }
-}
-flushEntry()
-
-console.log(`Parsed ${entries.length} entries`)
-
-// Deduplicate by headword
+// Deduplicate — keep first occurrence (most complete for compound entries)
 const seen = new Set()
 const unique = []
 for (const e of entries) {
-  const key = e.english_headword
-  if (!seen.has(key)) {
-    seen.add(key)
+  if (!seen.has(e.english_headword)) {
+    seen.add(e.english_headword)
     unique.push(e)
   }
 }
 console.log(`Unique headwords: ${unique.length}`)
+
+// Sample
+console.log('\nSample entries:')
+for (const e of unique.slice(0, 8)) {
+  console.log(`  ${e.english_headword} (p.${e.basel_page}): [${e.twi_equivalents.slice(0, 5).join(', ')}]`)
+}
 
 // Load into Supabase
 const BATCH = 200
