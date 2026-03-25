@@ -289,9 +289,9 @@ function StudyPageInner() {
       </div>
     )}
 
-    {/* Dark warm background — candlelit study at night */}
-    <div style={{ position: 'fixed', inset: 0, background: '#1E0E03', zIndex: -2 }} />
-    <div style={{ position: 'fixed', inset: 0, background: 'radial-gradient(ellipse at 50% 20%, rgba(60,36,21,0.8) 0%, rgba(30,14,3,0.95) 70%)', zIndex: -1 }} />
+    {/* Background — same image and overlay from the original /ask page */}
+    <img src="/images/ask-backdrop.png" alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', objectFit: 'cover', objectPosition: 'center 75%', zIndex: -2 }} />
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,6,2,0.55)', pointerEvents: 'none', zIndex: -1 }} />
 
     <main style={{ position: 'relative', minHeight: 'calc(100vh - 56px)' }} className="px-4 sm:px-6 py-10 sm:py-16">
       <div className="max-w-2xl mx-auto">
