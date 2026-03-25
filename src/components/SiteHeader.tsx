@@ -114,6 +114,25 @@ export default function SiteHeader() {
                   Admin
                 </Link>
               )}
+              {/* Theme toggle — desktop */}
+              <button
+                onClick={() => setTheme(theme === 'classic' ? 'modern' : 'classic')}
+                title={`Switch to ${theme === 'classic' ? 'Modern' : 'Classic'} theme`}
+                className="transition-colors duration-200"
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: 'transparent',
+                  border: '1px solid var(--border-subtle)',
+                  cursor: 'pointer',
+                  color: 'var(--gold)',
+                  fontSize: 14,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--gold-muted)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+              >
+                {theme === 'classic' ? '☀' : '◆'}
+              </button>
               <Link href="/settings/profile" title="Profile">
                 <div
                   className="flex items-center justify-center rounded-full transition-colors duration-200"
@@ -137,6 +156,26 @@ export default function SiteHeader() {
               </button>
             </>
           ) : (
+            <>
+            {/* Theme toggle — desktop, logged out */}
+            <button
+              onClick={() => setTheme(theme === 'classic' ? 'modern' : 'classic')}
+              title={`Switch to ${theme === 'classic' ? 'Modern' : 'Classic'} theme`}
+              className="transition-colors duration-200"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 28, height: 28, borderRadius: '50%',
+                background: 'transparent',
+                border: '1px solid var(--border-subtle)',
+                cursor: 'pointer',
+                color: 'var(--gold)',
+                fontSize: 14,
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--gold-muted)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+            >
+              {theme === 'classic' ? '☀' : '◆'}
+            </button>
             <Link href="/auth/signin">
               <span
                 className="inline-block transition-colors duration-200 hover:bg-[#F5C878] hover:text-[#6B3515]"
@@ -155,6 +194,7 @@ export default function SiteHeader() {
                 Sign In
               </span>
             </Link>
+            </>
           )}
         </div>
 
