@@ -39,25 +39,25 @@ echo [3/4] Backing up EdenPro...
 set EDENPRO_BACKUP=C:\Users\close\Dropbox\Dev-Backups\EdenPro
 if exist "%EDENPRO_BACKUP%" rd /s /q "%EDENPRO_BACKUP%"
 mkdir "%EDENPRO_BACKUP%"
-xcopy "C:\Dev\EdenPro\edenpro-linkedin-intel" "%EDENPRO_BACKUP%" /E /I /Q /EXCLUDE:C:\Dev\Logos\.gitignore-backup-exclude.txt
+xcopy "C:\Dev\EdenPro" "%EDENPRO_BACKUP%" /E /I /Q /EXCLUDE:C:\Dev\Logos\.gitignore-backup-exclude.txt
 echo EdenPro backup complete.
 echo.
 
 :: -----------------------------------------
-:: KAI'ROS BACKUP -- overwrite single copy
+:: FUNDRAISING BACKUP -- overwrite single copy
 :: -----------------------------------------
-echo [4/4] Backing up Kai'Ros...
-set KAIROS_BACKUP=C:\Users\close\Dropbox\Dev-Backups\KaiRos
-if exist "%KAIROS_BACKUP%" rd /s /q "%KAIROS_BACKUP%"
-mkdir "%KAIROS_BACKUP%"
-xcopy "C:\Dev\KaiRos" "%KAIROS_BACKUP%" /E /I /Q /EXCLUDE:C:\Dev\Logos\.gitignore-backup-exclude.txt
-echo KaiRos backup complete.
+echo [4/4] Backing up Fundraising...
+set FUNDRAISING_BACKUP=C:\Users\close\Dropbox\Dev-Backups\Fundraising
+if exist "%FUNDRAISING_BACKUP%" rd /s /q "%FUNDRAISING_BACKUP%"
+mkdir "%FUNDRAISING_BACKUP%"
+xcopy "C:\Dev\Fundraising" "%FUNDRAISING_BACKUP%" /E /I /Q /EXCLUDE:C:\Dev\Logos\.gitignore-backup-exclude.txt
+echo Fundraising backup complete.
 echo.
 
 :: -----------------------------------------
 :: LOG
 :: -----------------------------------------
-echo %TIMESTAMP% -- Full backup completed (Logos + EdenPro + KaiRos) >> "C:\Dev\Logos\backup-log.txt"
+echo %TIMESTAMP% -- Full backup completed (Logos + EdenPro + Fundraising) >> "C:\Dev\Logos\backup-log.txt"
 type "C:\Dev\Logos\backup-log.txt"
 echo.
 
