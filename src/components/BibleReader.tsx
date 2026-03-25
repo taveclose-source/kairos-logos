@@ -307,25 +307,34 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
       <>
         {segments.map((seg, i) => {
           if (seg.term) {
-            // Glossary term — dashed amber underline, tap opens TwiResourcesPanel
+            // Glossary term — dashed amber underline, each word individually tappable
+            const glossaryWords = seg.text.split(/(\s+)/)
             return (
-              <span
-                key={i}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setTwiPanel({ word: seg.text, verseReference: verseRef })
-                }}
-                style={{
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  textDecorationStyle: 'dashed',
-                  textDecorationColor: amberDashed,
-                  textDecorationThickness: '2px',
-                  textUnderlineOffset: '3px',
-                  transition: 'color 150ms',
-                }}
-              >
-                {seg.text}
+              <span key={i}>
+                {glossaryWords.map((gw, gi) => {
+                  const cleaned = gw.replace(/[^a-zA-ZɔɛɲŋàáèéìíòóùúâêîôûãẽĩõũƆƐ'-]/g, '')
+                  if (/^\s+$/.test(gw) || cleaned.length < 2) return gw
+                  return (
+                    <span
+                      key={gi}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setTwiPanel({ word: cleaned, verseReference: verseRef })
+                      }}
+                      style={{
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        textDecorationStyle: 'dashed',
+                        textDecorationColor: amberDashed,
+                        textDecorationThickness: '2px',
+                        textUnderlineOffset: '3px',
+                        transition: 'color 150ms',
+                      }}
+                    >
+                      {gw}
+                    </span>
+                  )
+                })}
               </span>
             )
           }
