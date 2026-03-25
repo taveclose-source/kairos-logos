@@ -8,9 +8,8 @@ echo LOGOS BACKUP — Running...
 echo ─────────────────────────────────────────
 echo.
 
-:: Set timestamp
-for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set dt=%%I
-set TIMESTAMP=%dt:~0,4%-%dt:~4,2%-%dt:~6,2%_%dt:~8,2%-%dt:~10,2%
+:: Timestamp via PowerShell (wmic deprecated on Windows 11)
+for /f "delims=" %%T in ('powershell -NoProfile -Command "Get-Date -Format yyyy-MM-dd_HH-mm"') do set TIMESTAMP=%%T
 
 :: Git commit and push
 echo [1/3] Committing all changes to git...
@@ -24,14 +23,18 @@ echo.
 echo [2/3] Copying to Dropbox...
 set BACKUP_DIR=C:\Users\close\Dropbox\Logos-Backups\%TIMESTAMP%
 mkdir "%BACKUP_DIR%"
-xcopy "C:\Dev\Logos" "%BACKUP_DIR%" /E /I /Q /EXCLUDE:C:\Dev\Logos\.gitignore-backup-exclude.txt
-echo Dropbox backup complete.
+xcopy "C:\Dev\Logos" "%BACKUP_DIR%" /E /I /Q /EXCLUDE:C:\Dev\Logos\.gitignore-backup-exclude.txt 2>nul
+if %ERRORLEVEL%==0 (
+    echo Dropbox backup complete.
+) else (
+    echo Dropbox folder not found -- skipping. Git backup is sufficient.
+)
 echo.
 
 :: Log it
 echo [3/3] Logging backup...
-echo %TIMESTAMP% — Backup completed >> "C:\Dev\Logos\backup-log.txt"
-echo Backup log updated.
+echo %TIMESTAMP% -- Backup completed >> "C:\Dev\Logos\backup-log.txt"
+type "C:\Dev\Logos\backup-log.txt"
 echo.
 
 echo ─────────────────────────────────────────
