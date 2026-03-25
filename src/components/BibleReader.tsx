@@ -11,6 +11,8 @@ import type { GlossaryTerm } from '@/components/GlossaryModal'
 import { usePinchFontSize, DEFAULT_SIZE } from '@/hooks/usePinchFontSize'
 import ResourcesPanel from '@/components/ResourcesPanel'
 import KingsPanel from '@/components/KingsPanel'
+import VerseContextMenu from '@/components/VerseContextMenu'
+import PastorResponsePanel from '@/components/PastorResponsePanel'
 import ChapterSheet from '@/components/ChapterSheet'
 // Navigation handled by child sheets
 import BookSheet from '@/components/BookSheet'
@@ -72,7 +74,10 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const [showSizeIndicator, setShowSizeIndicator] = useState(false)
   const [resourcesPanel, setResourcesPanel] = useState<{ word: string; strongsNumber?: string | null; isName?: boolean } | null>(null)
   const [kingsPanel, setKingsPanel] = useState(false)
-  const [verseMenu, setVerseMenu] = useState<{ verse: number; x: number; y: number } | null>(null)
+  const [ctxMenu, setCtxMenu] = useState<{ verse: { reference: string; text: string; book: string; chapter: number; verse_number: number }; position: { x: number; y: number } } | null>(null)
+  const [pastorPanel, setPastorPanel] = useState<{ verse: { reference: string; text: string; book: string; chapter: number; verse_number: number }; context: { before: string[]; after: string[] } } | null>(null)
+  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const longPressTriggered = useRef(false)
   const [knownNames, setKnownNames] = useState<Set<string>>(new Set())
   const [chapterSheetOpen, setChapterSheetOpen] = useState(false)
   const [chapterSheetBook, setChapterSheetBook] = useState(bookName)
@@ -138,10 +143,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     sizeTimerRef.current = setTimeout(() => setShowSizeIndicator(false), 1500)
   }, [fontSize])
 
-  // Pinch touch handlers that also show indicator
-  const handlePinchStart = useCallback((e: React.TouchEvent) => { pinchStart(e) }, [pinchStart])
-  const handlePinchMove = useCallback((e: React.TouchEvent) => { pinchMove(e); setShowSizeIndicator(true) }, [pinchMove])
-  const handlePinchEnd = useCallback(() => { pinchEnd() }, [pinchEnd])
+  // Pinch handlers now integrated into handleReaderTouchStart/Move/End
 
   // Fetch glossary terms once
   useEffect(() => {
@@ -171,13 +173,75 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     return () => { cancelled = true }
   }, [])
 
-  // Close verse menu when clicking elsewhere
-  useEffect(() => {
-    if (!verseMenu) return
-    function handleClick() { setVerseMenu(null) }
-    document.addEventListener('click', handleClick)
-    return () => document.removeEventListener('click', handleClick)
-  }, [verseMenu])
+  // Build verse info for context menu
+  function getVerseInfo(verseNum: number) {
+    const v = verses.find(v => v.verse === verseNum)
+    const text = v ? cleanKjvText(v.kjv_text) : ''
+    return {
+      reference: `${bookName} ${chapter}:${verseNum}`,
+      text,
+      book: bookName,
+      chapter,
+      verse_number: verseNum,
+    }
+  }
+
+  function getVerseContext(verseNum: number) {
+    const idx = verses.findIndex(v => v.verse === verseNum)
+    const before = verses.slice(Math.max(0, idx - 2), idx).map(v => cleanKjvText(v.kjv_text))
+    const after = verses.slice(idx + 1, idx + 3).map(v => cleanKjvText(v.kjv_text))
+    return { before, after }
+  }
+
+  // Find the closest verse number from a DOM event target
+  function findVerseFromTarget(target: HTMLElement): number | null {
+    const el = target.closest('[data-verse-num]') as HTMLElement | null
+    if (el?.dataset.verseNum) return parseInt(el.dataset.verseNum)
+    return null
+  }
+
+  // Context menu handler — shared between long press and right click
+  function openContextMenu(verseNum: number, x: number, y: number) {
+    setCtxMenu({ verse: getVerseInfo(verseNum), position: { x, y } })
+  }
+
+  // Right click on desktop — scoped to reader container
+  function handleReaderContextMenu(e: React.MouseEvent) {
+    const verseNum = findVerseFromTarget(e.target as HTMLElement)
+    if (verseNum === null) return
+    e.preventDefault()
+    openContextMenu(verseNum, e.clientX, e.clientY)
+  }
+
+  // Long press on mobile — 500ms hold
+  function handleReaderTouchStart(e: React.TouchEvent) {
+    // Let pinch-to-zoom pass through
+    if (e.touches.length > 1) return
+    pinchStart(e)
+    const target = e.target as HTMLElement
+    const verseNum = findVerseFromTarget(target)
+    if (verseNum === null) return
+    longPressTriggered.current = false
+    const touch = e.touches[0]
+    const x = touch.clientX
+    const y = touch.clientY
+    longPressRef.current = setTimeout(() => {
+      longPressTriggered.current = true
+      openContextMenu(verseNum, x, y)
+    }, 500)
+  }
+
+  function handleReaderTouchMove(e: React.TouchEvent) {
+    pinchMove(e)
+    setShowSizeIndicator(true)
+    // Cancel long press on any movement
+    if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null }
+  }
+
+  function handleReaderTouchEnd() {
+    pinchEnd()
+    if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null }
+  }
 
   const glossaryMatchers = useMemo(() => {
     return glossaryTerms.filter((t) => t.twi_term).sort((a, b) => b.twi_term.length - a.twi_term.length)
@@ -237,14 +301,6 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     return knownNames.has(clean.toLowerCase())
   }
 
-  // Verse number click handler — opens context menu
-  function handleVerseClick(e: React.MouseEvent, verseNum: number) {
-    e.stopPropagation()
-    e.preventDefault()
-    const rect = (e.target as HTMLElement).getBoundingClientRect()
-    setVerseMenu({ verse: verseNum, x: rect.left, y: rect.bottom + 4 })
-  }
-
   function renderVerseWords(v: Verse, isFirst: boolean) {
     const words = verseWords?.[v.verse]
     if (!words || words.length === 0) {
@@ -252,17 +308,16 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
       const text = cleanKjvText(v.kjv_text)
       if (isFirst && text.length > 0) {
         return (
-          <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: textColor, lineHeight: 1.9 }}>
+          <span key={v.verse} data-verse-num={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: textColor, lineHeight: 1.9 }}>
             <span style={{ float: 'left', fontFamily: 'var(--font-display)', fontSize: '52px', lineHeight: 0.8, paddingRight: '8px', paddingTop: '4px', color: textColor }}>{text[0]}</span>
             {text.slice(1)}{' '}
           </span>
         )
       }
       return (
-        <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: textColor, lineHeight: 1.9 }}>
+        <span key={v.verse} data-verse-num={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: textColor, lineHeight: 1.9 }}>
           <sup
-            onClick={(e) => handleVerseClick(e, v.verse)}
-            style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: verseNumColor, verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px', cursor: 'pointer' }}
+            style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: verseNumColor, verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}
           >{v.verse}</sup>
           {text}{' '}
         </span>
@@ -287,11 +342,10 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     }
 
     return (
-      <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: textColor, lineHeight: 1.9 }}>
+      <span key={v.verse} data-verse-num={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: textColor, lineHeight: 1.9 }}>
         {!isFirst && (
           <sup
-            onClick={(e) => handleVerseClick(e, v.verse)}
-            style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: verseNumColor, verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px', cursor: 'pointer' }}
+            style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: verseNumColor, verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}
           >{v.verse}</sup>
         )}
         {cleaned.map((w, wi) => {
@@ -393,9 +447,10 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         {/* Parchment book */}
         <div
           className="mx-auto relative"
-          onTouchStart={handlePinchStart}
-          onTouchMove={handlePinchMove}
-          onTouchEnd={handlePinchEnd}
+          onTouchStart={handleReaderTouchStart}
+          onTouchMove={handleReaderTouchMove}
+          onTouchEnd={handleReaderTouchEnd}
+          onContextMenu={handleReaderContextMenu}
           style={{
             maxWidth: '900px',
             background: parchmentBg,
@@ -515,45 +570,30 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         ) : <span />}
       </div>
 
-      {/* Verse context menu */}
-      {verseMenu && (
-        <div
-          style={{
-            position: 'fixed',
-            left: Math.min(verseMenu.x, window.innerWidth - 220),
-            top: verseMenu.y,
-            zIndex: 60,
-            background: isModern ? '#FFFFFF' : '#F8F2E2',
-            border: '1px solid rgba(139,107,20,0.3)',
-            borderRadius: 8,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-            minWidth: 200,
-            overflow: 'hidden',
-            animation: 'menuFade 150ms ease-out',
+      {/* Verse Context Menu — long press / right click */}
+      {ctxMenu && (
+        <VerseContextMenu
+          verse={ctxMenu.verse}
+          position={ctxMenu.position}
+          onClose={() => setCtxMenu(null)}
+          onAskPastor={(v) => {
+            const ctx = getVerseContext(v.verse_number)
+            setPastorPanel({ verse: v, context: ctx })
           }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(139,107,20,0.15)' }}>
-            <span style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: isModern ? '#888' : '#8B5E10' }}>
-              {bookName} {chapter}:{verseMenu.verse}
-            </span>
-          </div>
-          <button
-            onClick={() => { setKingsPanel(true); setVerseMenu(null) }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              width: '100%', textAlign: 'left', padding: '10px 12px',
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontFamily: 'var(--font-ui)', fontSize: 12, color: isModern ? '#1A1A1A' : '#1A0A04',
-              transition: 'background 150ms',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(139,107,20,0.06)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}
-          >
-            <span style={{ fontSize: 16 }}>&#127760;</span>
-            <span>What was happening in the world?</span>
-          </button>
-        </div>
+          onKingsKingdoms={() => setKingsPanel(true)}
+        />
+      )}
+
+      {/* Pastor Response Panel */}
+      {pastorPanel && (
+        <PastorResponsePanel
+          verse={pastorPanel.verse}
+          context={pastorPanel.context}
+          onClose={() => setPastorPanel(null)}
+          onGoDeeper={(word) => {
+            setResourcesPanel({ word, isName: false })
+          }}
+        />
       )}
 
       {/* Resources Panel — unified Strong's, Names, and all reference sources */}
@@ -626,13 +666,6 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         }}
       />
 
-      {/* Animations for verse menu */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes menuFade {
-          from { opacity: 0; transform: translateY(-4px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}} />
     </div>
   )
 }
