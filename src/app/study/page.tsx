@@ -289,11 +289,11 @@ function StudyPageInner() {
       </div>
     )}
 
-    <main style={{
-      background: 'var(--bg-warm, #F8F2E2)',
-      backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'200\' height=\'200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'0.03\'/%3E%3C/svg%3E")',
-      minHeight: 'calc(100vh - 56px)',
-    }} className="px-4 sm:px-6 py-10 sm:py-16">
+    {/* Dark warm background — candlelit study at night */}
+    <div style={{ position: 'fixed', inset: 0, background: '#1E0E03', zIndex: -2 }} />
+    <div style={{ position: 'fixed', inset: 0, background: 'radial-gradient(ellipse at 50% 20%, rgba(60,36,21,0.8) 0%, rgba(30,14,3,0.95) 70%)', zIndex: -1 }} />
+
+    <main style={{ position: 'relative', minHeight: 'calc(100vh - 56px)' }} className="px-4 sm:px-6 py-10 sm:py-16">
       <div className="max-w-2xl mx-auto">
 
         {/* ── NAMEPLATE ── */}
@@ -302,9 +302,10 @@ function StudyPageInner() {
             fontFamily: "'Cormorant Garamond', serif",
             fontSize: 42,
             fontWeight: 300,
-            color: '#1A0A04',
+            color: 'rgba(255,220,160,0.9)',
             letterSpacing: '3px',
             lineHeight: 1.1,
+            textShadow: '0 2px 12px rgba(0,0,0,0.5)',
           }}>
             {firstName}&apos;s Study
           </h1>
@@ -312,14 +313,14 @@ function StudyPageInner() {
             fontFamily: "'Cormorant Garamond', serif",
             fontSize: 15,
             fontStyle: 'italic',
-            color: 'rgba(139,107,20,0.7)',
+            color: 'rgba(200,160,40,0.6)',
             marginTop: 6,
             letterSpacing: '1px',
           }}>
             Your companion in the Word
           </p>
           {/* Ornamental rule */}
-          <div style={{ width: 60, height: 1, background: 'linear-gradient(to right, transparent, rgba(200,160,40,0.5), transparent)', margin: '1.25rem auto 0' }} />
+          <div style={{ width: 60, height: 1, background: 'linear-gradient(to right, transparent, rgba(200,160,40,0.4), transparent)', margin: '1.25rem auto 0' }} />
         </div>
 
         {/* ── 1. CONTINUE READING — bookmark style ── */}
@@ -327,29 +328,28 @@ function StudyPageInner() {
           {lastBook ? (
             <Link href={`/bible/${encodeURIComponent(lastBook)}/${lastChapter}`} style={{ textDecoration: 'none', display: 'block' }}>
               <div style={{
-                position: 'relative',
                 padding: '1.5rem 1.75rem',
-                borderLeft: '3px solid rgba(200,150,10,0.6)',
-                background: 'linear-gradient(135deg, rgba(248,242,226,0.6), rgba(240,230,210,0.4))',
-                transition: 'border-color 200ms',
+                borderLeft: '3px solid rgba(200,150,10,0.5)',
+                background: 'rgba(60,36,21,0.3)',
+                transition: 'border-color 200ms, background 200ms',
               }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderLeftColor = '#C8960A' }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderLeftColor = 'rgba(200,150,10,0.6)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderLeftColor = '#FFD060'; e.currentTarget.style.background = 'rgba(60,36,21,0.45)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderLeftColor = 'rgba(200,150,10,0.5)'; e.currentTarget.style.background = 'rgba(60,36,21,0.3)' }}
               >
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.6)', marginBottom: 8 }}>Continue Reading</p>
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 400, color: '#1A0A04', lineHeight: 1.2 }}>{lastBook}</p>
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, color: 'rgba(26,10,4,0.6)', marginTop: 2 }}>Chapter {lastChapter}</p>
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: '#C8960A', marginTop: 12, letterSpacing: '1px' }}>Resume &rarr;</p>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(200,160,40,0.6)', marginBottom: 8 }}>Continue Reading</p>
+                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 400, color: 'rgba(255,230,180,0.9)', lineHeight: 1.2 }}>{lastBook}</p>
+                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, color: 'rgba(255,230,180,0.5)', marginTop: 2 }}>Chapter {lastChapter}</p>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: '#FFD060', marginTop: 12, letterSpacing: '1px' }}>Resume &rarr;</p>
               </div>
             </Link>
           ) : (
             <Link href="/toc" style={{ textDecoration: 'none', display: 'block' }}>
-              <div style={{ padding: '1.5rem 1.75rem', borderLeft: '3px solid rgba(200,150,10,0.4)', transition: 'border-color 200ms' }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderLeftColor = '#C8960A' }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderLeftColor = 'rgba(200,150,10,0.4)' }}
+              <div style={{ padding: '1.5rem 1.75rem', borderLeft: '3px solid rgba(200,150,10,0.35)', transition: 'border-color 200ms' }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderLeftColor = '#FFD060' }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderLeftColor = 'rgba(200,150,10,0.35)' }}
               >
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 400, color: '#1A0A04' }}>Open the Bible</p>
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'rgba(139,107,20,0.5)', marginTop: 4, letterSpacing: '1px' }}>Begin reading &rarr;</p>
+                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 400, color: 'rgba(255,230,180,0.85)' }}>Open the Bible</p>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'rgba(200,160,40,0.5)', marginTop: 4, letterSpacing: '1px' }}>Begin reading &rarr;</p>
               </div>
             </Link>
           )}
@@ -358,20 +358,19 @@ function StudyPageInner() {
         {/* ── 2. READ — book spine link ── */}
         <section style={{ marginBottom: '2.5rem' }}>
           <Link href="/toc" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 3, height: 24, background: 'rgba(139,107,20,0.3)', borderRadius: 1, display: 'inline-block' }} />
-            <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: '#1A0A04', letterSpacing: '0.5px' }}>Table of Contents</span>
-            <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'rgba(139,107,20,0.5)' }}>&rarr;</span>
+            <span style={{ width: 3, height: 24, background: 'rgba(200,160,40,0.25)', borderRadius: 1, display: 'inline-block' }} />
+            <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: 'rgba(255,230,180,0.75)', letterSpacing: '0.5px' }}>Table of Contents</span>
+            <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'rgba(200,160,40,0.5)' }}>&rarr;</span>
           </Link>
         </section>
 
-        {/* ── 3. STUDY FURTHER — parchment tiles ── */}
+        {/* ── 3. STUDY FURTHER ── */}
         <section style={{ marginBottom: '3rem' }}>
-          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.5)', marginBottom: '1rem' }}>Study Further</p>
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(200,160,40,0.45)', marginBottom: '1rem' }}>Study Further</p>
           {visibleTopics.length === 0 ? (
             <div style={{ padding: '2rem 1.5rem', textAlign: 'center' }}>
-              {/* Candle illustration */}
-              <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.4 }}>&#128367;</div>
-              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontStyle: 'italic', color: 'rgba(139,107,20,0.6)', lineHeight: 1.7 }}>
+              <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.35 }}>&#128367;</div>
+              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontStyle: 'italic', color: 'rgba(200,160,40,0.5)', lineHeight: 1.7 }}>
                 Your study topics will appear here<br />as you walk with the Pastor.
               </p>
             </div>
@@ -379,20 +378,19 @@ function StudyPageInner() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
               {visibleTopics.map(t => (
                 <div key={t.id} style={{
-                  background: 'linear-gradient(135deg, rgba(248,242,226,0.8), rgba(235,222,195,0.5))',
-                  border: '1px solid rgba(200,160,40,0.2)',
+                  background: 'rgba(60,36,21,0.4)',
+                  border: '1px solid rgba(200,160,40,0.15)',
                   borderRadius: 2,
                   padding: '10px 16px',
                   display: 'flex', alignItems: 'center', gap: 10,
-                  boxShadow: '1px 1px 3px rgba(0,0,0,0.04)',
                 }}>
-                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: '#1A0A04', textTransform: 'capitalize' }}>{t.topic}</span>
+                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: 'rgba(255,230,180,0.85)', textTransform: 'capitalize' }}>{t.topic}</span>
                   <button
                     onClick={() => {
                       setInput(`Tell me more about ${t.topic}`)
                       setTimeout(() => pastorRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
                     }}
-                    style={{ fontFamily: 'var(--font-ui)', fontSize: 8, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#C8960A', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    style={{ fontFamily: 'var(--font-ui)', fontSize: 8, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#FFD060', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                   >
                     Go Deeper &rarr;
                   </button>
@@ -401,46 +399,46 @@ function StudyPageInner() {
             </div>
           )}
           {!isAdmin(userId) && userTier === 'free' && topics.length > 3 && (
-            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'rgba(139,107,20,0.4)', marginTop: 10 }}>
-              Upgrade to see all {topics.length} topics. <Link href="/pricing" style={{ color: '#C8960A', textDecoration: 'none' }}>See plans</Link>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'rgba(200,160,40,0.4)', marginTop: 10 }}>
+              Upgrade to see all {topics.length} topics. <Link href="/pricing" style={{ color: '#FFD060', textDecoration: 'none' }}>See plans</Link>
             </p>
           )}
         </section>
 
         {/* Divider before Pastor */}
-        <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(200,160,40,0.3), transparent)', marginBottom: '2.5rem' }} />
+        <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(200,160,40,0.2), transparent)', marginBottom: '2.5rem' }} />
 
-        {/* ── 4. THE PASTOR — desk-side feel ── */}
+        {/* ── 4. THE PASTOR ── */}
         <section ref={pastorRef} id="pastor" style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1.25rem' }}>
-            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.5)' }}>The Pastor</p>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(200,160,40,0.45)' }}>The Pastor</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {isAdmin(userId) && (
                 <>
-                  <button onClick={startNewChat} style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(139,107,20,0.5)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '1px' }}>+ New</button>
-                  <button onClick={() => setShowSessions(!showSessions)} style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(139,107,20,0.5)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '1px', textDecoration: 'underline', textDecorationColor: 'rgba(139,107,20,0.2)', textUnderlineOffset: '2px' }}>Past conversations</button>
+                  <button onClick={startNewChat} style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(200,160,40,0.5)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '1px' }}>+ New</button>
+                  <button onClick={() => setShowSessions(!showSessions)} style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(200,160,40,0.5)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '1px', textDecoration: 'underline', textDecorationColor: 'rgba(200,160,40,0.2)', textUnderlineOffset: '2px' }}>Past conversations</button>
                 </>
               )}
               {showCredits && (
-                <a href="/settings/memory" style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(139,107,20,0.4)', textDecoration: 'none' }}>{memoryCredits} credits</a>
+                <a href="/settings/memory" style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(200,160,40,0.35)', textDecoration: 'none' }}>{memoryCredits} credits</a>
               )}
             </div>
           </div>
 
           {/* Past sessions drawer */}
           {showSessions && isAdmin(userId) && (
-            <div style={{ borderLeft: '2px solid rgba(200,160,40,0.2)', paddingLeft: '1rem', marginBottom: '1.25rem', maxHeight: 200, overflowY: 'auto' }}>
+            <div style={{ borderLeft: '2px solid rgba(200,160,40,0.15)', paddingLeft: '1rem', marginBottom: '1.25rem', maxHeight: 200, overflowY: 'auto' }}>
               {pastSessions.length === 0 ? (
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'rgba(139,107,20,0.4)' }}>No past sessions.</p>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'rgba(200,160,40,0.35)' }}>No past sessions.</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {pastSessions.map(s => (
-                    <button key={s.id} onClick={() => resumeSession(s.id)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', cursor: 'pointer', background: 'none', border: 'none', textAlign: 'left', width: '100%', opacity: sessionId === s.id ? 1 : 0.6, transition: 'opacity 150ms' }}
+                    <button key={s.id} onClick={() => resumeSession(s.id)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', cursor: 'pointer', background: 'none', border: 'none', textAlign: 'left', width: '100%', opacity: sessionId === s.id ? 1 : 0.5, transition: 'opacity 150ms' }}
                       onMouseEnter={(e) => { e.currentTarget.style.opacity = '1' }}
-                      onMouseLeave={(e) => { if (sessionId !== s.id) e.currentTarget.style.opacity = '0.6' }}
+                      onMouseLeave={(e) => { if (sessionId !== s.id) e.currentTarget.style.opacity = '0.5' }}
                     >
-                      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: '#1A0A04', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>{s.title}</span>
-                      <span style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(139,107,20,0.4)', whiteSpace: 'nowrap' }}>{new Date(s.updatedAt).toLocaleDateString()}</span>
+                      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: 'rgba(255,230,180,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>{s.title}</span>
+                      <span style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(200,160,40,0.35)', whiteSpace: 'nowrap' }}>{new Date(s.updatedAt).toLocaleDateString()}</span>
                     </button>
                   ))}
                 </div>
@@ -448,16 +446,16 @@ function StudyPageInner() {
             </div>
           )}
 
-          {/* Conversation area — no card border */}
+          {/* Conversation area */}
           <div ref={scrollRef} style={{ maxHeight: 600, overflowY: 'auto', paddingBottom: '1rem' }}>
             {messages.length === 0 ? (
               <div style={{ padding: '2.5rem 0', textAlign: 'center' }}>
-                <div style={{ color: 'rgba(200,150,10,0.5)' }}><OilLampIcon className="w-14 h-14 mx-auto mb-4" /></div>
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, color: '#1A0A04', lineHeight: 1.6 }}>
+                <div style={{ color: 'rgba(255,208,96,0.45)' }}><OilLampIcon className="w-16 h-16 mx-auto mb-5" /></div>
+                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, color: 'rgba(255,230,180,0.9)', lineHeight: 1.6, textShadow: '0 1px 8px rgba(0,0,0,0.3)' }}>
                   {getGreeting(firstName)}
                 </p>
                 {memoryEnabled && lastTopic && (
-                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, fontStyle: 'italic', color: 'rgba(139,107,20,0.6)', marginTop: 10 }}>
+                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, fontStyle: 'italic', color: 'rgba(200,160,40,0.5)', marginTop: 12 }}>
                     Last time we were in <em>&ldquo;{lastTopic.slice(0, 60)}&rdquo;</em>.
                   </p>
                 )}
@@ -468,27 +466,27 @@ function StudyPageInner() {
                   <div key={i}>
                     {msg.role === 'user' ? (
                       <div style={{ marginBottom: 20, marginTop: i > 0 ? 20 : 0 }}>
-                        <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(139,107,20,0.4)', marginBottom: 4 }}>{firstName}</p>
-                        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: '#1A0A04', lineHeight: 1.7 }}>{msg.content}</p>
+                        <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(200,160,40,0.35)', marginBottom: 4 }}>{firstName}</p>
+                        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: 'rgba(255,230,180,0.85)', lineHeight: 1.7 }}>{msg.content}</p>
                       </div>
                     ) : (
-                      <div style={{ marginBottom: 20, paddingLeft: '1rem', borderLeft: '2px solid rgba(200,160,40,0.25)' }}>
-                        <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: '#C8960A', marginBottom: 6 }}>Pastor</p>
+                      <div style={{ marginBottom: 20, paddingLeft: '1rem', borderLeft: '2px solid rgba(200,160,40,0.2)' }}>
+                        <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,208,96,0.7)', marginBottom: 6 }}>Pastor</p>
                         {msg.routedToQueue && (
-                          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 13, color: 'rgba(200,150,10,0.7)', fontStyle: 'italic', marginBottom: 8 }}>
+                          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 13, color: 'rgba(255,208,96,0.5)', fontStyle: 'italic', marginBottom: 8 }}>
                             This question has been routed to pastoral review. Below is a preliminary response.
                           </p>
                         )}
-                        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: '#1A0A04', lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>
+                        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: 'rgba(255,230,180,0.9)', lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>
                           {msg.content}
                           {loading && i === messages.length - 1 && (
-                            <span className="inline-block w-1.5 h-5 bg-amber-400 animate-pulse ml-0.5 align-text-bottom" style={{ borderRadius: 1 }} />
+                            <span className="inline-block w-1.5 h-5 animate-pulse ml-0.5 align-text-bottom" style={{ borderRadius: 1, background: 'rgba(255,208,96,0.6)' }} />
                           )}
                         </div>
                         {msg.references && msg.references.length > 0 && (
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
                             {msg.references.map((ref, j) => (
-                              <span key={j} style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(139,107,20,0.6)', letterSpacing: '0.5px' }}>{ref}</span>
+                              <span key={j} style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(200,160,40,0.5)', letterSpacing: '0.5px' }}>{ref}</span>
                             ))}
                           </div>
                         )}
@@ -500,13 +498,13 @@ function StudyPageInner() {
                   <MemoryBanner onEnable={() => setShowCreditModal(true)} />
                 )}
                 {error && (
-                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#993333', fontStyle: 'italic', marginTop: 8 }}>{error}</p>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'rgba(220,100,80,0.8)', fontStyle: 'italic', marginTop: 8 }}>{error}</p>
                 )}
               </div>
             )}
           </div>
 
-          {/* Input — journal line style */}
+          {/* Input — journal line style against dark bg */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', marginTop: '0.5rem' }}>
             <div style={{ flex: 1, position: 'relative' }}>
               <textarea
@@ -523,19 +521,19 @@ function StudyPageInner() {
                   minHeight: 36,
                   maxHeight: 100,
                   background: 'transparent',
-                  color: '#1A0A04',
+                  color: 'rgba(255,230,180,0.9)',
                   border: 'none',
-                  borderBottom: '1px solid rgba(139,107,20,0.3)',
+                  borderBottom: '1px solid rgba(200,160,40,0.25)',
                   borderRadius: 0,
                   padding: '8px 0',
                   fontFamily: "'Cormorant Garamond', serif",
                   fontSize: 17,
                   outline: 'none',
-                  caretColor: '#C8960A',
+                  caretColor: '#FFD060',
                 }}
                 onInput={(e) => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 100) + 'px' }}
-                onFocus={(e) => { e.currentTarget.style.borderBottomColor = 'rgba(200,150,10,0.6)' }}
-                onBlur={(e) => { e.currentTarget.style.borderBottomColor = 'rgba(139,107,20,0.3)' }}
+                onFocus={(e) => { e.currentTarget.style.borderBottomColor = 'rgba(255,208,96,0.5)' }}
+                onBlur={(e) => { e.currentTarget.style.borderBottomColor = 'rgba(200,160,40,0.25)' }}
               />
             </div>
             <button
@@ -550,7 +548,7 @@ function StudyPageInner() {
                 fontSize: 10,
                 letterSpacing: '3px',
                 textTransform: 'uppercase',
-                color: '#C8960A',
+                color: '#FFD060',
                 cursor: 'pointer',
                 fontWeight: 500,
               }}
@@ -562,8 +560,8 @@ function StudyPageInner() {
 
         {/* Footer inscription */}
         <div style={{ textAlign: 'center', marginTop: '3rem', paddingTop: '1.5rem' }}>
-          <div style={{ width: 40, height: 1, background: 'linear-gradient(to right, transparent, rgba(200,160,40,0.4), transparent)', margin: '0 auto 1rem' }} />
-          <p style={{ fontSize: 10, color: 'rgba(139,107,20,0.35)', fontFamily: 'var(--font-ui)', letterSpacing: '3px' }}>
+          <div style={{ width: 40, height: 1, background: 'linear-gradient(to right, transparent, rgba(200,160,40,0.25), transparent)', margin: '0 auto 1rem' }} />
+          <p style={{ fontSize: 10, color: 'rgba(200,160,40,0.25)', fontFamily: 'var(--font-ui)', letterSpacing: '3px' }}>
             LOGOS BY KAI&apos;ROS &middot; YOUR STUDY. HIS WORD.
           </p>
         </div>
