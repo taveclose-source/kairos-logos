@@ -11,7 +11,7 @@ const ADMIN_ID = '2f4cc459-6fdd-4f41-be4b-754770b28529'
 
 const CENTER_LINKS = [
   { href: '/bible', label: 'Bible' },
-  { href: '/ask', label: 'Ask' },
+  { href: '/study', label: 'Study' },
   { href: '/why-kjv', label: 'Why KJV?' },
   { href: '/translation', label: 'Translation' },
 ]

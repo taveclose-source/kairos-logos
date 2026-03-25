@@ -100,7 +100,7 @@ export default function DashboardPage() {
             <p style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>Read</p>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: '16px', color: 'var(--text-primary)' }}>Open the Bible &rarr;</p>
           </Link>
-          <Link href="/ask" className="block transition-all duration-200 hover:border-[var(--border-medium)]" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '4px', padding: '1.25rem' }}>
+          <Link href="/study" className="block transition-all duration-200 hover:border-[var(--border-medium)]" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '4px', padding: '1.25rem' }}>
             <p style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '0.25rem' }}>Study</p>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: '16px', color: 'var(--text-primary)' }}>Ask the Word &rarr;</p>
           </Link>
@@ -141,7 +141,7 @@ export default function DashboardPage() {
         {questions.length === 0 && (
           <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '4px', padding: '2rem', textAlign: 'center' }}>
             <p style={{ color: 'var(--text-tertiary)', fontSize: '13px', fontFamily: 'var(--font-ui)', marginBottom: '0.75rem' }}>No questions yet.</p>
-            <Link href="/ask">
+            <Link href="/study">
               <span className="inline-block transition-colors duration-200 hover:opacity-90" style={{ background: 'var(--gold)', color: 'var(--bg-primary)', padding: '10px 24px', fontFamily: 'var(--font-ui)', fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', borderRadius: '2px' }}>
                 Ask the Word
               </span>

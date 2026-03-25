@@ -65,7 +65,7 @@ export default function ModernHome() {
                 <Link href="/bible">
                   <span style={{ display: 'inline-block', padding: '12px 28px', background: '#FFD060', color: '#0F3460', borderRadius: 8, fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 600 }}>Open Bible</span>
                 </Link>
-                <Link href="/ask">
+                <Link href="/study">
                   <span style={{ display: 'inline-block', padding: '12px 28px', border: '1px solid rgba(255,255,255,0.3)', color: '#FFFFFF', borderRadius: 8, fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 500 }}>Ask the Word</span>
                 </Link>
               </div>
@@ -94,7 +94,7 @@ export default function ModernHome() {
           </>
         )}
 
-        <Link href="/ask" style={{ textDecoration: 'none' }}>
+        <Link href="/study" style={{ textDecoration: 'none' }}>
           <div style={{ background: '#FFFFFF', border: '1px solid #ECEAE6', borderRadius: 10, padding: '1rem 1.25rem', marginBottom: '1rem' }}>
             <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#888', marginBottom: 4 }}>Try asking</p>
             <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, color: '#1A1A1A', fontWeight: 500 }}>&ldquo;What does grace mean?&rdquo;</p>

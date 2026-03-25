@@ -5,9 +5,11 @@ import Link from 'next/link'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
 export default function SignUpPage() {
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [displayName, setDisplayName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -17,6 +19,26 @@ export default function SignUpPage() {
     setError('')
     setLoading(true)
 
+    if (!firstName.trim()) {
+      setError('First name is required.')
+      setLoading(false)
+      return
+    }
+    if (!lastName.trim()) {
+      setError('Last name is required.')
+      setLoading(false)
+      return
+    }
+    if (!username.trim()) {
+      setError('Username is required.')
+      setLoading(false)
+      return
+    }
+    if (!/^[a-zA-Z0-9._-]{3,30}$/.test(username.trim())) {
+      setError('Username must be 3-30 characters (letters, numbers, dots, hyphens, underscores).')
+      setLoading(false)
+      return
+    }
     if (password.length < 6) {
       setError('Password must be at least 6 characters.')
       setLoading(false)
@@ -24,12 +46,13 @@ export default function SignUpPage() {
     }
 
     const supabase = createSupabaseBrowser()
+    const displayName = `${firstName.trim()} ${lastName.trim()}`
 
     const { data, error: authError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
-        data: { display_name: displayName.trim() || null },
+        data: { display_name: displayName, first_name: firstName.trim(), last_name: lastName.trim() },
       },
     })
 
@@ -39,17 +62,27 @@ export default function SignUpPage() {
       return
     }
 
-    // Insert into users table via API (service role bypasses RLS)
     if (data.user) {
-      await fetch('/api/auth/create-user', {
+      const res = await fetch('/api/auth/create-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: data.user.id,
           email: email.trim(),
-          display_name: displayName.trim() || email.trim().split('@')[0],
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          username: username.trim().toLowerCase(),
+          display_name: displayName,
         }),
-      }).catch(() => {})
+      })
+      if (!res.ok) {
+        const d = await res.json()
+        if (d.error === 'username_taken') {
+          setError('That username is already taken. Try another.')
+          setLoading(false)
+          return
+        }
+      }
     }
 
     setSuccess(true)
@@ -96,11 +129,30 @@ export default function SignUpPage() {
         <h2 className="text-lg font-semibold text-center mb-6">Create account</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="First name"
+              required
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+            />
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Last name"
+              required
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+            />
+          </div>
           <input
             type="text"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="Display name (optional)"
+            value={username}
+            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ''))}
+            placeholder="Username"
+            required
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
           />
           <input

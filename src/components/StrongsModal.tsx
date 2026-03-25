@@ -501,7 +501,7 @@ export default function StrongsModal({ word, onClose }: StrongsModalProps) {
                 </div>
 
                 <a
-                  href={`/ask?q=${encodeURIComponent(
+                  href={`/study?q=${encodeURIComponent(
                     `What is the significance of the ${langLabel} word "${currentWord.original_word}" (${currentWord.strongs_number}) used in ${currentWord.bookName} ${currentWord.chapter}:${currentWord.verseNum}?`
                   )}`}
                   className="block w-full text-center px-4 py-3 rounded-xl bg-amber-50 text-amber-700 font-medium text-sm border border-amber-200 hover:bg-amber-100 transition-colors"

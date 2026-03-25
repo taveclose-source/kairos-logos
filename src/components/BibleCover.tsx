@@ -51,7 +51,7 @@ export default function BibleCover({ onOpen }: { onOpen: () => void }) {
   const swipe = useSwipe(handleOpen, noop)
 
   const menuItems = [
-    { href: '/ask', label: 'Ask' },
+    { href: '/study', label: 'Study' },
     { href: '/why-kjv', label: 'Why KJV?' },
     { href: '/translation', label: 'Translation' },
     { href: '/learn', label: 'Learn' },

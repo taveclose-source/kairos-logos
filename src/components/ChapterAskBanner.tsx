@@ -6,7 +6,7 @@ import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
 export default function ChapterAskBanner({ bookName, chapter }: { bookName: string; chapter: number }) {
   const [show, setShow] = useState(false)
-  const [href, setHref] = useState(`/auth/signup?redirect=/ask`)
+  const [href, setHref] = useState(`/auth/signup?redirect=/study`)
 
   useEffect(() => {
     const supabase = createSupabaseBrowser()
@@ -19,7 +19,7 @@ export default function ChapterAskBanner({ bookName, chapter }: { bookName: stri
           .single()
         const tier = data?.subscription_tier ?? 'free'
         if (['scholar', 'ministry', 'missions'].includes(tier)) return
-        setHref(`/ask?ref=${encodeURIComponent(bookName)}/${chapter}`)
+        setHref(`/study?ref=${encodeURIComponent(bookName)}/${chapter}`)
       }
       setShow(true)
     })

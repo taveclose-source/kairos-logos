@@ -240,7 +240,7 @@ export default function WhyKJVPage() {
 
       <footer className="text-center pt-8 border-t border-gray-100">
         <Link
-          href="/ask"
+          href="/study"
           className="inline-block px-6 py-3 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors"
         >
           Ask the Word &rarr;

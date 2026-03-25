@@ -13,7 +13,7 @@ export default async function AdminPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) redirect('/auth/signin?redirect=/admin')
-  if (user.id !== ADMIN_ID) redirect('/dashboard')
+  if (user.id !== ADMIN_ID) redirect('/study')
 
   // Use service role to fetch all data
   const db = createClient(

@@ -6,9 +6,9 @@ import { usePathname } from 'next/navigation'
 const TABS = [
   { href: '/home', label: 'Home', icon: '⌂' },
   { href: '/toc', label: 'Bible', icon: '📖' },
-  { href: '/ask', label: 'Ask', icon: '💬' },
+  { href: '/study', label: 'Study', icon: '📝' },
   { href: '/search', label: 'Search', icon: '🔍' },
-  { href: '/dashboard', label: 'Profile', icon: '👤' },
+  { href: '/settings/profile', label: 'Profile', icon: '👤' },
 ]
 
 export default function ModernBottomNav() {
