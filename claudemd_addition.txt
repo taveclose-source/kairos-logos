@@ -1,0 +1,35 @@
+Add these rules to the CLAUDE.md file in C:\Dev\Logos at the top 
+under a section called "## Critical Build Rules":
+
+## Critical Build Rules
+
+### Before modifying any existing file:
+1. Read the current file completely first
+2. Run: git log --oneline -- <filename> to see its history
+3. Identify what was working before and what changed
+4. RESTORE working code from git history — do not rebuild from scratch
+
+### Never overwrite working features:
+The following features have been built and must be preserved in 
+every commit. Before pushing, verify each one still works:
+- Strong's concordance (3-tab panel: Lexicon, Strong's Concordance, English Concordance)
+- Glossary term highlighting with popups in Twi text
+- Pinch-to-zoom font scaling in Bible reader
+- Swipe left/right chapter navigation with page turn animation
+- Paper sound effects on page turns
+- Drop caps on verse 1 of each chapter
+- Twi parallel column (KJV left, Twi right on desktop)
+- Progress bar at bottom of parchment
+- Bible cover home page with swipe-to-open
+- Table of Contents with book and chapter selection
+- Admin panel 4-tab layout
+- Dashboard personal study hub
+
+### When building new features:
+- Create NEW component files rather than modifying existing ones where possible
+- Import new components INTO existing files rather than replacing existing file contents
+- Always run: npx next build before committing to verify nothing is broken
+
+### Prompt file:
+This project uses C:\Dev\Logos\promptLogos.txt for build instructions.
+Always re-read it fresh with: type C:\Dev\Logos\promptLogos.txt

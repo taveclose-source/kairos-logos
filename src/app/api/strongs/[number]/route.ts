@@ -29,5 +29,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ numb
     webster = w
   }
 
-  return NextResponse.json({ ...data, webster }, { headers: { 'Cache-Control': 'public, s-maxage=86400' } })
+  // For Hebrew words (H-numbers), fetch Gesenius' Hebrew-Chaldee Lexicon depth
+  let gesenius = null
+  if (number.startsWith('H')) {
+    const { data: g } = await supabase
+      .from('gesenius_lexicon')
+      .select('strongs_number, hebrew_word, transliteration, definition, extended_definition, root, cognates, scripture_refs')
+      .eq('strongs_number', number)
+      .maybeSingle()
+    gesenius = g
+  }
+
+  return NextResponse.json({ ...data, webster, gesenius }, { headers: { 'Cache-Control': 'public, s-maxage=86400' } })
 }

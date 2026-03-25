@@ -23,6 +23,16 @@ interface StrongsEntry {
   total_ot_occurrences: number | null
   all_kjv_translations: string | null
   webster: { word: string; definition: string; part_of_speech: string | null; etymology: string | null } | null
+  gesenius: {
+    strongs_number: string
+    hebrew_word: string | null
+    transliteration: string | null
+    definition: string
+    extended_definition: string
+    root: string | null
+    cognates: string | null
+    scripture_refs: string[] | null
+  } | null
 }
 
 interface ConcordanceResult {
@@ -275,6 +285,41 @@ export default function StrongsPanel({ strongsNumber, englishWord, onClose }: St
                   <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: textMain, lineHeight: 1.6 }}>{renderWithStrongsLinks(entry.derivation)}</p>
                 </div>
               )}
+              {/* Gesenius Hebrew-Chaldee Lexicon — shown for H-numbers */}
+              {entry.gesenius && (
+                <div style={{ marginBottom: '0.75rem', padding: '12px', background: 'rgba(139,107,20,0.04)', borderRadius: 6, border: '1px solid rgba(139,107,20,0.12)' }}>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: labelColor, marginBottom: 8 }}>
+                    Gesenius&apos; Hebrew-Chaldee Lexicon
+                  </p>
+                  {entry.gesenius.hebrew_word && (
+                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, color: textMain, marginBottom: 4 }}>
+                      {entry.gesenius.hebrew_word}
+                    </p>
+                  )}
+                  {entry.gesenius.transliteration && (
+                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 14, color: accentColor, marginBottom: 8 }}>
+                      {entry.gesenius.transliteration}
+                    </p>
+                  )}
+                  <p style={{ fontFamily: 'var(--font-reading)', fontSize: 14, color: textMain, lineHeight: 1.8, marginBottom: 6 }}>
+                    {entry.gesenius.definition}
+                  </p>
+                  {entry.gesenius.extended_definition && entry.gesenius.extended_definition !== entry.gesenius.definition && (
+                    <p style={{ fontFamily: 'var(--font-reading)', fontSize: 13, color: textMain, lineHeight: 1.8, opacity: 0.85 }}>
+                      {entry.gesenius.extended_definition.length > 500
+                        ? entry.gesenius.extended_definition.slice(0, 500) + '...'
+                        : entry.gesenius.extended_definition}
+                    </p>
+                  )}
+                  {entry.gesenius.root && (
+                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: labelColor, marginTop: 6 }}>Root: {entry.gesenius.root}</p>
+                  )}
+                  {entry.gesenius.cognates && (
+                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: labelColor, marginTop: 2 }}>Cognates: {entry.gesenius.cognates}</p>
+                  )}
+                </div>
+              )}
+
               {entry.outline_of_biblical_usage && (
                 <div style={{ marginBottom: '0.75rem' }}>
                   <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: labelColor, marginBottom: 4 }}>Outline of Biblical Usage</p>

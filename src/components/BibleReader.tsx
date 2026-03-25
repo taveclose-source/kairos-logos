@@ -10,6 +10,8 @@ import GlossaryModal from '@/components/GlossaryModal'
 import type { GlossaryTerm } from '@/components/GlossaryModal'
 import { usePinchFontSize, DEFAULT_SIZE } from '@/hooks/usePinchFontSize'
 import StrongsPanel from '@/components/StrongsPanel'
+import NamesPanel from '@/components/NamesPanel'
+import KingsPanel from '@/components/KingsPanel'
 import ChapterSheet from '@/components/ChapterSheet'
 // Navigation handled by child sheets
 import BookSheet from '@/components/BookSheet'
@@ -70,6 +72,10 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const { fontSize, setFontSize, onTouchStart: pinchStart, onTouchMove: pinchMove, onTouchEnd: pinchEnd } = usePinchFontSize()
   const [showSizeIndicator, setShowSizeIndicator] = useState(false)
   const [strongsPanel, setStrongsPanel] = useState<{ number: string; word: string } | null>(null)
+  const [namesPanel, setNamesPanel] = useState<string | null>(null)
+  const [kingsPanel, setKingsPanel] = useState(false)
+  const [verseMenu, setVerseMenu] = useState<{ verse: number; x: number; y: number } | null>(null)
+  const [knownNames, setKnownNames] = useState<Set<string>>(new Set())
   const [chapterSheetOpen, setChapterSheetOpen] = useState(false)
   const [chapterSheetBook, setChapterSheetBook] = useState(bookName)
   const [bookSheetOpen, setBookSheetOpen] = useState(false)
@@ -149,6 +155,32 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     return () => { cancelled = true }
   }, [])
 
+  // Fetch Hitchcock's names for proper noun detection
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/names')
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
+      .then((data: { name: string }[]) => {
+        if (!cancelled && Array.isArray(data)) {
+          const nameSet = new Set<string>()
+          for (const entry of data) {
+            nameSet.add(entry.name.toLowerCase())
+          }
+          setKnownNames(nameSet)
+        }
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
+  // Close verse menu when clicking elsewhere
+  useEffect(() => {
+    if (!verseMenu) return
+    function handleClick() { setVerseMenu(null) }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [verseMenu])
+
   const glossaryMatchers = useMemo(() => {
     return glossaryTerms.filter((t) => t.twi_term).sort((a, b) => b.twi_term.length - a.twi_term.length)
   }, [glossaryTerms])
@@ -197,6 +229,24 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
 
   // (Strong's panel handles its own dismiss)
 
+  // Check if a word is a known biblical proper noun
+  function isProperNoun(word: string): boolean {
+    if (knownNames.size === 0) return false
+    const clean = word.replace(/[^a-zA-Z'-]/g, '')
+    if (clean.length < 3) return false
+    // Must start with uppercase
+    if (clean[0] !== clean[0].toUpperCase() || clean[0] === clean[0].toLowerCase()) return false
+    return knownNames.has(clean.toLowerCase())
+  }
+
+  // Verse number click handler — opens context menu
+  function handleVerseClick(e: React.MouseEvent, verseNum: number) {
+    e.stopPropagation()
+    e.preventDefault()
+    const rect = (e.target as HTMLElement).getBoundingClientRect()
+    setVerseMenu({ verse: verseNum, x: rect.left, y: rect.bottom + 4 })
+  }
+
   function renderVerseWords(v: Verse, isFirst: boolean) {
     const words = verseWords?.[v.verse]
     if (!words || words.length === 0) {
@@ -212,7 +262,10 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
       }
       return (
         <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: textColor, lineHeight: 1.9 }}>
-          <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: verseNumColor, verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>{v.verse}</sup>
+          <sup
+            onClick={(e) => handleVerseClick(e, v.verse)}
+            style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: verseNumColor, verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px', cursor: 'pointer' }}
+          >{v.verse}</sup>
           {text}{' '}
         </span>
       )
@@ -238,7 +291,10 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     return (
       <span key={v.verse} style={{ fontFamily: 'var(--font-reading)', fontSize: `${fontSize}px`, fontWeight: 400, color: textColor, lineHeight: 1.9 }}>
         {!isFirst && (
-          <sup style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: verseNumColor, verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px' }}>{v.verse}</sup>
+          <sup
+            onClick={(e) => handleVerseClick(e, v.verse)}
+            style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 500, color: verseNumColor, verticalAlign: 'super', marginRight: '3px', letterSpacing: '0.5px', cursor: 'pointer' }}
+          >{v.verse}</sup>
         )}
         {cleaned.map((w, wi) => {
           if (isFirst && wi === 0) {
@@ -250,6 +306,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
             )
           }
           const hasStrongs = w.strongs_number && strongsLookup?.[w.strongs_number]
+          const isName = isProperNoun(w.word_text)
           return (
             <span key={w.word_position}>
               {wi > 0 || !isFirst ? ' ' : ''}
@@ -260,6 +317,16 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                     setStrongsPanel({ number: w.strongs_number!, word: w.word_text })
                   }}
                   style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: verseNumColor, textUnderlineOffset: '3px', transition: 'color 150ms' }}
+                >
+                  {w.word_text}
+                </span>
+              ) : isName ? (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setNamesPanel(w.word_text.replace(/[^a-zA-Z'-]/g, ''))
+                  }}
+                  style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dashed', textDecorationColor: isModern ? 'rgba(15,52,96,0.4)' : 'rgba(184,134,11,0.5)', textUnderlineOffset: '3px', transition: 'color 150ms' }}
                 >
                   {w.word_text}
                 </span>
@@ -450,12 +517,74 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         ) : <span />}
       </div>
 
+      {/* Verse context menu */}
+      {verseMenu && (
+        <div
+          style={{
+            position: 'fixed',
+            left: Math.min(verseMenu.x, window.innerWidth - 220),
+            top: verseMenu.y,
+            zIndex: 60,
+            background: isModern ? '#FFFFFF' : '#F8F2E2',
+            border: '1px solid rgba(139,107,20,0.3)',
+            borderRadius: 8,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+            minWidth: 200,
+            overflow: 'hidden',
+            animation: 'menuFade 150ms ease-out',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(139,107,20,0.15)' }}>
+            <span style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: isModern ? '#888' : '#8B5E10' }}>
+              {bookName} {chapter}:{verseMenu.verse}
+            </span>
+          </div>
+          <button
+            onClick={() => { setKingsPanel(true); setVerseMenu(null) }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              width: '100%', textAlign: 'left', padding: '10px 12px',
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontFamily: 'var(--font-ui)', fontSize: 12, color: isModern ? '#1A1A1A' : '#1A0A04',
+              transition: 'background 150ms',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(139,107,20,0.06)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}
+          >
+            <span style={{ fontSize: 16 }}>&#127760;</span>
+            <span>What was happening in the world?</span>
+          </button>
+        </div>
+      )}
+
       {/* Strong's Panel */}
       {strongsPanel && (
         <StrongsPanel
           strongsNumber={strongsPanel.number}
           englishWord={strongsPanel.word}
           onClose={() => setStrongsPanel(null)}
+        />
+      )}
+
+      {/* Names Lookup Panel */}
+      {namesPanel && (
+        <NamesPanel
+          name={namesPanel}
+          onClose={() => setNamesPanel(null)}
+          onStrongsOpen={(num, word) => {
+            setNamesPanel(null)
+            setStrongsPanel({ number: num, word })
+          }}
+        />
+      )}
+
+      {/* Kings and Kingdoms Panel */}
+      {kingsPanel && (
+        <KingsPanel
+          bookName={bookName}
+          chapter={chapter}
+          onClose={() => setKingsPanel(false)}
         />
       )}
 
@@ -509,6 +638,14 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
           setChapterSheetOpen(true)
         }}
       />
+
+      {/* Animations for verse menu */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes menuFade {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}} />
     </div>
   )
 }

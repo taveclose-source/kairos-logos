@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" fill="#1a1a2e"/>
+  <line x1="512" y1="0" x2="512" y2="1024" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="0" y1="512" x2="1024" y2="512" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <circle cx="512" cy="512" r="300" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <circle cx="512" cy="512" r="150" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <text x="512" y="380" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="rgba(255,255,255,0.5)" letter-spacing="6">LOGOS BY KAI'ROS</text>
+  <text x="512" y="530" text-anchor="middle" font-family="Georgia, serif" font-size="110" font-weight="700" fill="#ffffff">Free</text>
+  <line x1="256" y1="590" x2="768" y2="590" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+  <text x="512" y="650" text-anchor="middle" font-family="Georgia, serif" font-size="30" fill="rgba(255,255,255,0.7)" font-style="italic">The Word. Open to all.</text>
+  <text x="512" y="780" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="rgba(255,255,255,0.3)" letter-spacing="3">FREE FOREVER</text>
+</svg>

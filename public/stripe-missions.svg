@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" fill="#1a2f1a"/>
+  <rect x="2" y="2" width="1020" height="1020" fill="none" stroke="rgba(100,220,100,0.4)" stroke-width="3" rx="8"/>
+  <line x1="512" y1="0" x2="512" y2="1024" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="0" y1="512" x2="1024" y2="512" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <circle cx="512" cy="480" r="200" fill="none" stroke="rgba(100,220,100,0.08)" stroke-width="1"/>
+  <path d="M432 440 Q512 360 592 440 Q672 520 512 580 Q352 520 432 440 Z" fill="rgba(100,220,100,0.15)" stroke="rgba(100,220,100,0.3)" stroke-width="1.5"/>
+  <text x="512" y="360" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="rgba(255,255,255,0.5)" letter-spacing="6">LOGOS BY KAI'ROS</text>
+  <text x="512" y="580" text-anchor="middle" font-family="Georgia, serif" font-size="95" font-weight="700" fill="#ffffff">Missions</text>
+  <line x1="256" y1="620" x2="768" y2="620" stroke="rgba(100,220,100,0.2)" stroke-width="1"/>
+  <text x="512" y="680" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="rgba(255,255,255,0.7)" font-style="italic">Sponsor a believer. Change a life.</text>
+  <text x="512" y="760" text-anchor="middle" font-family="Georgia, serif" font-size="40" font-weight="700" fill="#64dc64">$99 · one year</text>
+  <text x="512" y="820" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="rgba(100,220,100,0.6)">full scholar access · gift giving</text>
+</svg>

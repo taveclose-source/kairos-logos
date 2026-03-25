@@ -1,0 +1,33 @@
+{
+  "book": "Matthew",
+  "chapter": 17,
+  "verses": [
+    {"verse_number": 1, "twi_text": "Na nnansa abiɛsa akyi Yesu kaa Petro, ne Yakobo, ne n'nua Yohane de wɔn kɔɔ bepɔw sung so nko ara,"},
+    {"verse_number": 2, "twi_text": "Na ɔdan ne siw wɔ wɔn anim: na n'anim hyerɛn sɛ owia, na n'atade yɛ fitaa sɛ hann."},
+    {"verse_number": 3, "twi_text": "Na hwɛ, Moses ne Elia pue kaa sɛm no saa wɔn."},
+    {"verse_number": 4, "twi_text": "Afei Petro buaa kaa kyerɛɛ Yesu sɛ: Awurade, yɛwɔ ha papa: sɛ wopɛ a, yɛnsi ntukuae abiɛsa ha; baako ma wo, ne baako ma Moses, ne baako ma Elia."},
+    {"verse_number": 5, "twi_text": "Bere a ɔkasa no, hwɛ, omununkum fitaa bi haa wɔn: na hwɛ, omununkum no mu na ɔte dwene a ɔkaa sɛ: Ɔno na ɔyɛ m'ɔba adore no, a mɔpɛ no paa; montie no."},
+    {"verse_number": 6, "twi_text": "Na bere a asuafoɔ no tee no, wɔhwee wɔn anim gu fam, na wɔbɔɔ hu yie."},
+    {"verse_number": 7, "twi_text": "Na Yesu baa bɛka wɔn, na ɔkaa sɛ: Monsɔre na nnsuro."},
+    {"verse_number": 8, "twi_text": "Na bere a wɔsɔree wɔn ani hwɛɛ no, wɔanhu onipa biara, gye Yesu nko ara."},
+    {"verse_number": 9, "twi_text": "Na bere a wɔresiw fi bepɔw no so no, Yesu hyɛɛ wɔn sɛ: Monka nsɛm a mo huu no nkyerɛ onipa biara, kosi sɛ Onipa Ba no asɔre fi awufoɔ mu."},
+    {"verse_number": 10, "twi_text": "Na n'asuafoɔ no bisaa no sɛ: Adɛn nti na twerɛfoɔ no ka sɛ Elia sɛ ɔba kan?"},
+    {"verse_number": 11, "twi_text": "Na Yesu buaa kaa kyerɛɛ wɔn sɛ: Nokware Elia bɛba kan, na ɔbɛsan nneɛma nyinaa."},
+    {"verse_number": 12, "twi_text": "Nanso meka kyerɛ mo sɛ, Elia aba dedaw, na wɔannhu no, na wɔde no yɛɛ biribiara a wɔpɛɛ. Saa ara nso na Onipa Ba no bɛcɛfa wɔ wɔn nkyɛn."},
+    {"verse_number": 13, "twi_text": "Afei asuafoɔ no tee ase sɛ ɔkasaa wɔn ho sɛ ɔkaa Yohane Baptistfoɔ."},
+    {"verse_number": 14, "twi_text": "Na bere a wɔduruu nnipadɔm no nkyɛn no, onipa bi baa n'nkyɛn, sore kotoo n'anim sɛ:"},
+    {"verse_number": 15, "twi_text": "Awurade, mmɔborɔhunu me ba; efisɛ ɔyɛ ɔwiawia na ɔhunu amane yie: efisɛ ɔtow nkurom gu ogya mu, na nkyekyem nso gu nsuo mu."},
+    {"verse_number": 16, "twi_text": "Na mede no baa w'asuafoɔ nkyɛn, na wɔantumi ansane no yareɛ."},
+    {"verse_number": 17, "twi_text": "Afei Yesu buaa kaa sɛ: Ɔ, aborɔfoɔ ne akɔnnɔ nnipa asafo, bere ahe na mɛtena mo ho? Bere ahe na mɛcɛfa mo? Mfa no bra me nkyɛn ha."},
+    {"verse_number": 18, "twi_text": "Na Yesu tɔɔ honhom bɔne no so, na ɔfiri no mu: na abofra no sanee wɔ bere no mu ara."},
+    {"verse_number": 19, "twi_text": "Afei asuafoɔ no baa Yesu nkyɛn nko ara kaa sɛ: Adɛn nti na yɛantumi ampono no?"},
+    {"verse_number": 20, "twi_text": "Na Yesu kaa kyerɛɛ wɔn sɛ: Mo gyidie pisipisi nti: nokware meka kyerɛ mo sɛ, sɛ mo wɔ gyidie sɛ nnuaba sinapi bi a, mobɛka bepɔw yi sɛ: San fi ha kɔ hɔ, na ɔbɛsan; na biribiara renni mo ho adwuma biara da."},
+    {"verse_number": 21, "twi_text": "Nanso saa ɔboafoɔ yi firi mu wɔ mpaeɛ ne awia nko ara mu."},
+    {"verse_number": 22, "twi_text": "Na bere a wɔtenaa Galilea no, Yesu kaa kyerɛɛ wɔn sɛ: Onipa Ba no bɛtow wɔn nsam:"},
+    {"verse_number": 23, "twi_text": "Na wɔbɛkum no, na ɔda abiɛsa mu ɔbɛsɔre bio. Na wɔn werɛ hooeɛ yie."},
+    {"verse_number": 24, "twi_text": "Na bere a wɔduruu Kapernaum no, wɔn a wɔgye sika kasɛ no baa Petro nkyɛn kaa sɛ: Mo kyerɛmpon no ntua sika kasɛ anaa?"},
+    {"verse_number": 25, "twi_text": "Ɔkaa sɛ: Yiw. Na bere a ɔkɔɔ fie no, Yesu dii no kan kaa sɛ: Simon, wo ho adwene te dɛn? Asase ahene gye sika anaa kasɛ fi wɔn mma ankasa, anaa fi ɔhɔho?"},
+    {"verse_number": 26, "twi_text": "Petro kaa kyerɛɛ no sɛ: Fi ɔhɔho. Yesu kaa kyerɛɛ no sɛ: Enti mma no nyɛ free."},
+    {"verse_number": 27, "twi_text": "Nanso sɛdeɛ ɛbɛyɛ a yɛannye wɔn bo no, kɔ ɛpo ho na tɔ mmoawa, na mmoawa a ɔba kan no, bue n'ano; na wɔbɛhu sika hwɛ: kaa no na fa ma wɔn ama me ne wo."}
+  ]
+}

@@ -1,0 +1,250 @@
+[2026-03-11T13:36:03.169Z] === Translation Pipeline Started ===
+[2026-03-11T13:36:03.170Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-11T13:36:03.170Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-11T13:36:12.984Z] === Translation Pipeline Started ===
+[2026-03-11T13:36:12.985Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-11T13:36:12.985Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-11T13:36:12.986Z] Found 1 existing file(s) in inbox — processing...
+[2026-03-11T13:36:13.995Z] Processing: TestBook_1.json
+[2026-03-11T13:36:14.569Z] REJECTED: TestBook_1.json → TestBook_1__unknown-book-TestBook.json
+[2026-03-11T13:41:17.157Z] === Translation Pipeline Started ===
+[2026-03-11T13:41:17.158Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-11T13:41:17.159Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-11T15:05:29.273Z] Processing: Matthew_9.json
+[2026-03-11T15:05:35.107Z] SUCCESS: Matthew chapter 9 — 38 verses upserted
+[2026-03-11T15:22:32.445Z] Processing: MATIO_10_TR_Twi.json
+[2026-03-11T15:22:32.447Z] REJECTED: MATIO_10_TR_Twi.json → MATIO_10_TR_Twi__bad-filename-format.json
+[2026-03-11T15:31:42.164Z] Processing: Matthew_10.json
+[2026-03-11T15:31:42.166Z]   Validation errors: Glossary violation: found "Ɔsoro" but locked term is "ɔsoro ahennie"
+[2026-03-11T15:31:42.167Z] REJECTED: Matthew_10.json → Matthew_10__Glossary_violation__found___soro__but_locked_term_is___soro_ahennie_.json
+[2026-03-11T15:36:46.620Z] Processing: Matthew_10.json
+[2026-03-11T15:36:46.623Z]   Validation errors: Glossary violation: found "Ɔsoro" but locked term is "ɔsoro ahennie"
+[2026-03-11T15:36:46.623Z] REJECTED: Matthew_10.json → Matthew_10__Glossary_violation__found___soro__but_locked_term_is___soro_ahennie_.json
+[2026-03-11T19:45:18.266Z] Processing: Matthew_11.json
+[2026-03-11T19:45:23.150Z] SUCCESS: Matthew chapter 11 — 30 verses upserted
+[2026-03-11T19:51:45.276Z] Processing: Matthew_10.json
+[2026-03-11T19:51:45.278Z]   Validation errors: Glossary violation: found "Ɔsoro" but locked term is "ɔsoro ahennie"
+[2026-03-11T19:51:45.279Z] REJECTED: Matthew_10.json → Matthew_10__Glossary_violation__found___soro__but_locked_term_is___soro_ahennie_.json
+[2026-03-11T19:51:48.537Z] === Translation Pipeline Started ===
+[2026-03-11T19:51:48.538Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-11T19:51:48.539Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-11T19:52:01.163Z] === Translation Pipeline Started ===
+[2026-03-11T19:52:01.164Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-11T19:52:01.165Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-11T19:52:26.672Z] Processing: Matthew_10.json
+[2026-03-11T19:52:26.674Z]   Validation errors: Glossary violation: found "Ɔsoro" but locked term is "ɔsoro ahennie"
+[2026-03-11T19:52:26.675Z] REJECTED: Matthew_10.json → Matthew_10__Glossary_violation__found___soro__but_locked_term_is___soro_ahennie_.json
+[2026-03-11T19:52:28.929Z] === Translation Pipeline Started ===
+[2026-03-11T19:52:28.930Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-11T19:52:28.931Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-11T19:53:06.309Z] === Translation Pipeline Started ===
+[2026-03-11T19:53:06.310Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-11T19:53:06.310Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-11T19:53:45.585Z] === Translation Pipeline Started ===
+[2026-03-11T19:53:45.586Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-11T19:53:45.586Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-11T19:53:45.587Z] Found 1 existing file(s) in inbox — processing...
+[2026-03-11T19:53:46.435Z] Processing: Matthew_10.json
+[2026-03-11T19:53:46.437Z]   Validation errors: Glossary violation: found "Ɔsoro" but locked term is "ɔsoro ahennie"
+[2026-03-11T19:53:46.439Z] REJECTED: Matthew_10.json → Matthew_10__Glossary_violation__found___soro__but_locked_term_is___soro_ahennie_.json
+[2026-03-11T19:53:46.588Z] Processing: Matthew_10.json
+[2026-03-11T19:53:46.589Z] UNEXPECTED ERROR processing Matthew_10.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_10.json' -> 'C:\Dev\Logos\translation-inbox\rejected\Matthew_10__invalid-json.json'
+[2026-03-11T19:54:13.833Z] Processing: Matthew_10.json
+[2026-03-11T19:54:13.835Z]   Validation errors: Glossary violation: found "Ɔsoro" but locked term is "ɔsoro ahennie"
+[2026-03-11T19:54:13.836Z] REJECTED: Matthew_10.json → Matthew_10__Glossary_violation__found___soro__but_locked_term_is___soro_ahennie_.json
+[2026-03-11T19:54:17.423Z] === Translation Pipeline Started ===
+[2026-03-11T19:54:17.425Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-11T19:54:17.425Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-11T19:55:05.300Z] === Translation Pipeline Started ===
+[2026-03-11T19:55:05.301Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-11T19:55:05.301Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-11T19:55:09.269Z] Processing: Matthew_10.json
+[2026-03-11T19:55:09.269Z] Processing: Matthew_10.json
+[2026-03-11T19:55:09.272Z]   Validation errors: Glossary violation: found "Ɔsoro" but locked term is "ɔsoro ahennie"
+[2026-03-11T19:55:09.273Z] REJECTED: Matthew_10.json → Matthew_10__Glossary_violation__found___soro__but_locked_term_is___soro_ahennie_.json
+[2026-03-11T19:55:15.940Z] UNEXPECTED ERROR processing Matthew_10.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_10.json' -> 'C:\Dev\Logos\translation-inbox\processed\Matthew_10.json'
+[2026-03-11T20:07:47.494Z] === Translation Pipeline Started ===
+[2026-03-11T20:07:47.495Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-11T20:07:47.495Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-11T20:07:47.497Z] Found 1 existing file(s) in inbox — processing...
+[2026-03-11T20:07:48.512Z] Processing: Matthew_10.json
+[2026-03-11T20:07:50.738Z] === Translation Pipeline Started ===
+[2026-03-11T20:07:50.739Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-11T20:07:50.739Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-11T20:07:50.740Z] Found 1 existing file(s) in inbox — processing...
+[2026-03-11T20:07:51.745Z] Processing: Matthew_10.json
+[2026-03-11T20:07:55.112Z] SUCCESS: Matthew chapter 10 — 42 verses upserted
+[2026-03-11T20:07:58.019Z] UNEXPECTED ERROR processing Matthew_10.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_10.json' -> 'C:\Dev\Logos\translation-inbox\processed\Matthew_10.json'
+[2026-03-12T18:04:17.345Z] === Translation Pipeline Started ===
+[2026-03-12T18:04:17.346Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-12T18:04:17.347Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-12T18:07:58.676Z] === Translation Pipeline Started ===
+[2026-03-12T18:07:58.678Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-12T18:07:58.678Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-12T18:08:42.085Z] === Translation Pipeline Started ===
+[2026-03-12T18:08:42.086Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-12T18:08:42.087Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-12T18:09:35.797Z] === Translation Pipeline Started ===
+[2026-03-12T18:09:35.798Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-12T18:09:35.799Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-12T18:09:52.008Z] Processing: Matthew_14.json
+[2026-03-12T18:09:52.003Z] Processing: Matthew_14.json
+[2026-03-12T18:09:57.235Z] SUCCESS: Matthew chapter 14 — 36 verses upserted
+[2026-03-12T18:09:57.655Z] UNEXPECTED ERROR processing Matthew_14.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_14.json' -> 'C:\Dev\Logos\translation-inbox\processed\Matthew_14.json'
+[2026-03-12T18:52:18.477Z] Processing: Matthew_15.json
+[2026-03-12T18:52:18.477Z] Processing: Matthew_15.json
+[2026-03-12T18:52:23.722Z] SUCCESS: Matthew chapter 15 — 39 verses upserted
+[2026-03-12T18:52:23.973Z] UNEXPECTED ERROR processing Matthew_15.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_15.json' -> 'C:\Dev\Logos\translation-inbox\processed\Matthew_15.json'
+[2026-03-12T19:01:12.681Z] Processing: Matthew_16.json
+[2026-03-12T19:01:12.681Z] Processing: Matthew_16.json
+[2026-03-12T19:01:16.446Z] SUCCESS: Matthew chapter 16 — 28 verses upserted
+[2026-03-12T19:01:16.687Z] UNEXPECTED ERROR processing Matthew_16.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_16.json' -> 'C:\Dev\Logos\translation-inbox\processed\Matthew_16.json'
+[2026-03-12T19:45:26.282Z] Processing: Matthew_17.json
+[2026-03-12T19:45:26.282Z] Processing: Matthew_17.json
+[2026-03-12T19:45:30.158Z] SUCCESS: Matthew chapter 17 — 27 verses upserted
+[2026-03-12T19:45:30.198Z] UNEXPECTED ERROR processing Matthew_17.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_17.json' -> 'C:\Dev\Logos\translation-inbox\processed\Matthew_17.json'
+[2026-03-12T19:51:21.437Z] Processing: Matthew_18.json
+[2026-03-12T19:51:21.437Z] Processing: Matthew_18.json
+[2026-03-12T19:51:21.439Z]   Validation errors: Glossary violation: found "onipa baako" but locked phrase is "Onipa Ba"
+[2026-03-12T19:51:21.439Z]   Validation errors: Glossary violation: found "onipa baako" but locked phrase is "Onipa Ba"
+[2026-03-12T19:51:21.440Z] REJECTED: Matthew_18.json → Matthew_18__Glossary_violation__found__onipa_baako__but_locked_phrase_is__Onipa_Ba_.json
+[2026-03-12T19:51:21.440Z] UNEXPECTED ERROR processing Matthew_18.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_18.json' -> 'C:\Dev\Logos\translation-inbox\rejected\Matthew_18__Glossary_violation__found__onipa_baako__but_locked_phrase_is__Onipa_Ba_.json'
+[2026-03-12T21:01:49.033Z] Processing: Matthew_18.json
+[2026-03-12T21:01:49.033Z] Processing: Matthew_18.json
+[2026-03-12T21:01:49.035Z]   Validation errors: Glossary violation: found "onipa baako" but locked phrase is "Onipa Ba"
+[2026-03-12T21:01:49.035Z]   Validation errors: Glossary violation: found "onipa baako" but locked phrase is "Onipa Ba"
+[2026-03-12T21:01:49.036Z] REJECTED: Matthew_18.json → Matthew_18__Glossary_violation__found__onipa_baako__but_locked_phrase_is__Onipa_Ba_.json
+[2026-03-12T21:01:49.036Z] UNEXPECTED ERROR processing Matthew_18.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_18.json' -> 'C:\Dev\Logos\translation-inbox\rejected\Matthew_18__Glossary_violation__found__onipa_baako__but_locked_phrase_is__Onipa_Ba_.json'
+[2026-03-12T21:10:03.765Z] === Translation Pipeline Started ===
+[2026-03-12T21:10:03.766Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-12T21:10:03.767Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-12T21:10:19.088Z] Processing: Matthew_18.json
+[2026-03-12T21:10:24.156Z] SUCCESS: Matthew chapter 18 — 35 verses upserted
+[2026-03-12T22:02:48.140Z] === Translation Pipeline Started ===
+[2026-03-12T22:02:48.146Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-12T22:02:48.147Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-12T22:02:58.129Z] Processing: Matthew_19.json
+[2026-03-12T22:02:58.132Z]   Validation errors: Glossary violation: found "amumɔyɛ" but locked term is "amumuyɛ"
+[2026-03-12T22:02:58.133Z] REJECTED: Matthew_19.json → Matthew_19__Glossary_violation__found__amum_y___but_locked_term_is__amumuy__.json
+[2026-03-12T22:08:22.213Z] Processing: Matthew_19.json
+[2026-03-12T22:08:22.215Z]   Validation errors: Glossary violation: found "amumɔyɛ" but locked term is "amumuyɛ"
+[2026-03-12T22:08:22.216Z] REJECTED: Matthew_19.json → Matthew_19__Glossary_violation__found__amum_y___but_locked_term_is__amumuy__.json
+[2026-03-12T22:09:23.454Z] === Translation Pipeline Started ===
+[2026-03-12T22:09:23.455Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-12T22:09:23.456Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-12T22:09:31.193Z] Processing: Matthew_19.json
+[2026-03-12T22:09:35.584Z] SUCCESS: Matthew chapter 19 — 30 verses upserted
+[2026-03-12T22:15:08.203Z] Processing: Matthew_20.json
+[2026-03-12T22:15:12.776Z] SUCCESS: Matthew chapter 20 — 34 verses upserted
+[2026-03-13T13:50:39.928Z] Processing: Matthew_21.json
+[2026-03-13T13:50:46.418Z] SUCCESS: Matthew chapter 21 — 46 verses upserted
+[2026-03-13T13:53:31.607Z] Processing: Matthew_22.json
+[2026-03-13T13:53:31.609Z]   Validation errors: Glossary violation: found "Ɔsoro ahennie" but locked phrase is "ɔsoro ahennie"
+[2026-03-13T13:53:31.610Z] REJECTED: Matthew_22.json → Matthew_22__Glossary_violation__found___soro_ahennie__but_locked_phrase_is___soro_ahennie_.json
+[2026-03-13T13:56:59.342Z] === Translation Pipeline Started ===
+[2026-03-13T13:56:59.343Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-13T13:56:59.343Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-13T13:58:13.983Z] === Translation Pipeline Started ===
+[2026-03-13T13:58:13.985Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-13T13:58:13.985Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-13T13:58:30.899Z] Processing: Matthew_22.json
+[2026-03-13T13:58:30.898Z] Processing: Matthew_22.json
+[2026-03-13T13:58:37.237Z] SUCCESS: Matthew chapter 22 — 45 verses upserted
+[2026-03-13T13:58:37.772Z] UNEXPECTED ERROR processing Matthew_22.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_22.json' -> 'C:\Dev\Logos\translation-inbox\processed\Matthew_22.json'
+[2026-03-13T14:17:11.620Z] Processing: Matthew_23.json
+[2026-03-13T14:17:11.620Z] Processing: Matthew_23.json
+[2026-03-13T14:17:17.416Z] SUCCESS: Matthew chapter 23 — 39 verses upserted
+[2026-03-13T14:17:17.524Z] UNEXPECTED ERROR processing Matthew_23.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_23.json' -> 'C:\Dev\Logos\translation-inbox\processed\Matthew_23.json'
+[2026-03-13T15:08:53.142Z] Processing: Matthew_24.json
+[2026-03-13T15:08:53.142Z] Processing: Matthew_24.json
+[2026-03-13T15:09:00.283Z] SUCCESS: Matthew chapter 24 — 51 verses upserted
+[2026-03-13T15:09:00.637Z] UNEXPECTED ERROR processing Matthew_24.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_24.json' -> 'C:\Dev\Logos\translation-inbox\processed\Matthew_24.json'
+[2026-03-13T15:13:23.619Z] Processing: Matthew_25.json
+[2026-03-13T15:13:23.619Z] Processing: Matthew_25.json
+[2026-03-13T15:13:30.691Z] SUCCESS: Matthew chapter 25 — 46 verses upserted
+[2026-03-13T15:13:30.936Z] UNEXPECTED ERROR processing Matthew_25.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_25.json' -> 'C:\Dev\Logos\translation-inbox\processed\Matthew_25.json'
+[2026-03-13T15:21:59.889Z] Processing: Matthew_26.json
+[2026-03-13T15:21:59.889Z] Processing: Matthew_26.json
+[2026-03-13T15:22:10.284Z] SUCCESS: Matthew chapter 26 — 74 verses upserted
+[2026-03-13T15:22:10.731Z] UNEXPECTED ERROR processing Matthew_26.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_26.json' -> 'C:\Dev\Logos\translation-inbox\processed\Matthew_26.json'
+[2026-03-13T15:27:45.980Z] Processing: Matthew_27.json
+[2026-03-13T15:27:45.980Z] Processing: Matthew_27.json
+[2026-03-13T15:27:55.502Z] SUCCESS: Matthew chapter 27 — 66 verses upserted
+[2026-03-13T15:27:56.025Z] UNEXPECTED ERROR processing Matthew_27.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_27.json' -> 'C:\Dev\Logos\translation-inbox\processed\Matthew_27.json'
+[2026-03-13T15:48:35.315Z] Processing: Matthew_28.json
+[2026-03-13T15:48:35.315Z] Processing: Matthew_28.json
+[2026-03-13T15:48:38.533Z] SUCCESS: Matthew chapter 28 — 20 verses upserted
+[2026-03-13T15:48:38.704Z] UNEXPECTED ERROR processing Matthew_28.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Matthew_28.json' -> 'C:\Dev\Logos\translation-inbox\processed\Matthew_28.json'
+[2026-03-13T16:45:08.429Z] Processing: Mark_1.json
+[2026-03-13T16:45:08.429Z] Processing: Mark_1.json
+[2026-03-13T16:45:15.541Z] SUCCESS: Mark chapter 1 — 45 verses upserted
+[2026-03-13T16:45:15.550Z] UNEXPECTED ERROR processing Mark_1.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_1.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_1.json'
+[2026-03-13T16:48:51.657Z] Processing: Mark_2.json
+[2026-03-13T16:48:51.657Z] Processing: Mark_2.json
+[2026-03-13T16:48:55.919Z] SUCCESS: Mark chapter 2 — 28 verses upserted
+[2026-03-13T16:48:56.336Z] UNEXPECTED ERROR processing Mark_2.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_2.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_2.json'
+[2026-03-13T16:53:13.417Z] Processing: Mark_3.json
+[2026-03-13T16:53:13.417Z] Processing: Mark_3.json
+[2026-03-13T16:53:19.212Z] SUCCESS: Mark chapter 3 — 35 verses upserted
+[2026-03-13T16:53:19.346Z] UNEXPECTED ERROR processing Mark_3.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_3.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_3.json'
+[2026-03-13T17:16:26.315Z] Processing: Mark_4.json
+[2026-03-13T17:16:26.315Z] Processing: Mark_4.json
+[2026-03-13T17:16:32.234Z] SUCCESS: Mark chapter 4 — 40 verses upserted
+[2026-03-13T17:16:32.577Z] UNEXPECTED ERROR processing Mark_4.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_4.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_4.json'
+[2026-03-13T17:26:34.286Z] Processing: Mark_5.json
+[2026-03-13T17:26:34.286Z] Processing: Mark_5.json
+[2026-03-13T17:26:40.686Z] SUCCESS: Mark chapter 5 — 43 verses upserted
+[2026-03-13T17:26:40.846Z] UNEXPECTED ERROR processing Mark_5.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_5.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_5.json'
+[2026-03-13T17:34:57.822Z] Processing: Mark_6.json
+[2026-03-13T17:34:57.822Z] Processing: Mark_6.json
+[2026-03-13T17:35:06.436Z] SUCCESS: Mark chapter 6 — 56 verses upserted
+[2026-03-13T17:35:06.516Z] UNEXPECTED ERROR processing Mark_6.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_6.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_6.json'
+[2026-03-13T17:50:10.566Z] Processing: Mark_7.json
+[2026-03-13T17:50:10.566Z] Processing: Mark_7.json
+[2026-03-13T17:50:15.871Z] SUCCESS: Mark chapter 7 — 37 verses upserted
+[2026-03-13T17:50:16.650Z] UNEXPECTED ERROR processing Mark_7.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_7.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_7.json'
+[2026-03-13T18:18:45.955Z] Processing: Mark_8.json
+[2026-03-13T18:18:45.955Z] Processing: Mark_8.json
+[2026-03-13T18:18:51.591Z] SUCCESS: Mark chapter 8 — 37 verses upserted
+[2026-03-13T18:18:52.058Z] UNEXPECTED ERROR processing Mark_8.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_8.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_8.json'
+[2026-03-13T18:47:56.579Z] Processing: Mark_9.json
+[2026-03-13T18:47:56.579Z] Processing: Mark_9.json
+[2026-03-13T18:48:04.090Z] SUCCESS: Mark chapter 9 — 50 verses upserted
+[2026-03-13T18:48:04.194Z] UNEXPECTED ERROR processing Mark_9.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_9.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_9.json'
+[2026-03-13T18:56:39.247Z] Processing: Mark_10.json
+[2026-03-13T18:56:39.248Z] Processing: Mark_10.json
+[2026-03-13T18:56:46.514Z] SUCCESS: Mark chapter 10 — 52 verses upserted
+[2026-03-13T18:56:46.755Z] UNEXPECTED ERROR processing Mark_10.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_10.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_10.json'
+[2026-03-13T19:06:32.116Z] Processing: Mark_12.json
+[2026-03-13T19:06:32.116Z] Processing: Mark_12.json
+[2026-03-13T19:06:38.338Z] SUCCESS: Mark chapter 12 — 44 verses upserted
+[2026-03-13T19:06:38.985Z] UNEXPECTED ERROR processing Mark_12.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_12.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_12.json'
+[2026-03-13T19:12:40.171Z] Processing: Mark_11.json
+[2026-03-13T19:12:40.171Z] Processing: Mark_11.json
+[2026-03-13T19:12:45.182Z] SUCCESS: Mark chapter 11 — 33 verses upserted
+[2026-03-13T19:12:45.213Z] UNEXPECTED ERROR processing Mark_11.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_11.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_11.json'
+[2026-03-13T19:27:59.183Z] Processing: Mark_13.json
+[2026-03-13T19:27:59.183Z] Processing: Mark_13.json
+[2026-03-13T19:28:04.856Z] SUCCESS: Mark chapter 13 — 37 verses upserted
+[2026-03-13T19:28:04.910Z] UNEXPECTED ERROR processing Mark_13.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_13.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_13.json'
+[2026-03-13T19:32:50.217Z] Processing: Mark_14.json
+[2026-03-13T19:32:50.217Z] Processing: Mark_14.json
+[2026-03-13T19:33:00.750Z] SUCCESS: Mark chapter 14 — 72 verses upserted
+[2026-03-13T19:33:00.772Z] UNEXPECTED ERROR processing Mark_14.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_14.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_14.json'
+[2026-03-13T19:53:38.528Z] Processing: Mark_15.json
+[2026-03-13T19:53:38.528Z] Processing: Mark_15.json
+[2026-03-13T19:53:45.703Z] SUCCESS: Mark chapter 15 — 47 verses upserted
+[2026-03-13T19:53:45.842Z] UNEXPECTED ERROR processing Mark_15.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_15.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_15.json'
+[2026-03-13T19:53:57.684Z] Processing: Mark_16.json
+[2026-03-13T19:53:57.684Z] Processing: Mark_16.json
+[2026-03-13T19:54:00.800Z] SUCCESS: Mark chapter 16 — 20 verses upserted
+[2026-03-13T19:54:00.966Z] UNEXPECTED ERROR processing Mark_16.json: ENOENT: no such file or directory, rename 'C:\Dev\Logos\translation-inbox\Mark_16.json' -> 'C:\Dev\Logos\translation-inbox\processed\Mark_16.json'
+[2026-03-13T20:33:30.728Z] === Translation Pipeline Started ===
+[2026-03-13T20:33:30.731Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-13T20:33:30.731Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-13T20:36:25.110Z] === Translation Pipeline Started ===
+[2026-03-13T20:36:25.112Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-13T20:36:25.112Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co
+[2026-03-13T20:44:21.034Z] === Translation Pipeline Started ===
+[2026-03-13T20:44:21.036Z] Watching: C:\Dev\Logos\translation-inbox
+[2026-03-13T20:44:21.036Z] Supabase: https://xafzgucdwmiwjsupbjbx.supabase.co

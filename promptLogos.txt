@@ -1,0 +1,15 @@
+Before I close this session write a complete state summary to C:\Dev\Logos\LOGOS-SESSION-MARCH-20-2026.md
+
+Include:
+- Every file created or modified in this session with the commit hash
+- Current build state and what works
+- Every pending task in priority order
+- All Supabase tables created today
+- All Stripe Price IDs
+- Resend configuration
+- Navigation routing spec (final settled decisions)
+- church→asafo translation review flag
+- Bubby session resume command
+
+This is the handoff document for the next session.
+Do not summarize — be exhaustive.
