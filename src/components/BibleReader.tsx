@@ -297,23 +297,46 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         segments.splice(i, 1, ...newSegs)
       }
     }
-    // Underline colors — Modern: blue, Traditional: amber/gold
-    const twiDashed = isModern ? 'rgba(15,52,96,0.6)' : 'rgba(184,134,11,0.7)'   // glossary terms
-    const twiDotted = isModern ? 'rgba(15,52,96,0.5)' : 'rgba(184,134,11,0.6)'   // Strong's link
-    const twiSolid  = isModern ? 'rgba(15,52,96,0.3)' : 'rgba(184,134,11,0.3)'   // Christaller / English-Twi match
+    // Hover helpers for Modern theme blue highlight
+    const modernHoverIn = isModern
+      ? (e: React.MouseEvent) => { (e.currentTarget as HTMLElement).style.background = 'rgba(37,99,235,0.08)' }
+      : undefined
+    const modernHoverOut = isModern
+      ? (e: React.MouseEvent) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }
+      : undefined
 
-    // Render each segment — glossary terms get dashed amber, classified words get dotted/solid amber
+    // Render each segment — Modern: solid blue hyperlinks; Traditional: dashed/dotted amber
     return (
       <>
         {segments.map((seg, i) => {
           if (seg.term) {
-            // Glossary term — dashed amber underline, each word individually tappable
+            // Glossary term — Modern: solid blue + bold; Traditional: dashed amber
             const glossaryWords = seg.text.split(/(\s+)/)
             return (
               <span key={i}>
                 {glossaryWords.map((gw, gi) => {
                   const cleaned = gw.replace(/[^a-zA-ZɔɛɲŋàáèéìíòóùúâêîôûãẽĩõũƆƐ'-]/g, '')
                   if (/^\s+$/.test(gw) || cleaned.length < 2) return gw
+                  const glossaryStyle: React.CSSProperties = isModern
+                    ? {
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        textDecorationStyle: 'solid',
+                        textDecorationColor: '#2563EB',
+                        textUnderlineOffset: '2px',
+                        fontWeight: 700,
+                        borderRadius: '2px',
+                        transition: 'background 150ms, color 150ms',
+                      }
+                    : {
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        textDecorationStyle: 'dashed',
+                        textDecorationColor: 'rgba(184,134,11,0.7)',
+                        textDecorationThickness: '2px',
+                        textUnderlineOffset: '3px',
+                        transition: 'color 150ms',
+                      }
                   return (
                     <span
                       key={gi}
@@ -321,15 +344,9 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                         e.stopPropagation()
                         setTwiPanel({ word: cleaned, verseReference: verseRef, glossaryTerm: seg.term!.twi_term })
                       }}
-                      style={{
-                        cursor: 'pointer',
-                        textDecoration: 'underline',
-                        textDecorationStyle: 'dashed',
-                        textDecorationColor: twiDashed,
-                        textDecorationThickness: '2px',
-                        textUnderlineOffset: '3px',
-                        transition: 'color 150ms',
-                      }}
+                      style={glossaryStyle}
+                      onMouseEnter={modernHoverIn}
+                      onMouseLeave={modernHoverOut}
                     >
                       {gw}
                     </span>
@@ -347,6 +364,27 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                 if (cleaned.length < 2 || /^\s+$/.test(w)) return w
                 const cls = twiWordClasses[cleaned.toLowerCase()]
                 const hasUnderline = cls === 'strongs' || cls === 'dictionary'
+                // Modern: solid blue (full or 60% opacity); Traditional: dotted/solid amber
+                const wordStyle: React.CSSProperties = hasUnderline
+                  ? isModern
+                    ? {
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        textDecorationStyle: 'solid',
+                        textDecorationColor: cls === 'strongs' ? '#2563EB' : 'rgba(37,99,235,0.6)',
+                        textUnderlineOffset: '2px',
+                        borderRadius: '2px',
+                        transition: 'background 150ms, color 150ms',
+                      }
+                    : {
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        textDecorationStyle: cls === 'strongs' ? 'dotted' : 'solid',
+                        textDecorationColor: cls === 'strongs' ? 'rgba(184,134,11,0.6)' : 'rgba(184,134,11,0.3)',
+                        textUnderlineOffset: '3px',
+                        transition: 'color 150ms',
+                      }
+                  : { cursor: 'pointer', transition: 'color 150ms' }
                 return (
                   <span
                     key={j}
@@ -354,16 +392,9 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                       e.stopPropagation()
                       setTwiPanel({ word: cleaned, verseReference: verseRef })
                     }}
-                    style={{
-                      cursor: 'pointer',
-                      transition: 'color 150ms',
-                      ...(hasUnderline ? {
-                        textDecoration: 'underline',
-                        textDecorationStyle: cls === 'strongs' ? 'dotted' : 'solid',
-                        textDecorationColor: cls === 'strongs' ? twiDotted : twiSolid,
-                        textUnderlineOffset: '3px',
-                      } as React.CSSProperties : {}),
-                    }}
+                    style={wordStyle}
+                    onMouseEnter={hasUnderline ? modernHoverIn : undefined}
+                    onMouseLeave={hasUnderline ? modernHoverOut : undefined}
                   >
                     {w}
                   </span>
@@ -374,7 +405,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         })}
       </>
     )
-  }, [glossaryMatchers, twiWordClasses])
+  }, [glossaryMatchers, twiWordClasses, isModern])
 
   // (Strong's panel handles its own dismiss)
 
@@ -447,11 +478,26 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
           const hasStrongs = w.strongs_number && strongsLookup?.[w.strongs_number]
           const isName = isProperNoun(w.word_text)
           const isClickable = hasStrongs || isName
-          // Proper nouns always get dashed underline; Strong's-only words get dotted
-          const decorationStyle = isName ? 'dashed' : 'dotted'
-          const decorationColor = isModern
-            ? (isName ? 'rgba(15,52,96,0.5)' : 'rgba(15,52,96,0.6)')
-            : (isName ? 'rgba(184,134,11,0.5)' : '#C8960A')
+          // Modern: solid blue hyperlink style; Traditional: dashed/dotted amber
+          const engStyle: React.CSSProperties = isModern
+            ? {
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                textDecorationStyle: 'solid',
+                textDecorationColor: isName ? '#2563EB' : '#2563EB',
+                textUnderlineOffset: '2px',
+                fontWeight: isName ? 700 : 400,
+                borderRadius: '2px',
+                transition: 'background 150ms, color 150ms',
+              }
+            : {
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                textDecorationStyle: isName ? 'dashed' : 'dotted',
+                textDecorationColor: isName ? 'rgba(184,134,11,0.5)' : '#C8960A',
+                textUnderlineOffset: '3px',
+                transition: 'color 150ms',
+              }
           return (
             <span key={w.word_position}>
               {wi > 0 || !isFirst ? ' ' : ''}
@@ -465,7 +511,9 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                       isName,
                     })
                   }}
-                  style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: decorationStyle as 'dashed' | 'dotted', textDecorationColor: decorationColor, textUnderlineOffset: '3px', transition: 'color 150ms' }}
+                  style={engStyle}
+                  onMouseEnter={isModern ? (e) => { e.currentTarget.style.background = 'rgba(37,99,235,0.08)' } : undefined}
+                  onMouseLeave={isModern ? (e) => { e.currentTarget.style.background = 'transparent' } : undefined}
                 >
                   {w.word_text}
                 </span>
