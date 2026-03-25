@@ -297,10 +297,10 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         segments.splice(i, 1, ...newSegs)
       }
     }
-    // Underline colors — amber/gold for Twi column (distinct from blue on English side)
-    const amberDashed = 'rgba(184,134,11,0.7)'   // glossary terms
-    const amberDotted = 'rgba(184,134,11,0.6)'   // Strong's link
-    const amberSolid  = 'rgba(184,134,11,0.3)'   // Christaller / English-Twi match
+    // Underline colors — Modern: blue, Traditional: amber/gold
+    const twiDashed = isModern ? 'rgba(15,52,96,0.6)' : 'rgba(184,134,11,0.7)'   // glossary terms
+    const twiDotted = isModern ? 'rgba(15,52,96,0.5)' : 'rgba(184,134,11,0.6)'   // Strong's link
+    const twiSolid  = isModern ? 'rgba(15,52,96,0.3)' : 'rgba(184,134,11,0.3)'   // Christaller / English-Twi match
 
     // Render each segment — glossary terms get dashed amber, classified words get dotted/solid amber
     return (
@@ -325,7 +325,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                         cursor: 'pointer',
                         textDecoration: 'underline',
                         textDecorationStyle: 'dashed',
-                        textDecorationColor: amberDashed,
+                        textDecorationColor: twiDashed,
                         textDecorationThickness: '2px',
                         textUnderlineOffset: '3px',
                         transition: 'color 150ms',
@@ -360,7 +360,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                       ...(hasUnderline ? {
                         textDecoration: 'underline',
                         textDecorationStyle: cls === 'strongs' ? 'dotted' : 'solid',
-                        textDecorationColor: cls === 'strongs' ? amberDotted : amberSolid,
+                        textDecorationColor: cls === 'strongs' ? twiDotted : twiSolid,
                         textUnderlineOffset: '3px',
                       } as React.CSSProperties : {}),
                     }}
@@ -449,9 +449,9 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
           const isClickable = hasStrongs || isName
           // Proper nouns always get dashed underline; Strong's-only words get dotted
           const decorationStyle = isName ? 'dashed' : 'dotted'
-          const decorationColor = isName
-            ? (isModern ? 'rgba(15,52,96,0.4)' : 'rgba(184,134,11,0.5)')
-            : verseNumColor
+          const decorationColor = isModern
+            ? (isName ? 'rgba(15,52,96,0.5)' : 'rgba(15,52,96,0.6)')
+            : (isName ? 'rgba(184,134,11,0.5)' : '#C8960A')
           return (
             <span key={w.word_position}>
               {wi > 0 || !isFirst ? ' ' : ''}
