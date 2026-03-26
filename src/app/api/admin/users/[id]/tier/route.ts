@@ -24,7 +24,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const updates: Record<string, string> = {
     subscription_tier: tier,
-    subscription_status: tier === 'free' ? 'none' : 'active',
+    subscription_status: tier === 'free' ? 'canceled' : 'active',
   }
   // Support missions_status for approve/deny actions
   if (typeof body.missions_status === 'string') {

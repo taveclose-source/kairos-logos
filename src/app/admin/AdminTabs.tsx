@@ -193,7 +193,7 @@ export default function AdminTabs({
   async function updateTier(userId: string, newTier: string) {
     // Optimistic update — update single user in state
     setUsers(prev => prev.map(u =>
-      u.id === userId ? { ...u, subscription_tier: newTier, subscription_status: newTier === 'free' ? 'none' : 'active' } : u
+      u.id === userId ? { ...u, subscription_tier: newTier, subscription_status: newTier === 'free' ? 'canceled' : 'active' } : u
     ))
     const res = await fetch(`/api/admin/users/${userId}/tier`, {
       method: 'PATCH',
