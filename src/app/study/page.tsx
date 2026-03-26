@@ -84,7 +84,8 @@ function StudyPageInner() {
   const [showSessions, setShowSessions] = useState(false)
   const [lastTopic, setLastTopic] = useState<string | null>(null)
 
-  useTheme() // theme-aware via CSS vars
+  const { theme } = useTheme()
+  const isModern = theme === 'modern'
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -289,114 +290,121 @@ function StudyPageInner() {
       </div>
     )}
 
-    {/* Background — same image and overlay from the original /ask page */}
-    <img src="/images/ask-backdrop.png" alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', objectFit: 'cover', objectPosition: 'center 75%', zIndex: -2 }} />
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,6,2,0.75)', pointerEvents: 'none', zIndex: -1 }} />
+    {/* Background — Traditional: image + overlay, Modern: clean white */}
+    {!isModern && (
+      <>
+        <img src="/images/ask-backdrop.png" alt="" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', objectFit: 'cover', objectPosition: 'center 75%', zIndex: -2 }} />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,6,2,0.75)', pointerEvents: 'none', zIndex: -1 }} />
+      </>
+    )}
 
-    <main style={{ position: 'relative', minHeight: 'calc(100vh - 56px)' }} className="px-4 sm:px-6 py-10 sm:py-16">
+    <main style={{ position: 'relative', minHeight: 'calc(100vh - 56px)', background: isModern ? '#FAFAF9' : 'transparent' }} className="px-4 sm:px-6 py-10 sm:py-16">
       <div className="max-w-2xl mx-auto">
 
         {/* ── NAMEPLATE ── */}
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
           <h1 style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 42,
-            fontWeight: 300,
-            color: '#FFFFFF',
-            letterSpacing: '3px',
+            fontFamily: isModern ? "'Inter', sans-serif" : "'Cormorant Garamond', serif",
+            fontSize: isModern ? 32 : 42,
+            fontWeight: isModern ? 700 : 300,
+            color: isModern ? '#1A1A1A' : '#FFFFFF',
+            letterSpacing: isModern ? '-0.5px' : '3px',
             lineHeight: 1.1,
-            textShadow: '0 2px 12px rgba(0,0,0,0.5)',
+            textShadow: isModern ? 'none' : '0 2px 12px rgba(0,0,0,0.5)',
           }}>
             {firstName}&apos;s Study
           </h1>
           <p style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 15,
+            fontFamily: isModern ? "'Inter', sans-serif" : "'Cormorant Garamond', serif",
+            fontSize: isModern ? 14 : 15,
             fontStyle: 'italic',
-            color: 'rgba(255,208,96,0.75)',
+            color: isModern ? '#888888' : 'rgba(255,208,96,0.75)',
             marginTop: 6,
-            letterSpacing: '1px',
+            letterSpacing: isModern ? '0' : '1px',
           }}>
             Your companion in the Word
           </p>
-          {/* Ornamental rule */}
-          <div style={{ width: 60, height: 1, background: 'linear-gradient(to right, transparent, rgba(200,160,40,0.4), transparent)', margin: '1.25rem auto 0' }} />
+          {/* Ornamental rule — Traditional only */}
+          {!isModern && <div style={{ width: 60, height: 1, background: 'linear-gradient(to right, transparent, rgba(200,160,40,0.4), transparent)', margin: '1.25rem auto 0' }} />}
         </div>
 
-        {/* ── 1. CONTINUE READING — bookmark style ── */}
-        <section style={{ marginBottom: '2.5rem' }}>
+        {/* ── 1. CONTINUE READING ── */}
+        <section style={{ marginBottom: isModern ? '1.5rem' : '2.5rem' }}>
           {lastBook ? (
             <Link href={`/bible/${encodeURIComponent(lastBook)}/${lastChapter}`} style={{ textDecoration: 'none', display: 'block' }}>
               <div style={{
                 padding: '1.5rem 1.75rem',
-                borderLeft: '3px solid rgba(255,200,100,0.5)',
-                border: '1px solid rgba(255,200,100,0.15)',
-                borderLeftWidth: 3,
-                borderLeftColor: 'rgba(255,200,100,0.5)',
-                borderRadius: 4,
-                background: 'rgba(15,6,2,0.6)',
-                transition: 'border-color 200ms, background 200ms',
+                borderLeft: isModern ? 'none' : '3px solid rgba(255,200,100,0.5)',
+                border: isModern ? '1px solid #ECEAE6' : '1px solid rgba(255,200,100,0.15)',
+                borderLeftWidth: isModern ? 1 : 3,
+                borderLeftColor: isModern ? '#ECEAE6' : 'rgba(255,200,100,0.5)',
+                borderRadius: isModern ? 10 : 4,
+                background: isModern ? '#FFFFFF' : 'rgba(15,6,2,0.6)',
+                transition: 'box-shadow 200ms, border-color 200ms',
               }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderLeftColor = '#FFD060'; e.currentTarget.style.background = 'rgba(15,6,2,0.7)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderLeftColor = 'rgba(255,200,100,0.5)'; e.currentTarget.style.background = 'rgba(15,6,2,0.6)' }}
+                onMouseEnter={(e) => { if (isModern) e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.08)'; else { e.currentTarget.style.borderLeftColor = '#FFD060'; e.currentTarget.style.background = 'rgba(15,6,2,0.7)' } }}
+                onMouseLeave={(e) => { if (isModern) e.currentTarget.style.boxShadow = 'none'; else { e.currentTarget.style.borderLeftColor = 'rgba(255,200,100,0.5)'; e.currentTarget.style.background = 'rgba(15,6,2,0.6)' } }}
               >
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(255,208,96,0.8)', marginBottom: 8 }}>Continue Reading</p>
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 400, color: '#FFFFFF', lineHeight: 1.2 }}>{lastBook}</p>
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, color: 'rgba(255,230,180,0.7)', marginTop: 2 }}>Chapter {lastChapter}</p>
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: '#FFD060', marginTop: 12, letterSpacing: '1px' }}>Resume &rarr;</p>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: isModern ? 11 : 9, letterSpacing: isModern ? '1px' : '3px', textTransform: 'uppercase', color: isModern ? '#888' : 'rgba(255,208,96,0.8)', marginBottom: 8, fontWeight: isModern ? 600 : 400 }}>Continue Reading</p>
+                <p style={{ fontFamily: isModern ? "'Inter', sans-serif" : "'Cormorant Garamond', serif", fontSize: isModern ? 22 : 28, fontWeight: isModern ? 700 : 400, color: isModern ? '#1A1A1A' : '#FFFFFF', lineHeight: 1.2 }}>{lastBook}</p>
+                <p style={{ fontFamily: isModern ? "'Inter', sans-serif" : "'Cormorant Garamond', serif", fontSize: isModern ? 14 : 16, color: isModern ? '#888' : 'rgba(255,230,180,0.7)', marginTop: 2 }}>Chapter {lastChapter}</p>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: isModern ? '#2563EB' : '#FFD060', marginTop: 12, letterSpacing: '1px' }}>Resume &rarr;</p>
               </div>
             </Link>
           ) : (
             <Link href="/toc" style={{ textDecoration: 'none', display: 'block' }}>
-              <div style={{ padding: '1.5rem 1.75rem', borderLeft: '3px solid rgba(255,200,100,0.35)', border: '1px solid rgba(255,200,100,0.15)', borderLeftWidth: 3, borderLeftColor: 'rgba(255,200,100,0.35)', borderRadius: 4, background: 'rgba(15,6,2,0.6)', transition: 'border-color 200ms' }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderLeftColor = '#FFD060' }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderLeftColor = 'rgba(255,200,100,0.35)' }}
+              <div style={{ padding: '1.5rem 1.75rem', border: isModern ? '1px solid #ECEAE6' : '1px solid rgba(255,200,100,0.15)', borderLeft: isModern ? '1px solid #ECEAE6' : '3px solid rgba(255,200,100,0.35)', borderRadius: isModern ? 10 : 4, background: isModern ? '#FFFFFF' : 'rgba(15,6,2,0.6)', transition: 'box-shadow 200ms' }}
+                onMouseEnter={(e) => { if (isModern) e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.08)' }}
+                onMouseLeave={(e) => { if (isModern) e.currentTarget.style.boxShadow = 'none' }}
               >
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 400, color: '#FFFFFF' }}>Open the Bible</p>
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'rgba(255,208,96,0.7)', marginTop: 4, letterSpacing: '1px' }}>Begin reading &rarr;</p>
+                <p style={{ fontFamily: isModern ? "'Inter', sans-serif" : "'Cormorant Garamond', serif", fontSize: isModern ? 18 : 22, fontWeight: isModern ? 600 : 400, color: isModern ? '#1A1A1A' : '#FFFFFF' }}>Open the Bible</p>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: isModern ? '#2563EB' : 'rgba(255,208,96,0.7)', marginTop: 4, letterSpacing: '1px' }}>Begin reading &rarr;</p>
               </div>
             </Link>
           )}
         </section>
 
-        {/* ── 2. READ — book spine link ── */}
-        <section style={{ marginBottom: '2.5rem' }}>
-          <Link href="/toc" style={{ textDecoration: 'none', display: 'block', padding: '1rem 1.5rem', background: 'rgba(15,6,2,0.6)', border: '1px solid rgba(255,200,100,0.15)', borderRadius: 4 }}>
+        {/* ── 2. READ ── */}
+        <section style={{ marginBottom: isModern ? '1.5rem' : '2.5rem' }}>
+          <Link href="/toc" style={{ textDecoration: 'none', display: 'block', padding: isModern ? '1rem 1.25rem' : '1rem 1.5rem', background: isModern ? '#FFFFFF' : 'rgba(15,6,2,0.6)', border: isModern ? '1px solid #ECEAE6' : '1px solid rgba(255,200,100,0.15)', borderRadius: isModern ? 10 : 4, transition: 'box-shadow 200ms' }}
+            onMouseEnter={(e) => { if (isModern) e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.08)' }}
+            onMouseLeave={(e) => { if (isModern) e.currentTarget.style.boxShadow = 'none' }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ width: 3, height: 24, background: 'rgba(255,200,100,0.35)', borderRadius: 1, display: 'inline-block' }} />
-              <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: 'rgba(255,230,180,0.95)', letterSpacing: '0.5px' }}>Table of Contents</span>
-              <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'rgba(255,208,96,0.7)' }}>&rarr;</span>
+              {!isModern && <span style={{ width: 3, height: 24, background: 'rgba(255,200,100,0.35)', borderRadius: 1, display: 'inline-block' }} />}
+              <span style={{ fontFamily: isModern ? "'Inter', sans-serif" : "'Cormorant Garamond', serif", fontSize: isModern ? 15 : 17, color: isModern ? '#1A1A1A' : 'rgba(255,230,180,0.95)', fontWeight: isModern ? 500 : 400 }}>Table of Contents</span>
+              <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: isModern ? '#2563EB' : 'rgba(255,208,96,0.7)' }}>&rarr;</span>
             </div>
           </Link>
         </section>
 
         {/* ── 3. STUDY FURTHER ── */}
-        <section style={{ marginBottom: '3rem', padding: '1.5rem', background: 'rgba(15,6,2,0.6)', border: '1px solid rgba(255,200,100,0.15)', borderRadius: 4 }}>
-          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(255,208,96,0.8)', marginBottom: '1rem' }}>Study Further</p>
+        <section style={{ marginBottom: isModern ? '1.5rem' : '3rem', padding: '1.5rem', background: isModern ? '#FFFFFF' : 'rgba(15,6,2,0.6)', border: isModern ? '1px solid #ECEAE6' : '1px solid rgba(255,200,100,0.15)', borderRadius: isModern ? 10 : 4 }}>
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: isModern ? 13 : 9, fontWeight: isModern ? 700 : 400, letterSpacing: isModern ? '0' : '3px', textTransform: isModern ? 'none' : 'uppercase', color: isModern ? '#1A1A1A' : 'rgba(255,208,96,0.8)', marginBottom: '1rem' }}>{isModern ? 'Study Further' : 'Study Further'}</p>
           {visibleTopics.length === 0 ? (
             <div style={{ padding: '1.5rem 1rem', textAlign: 'center' }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>&#128367;</div>
-              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, fontStyle: 'italic', color: 'rgba(255,230,180,0.85)', lineHeight: 1.7 }}>
-                Your study topics will appear here<br />as you walk with the Pastor.
+              {!isModern && <div style={{ fontSize: 36, marginBottom: 12 }}>&#128367;</div>}
+              <p style={{ fontFamily: isModern ? "'Inter', sans-serif" : "'Cormorant Garamond', serif", fontSize: isModern ? 14 : 17, fontStyle: 'italic', color: isModern ? '#888' : 'rgba(255,230,180,0.85)', lineHeight: 1.7 }}>
+                Your study topics will appear here{!isModern && <br />} as you walk with the Pastor.
               </p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
               {visibleTopics.map(t => (
                 <div key={t.id} style={{
-                  background: 'rgba(255,200,100,0.08)',
-                  border: '1px solid rgba(255,200,100,0.2)',
-                  borderRadius: 3,
+                  background: isModern ? '#F8F9FA' : 'rgba(255,200,100,0.08)',
+                  border: isModern ? '1px solid #ECEAE6' : '1px solid rgba(255,200,100,0.2)',
+                  borderRadius: isModern ? 8 : 3,
                   padding: '10px 16px',
                   display: 'flex', alignItems: 'center', gap: 10,
                 }}>
-                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: 'rgba(255,230,180,0.95)', textTransform: 'capitalize' }}>{t.topic}</span>
+                  <span style={{ fontFamily: isModern ? "'Inter', sans-serif" : "'Cormorant Garamond', serif", fontSize: isModern ? 14 : 15, color: isModern ? '#1A1A1A' : 'rgba(255,230,180,0.95)', textTransform: 'capitalize' }}>{t.topic}</span>
                   <button
                     onClick={() => {
                       setInput(`Tell me more about ${t.topic}`)
                       setTimeout(() => pastorRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
                     }}
-                    style={{ fontFamily: 'var(--font-ui)', fontSize: 8, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#FFD060', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    style={{ fontFamily: 'var(--font-ui)', fontSize: isModern ? 11 : 8, letterSpacing: isModern ? '0' : '1.5px', textTransform: isModern ? 'none' : 'uppercase', color: isModern ? '#2563EB' : '#FFD060', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: isModern ? 500 : 400 }}
                   >
                     Go Deeper &rarr;
                   </button>
@@ -411,18 +419,18 @@ function StudyPageInner() {
           )}
         </section>
 
-        {/* Divider before Pastor */}
-        <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(200,160,40,0.2), transparent)', marginBottom: '2.5rem' }} />
+        {/* Divider before Pastor — Traditional only */}
+        {!isModern && <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(200,160,40,0.2), transparent)', marginBottom: '2.5rem' }} />}
 
         {/* ── 4. THE PASTOR ── */}
-        <section ref={pastorRef} id="pastor" style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(15,6,2,0.6)', border: '1px solid rgba(255,200,100,0.15)', borderRadius: 4 }}>
+        <section ref={pastorRef} id="pastor" style={{ marginBottom: '2rem', padding: '1.5rem', background: isModern ? '#FFFFFF' : 'rgba(15,6,2,0.6)', border: isModern ? '1px solid #ECEAE6' : '1px solid rgba(255,200,100,0.15)', borderRadius: isModern ? 10 : 4 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1.25rem' }}>
-            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(255,208,96,0.8)' }}>The Pastor</p>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: isModern ? 13 : 9, fontWeight: isModern ? 700 : 400, letterSpacing: isModern ? '0' : '3px', textTransform: isModern ? 'none' : 'uppercase', color: isModern ? '#1A1A1A' : 'rgba(255,208,96,0.8)' }}>The Pastor</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {isAdmin(userId) && (
                 <>
-                  <button onClick={startNewChat} style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(255,208,96,0.7)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '1px' }}>+ New</button>
-                  <button onClick={() => setShowSessions(!showSessions)} style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(255,208,96,0.7)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '1px', textDecoration: 'underline', textDecorationColor: 'rgba(255,208,96,0.3)', textUnderlineOffset: '2px' }}>Past conversations</button>
+                  <button onClick={startNewChat} style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: isModern ? '#2563EB' : 'rgba(255,208,96,0.7)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '1px' }}>+ New</button>
+                  <button onClick={() => setShowSessions(!showSessions)} style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: isModern ? '#2563EB' : 'rgba(255,208,96,0.7)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '1px', textDecoration: 'underline', textDecorationColor: isModern ? 'rgba(37,99,235,0.3)' : 'rgba(255,208,96,0.3)', textUnderlineOffset: '2px' }}>Past conversations</button>
                 </>
               )}
               {showCredits && (
@@ -433,9 +441,9 @@ function StudyPageInner() {
 
           {/* Past sessions drawer */}
           {showSessions && isAdmin(userId) && (
-            <div style={{ borderLeft: '2px solid rgba(255,200,100,0.2)', paddingLeft: '1rem', marginBottom: '1.25rem', maxHeight: 200, overflowY: 'auto' }}>
+            <div style={{ borderLeft: isModern ? 'none' : '2px solid rgba(255,200,100,0.2)', paddingLeft: isModern ? 0 : '1rem', marginBottom: '1.25rem', maxHeight: 200, overflowY: 'auto' }}>
               {pastSessions.length === 0 ? (
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'rgba(255,208,96,0.5)' }}>No past sessions.</p>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: isModern ? '#888' : 'rgba(255,208,96,0.5)' }}>No past sessions.</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {pastSessions.map(s => (
@@ -443,8 +451,8 @@ function StudyPageInner() {
                       onMouseEnter={(e) => { e.currentTarget.style.opacity = '1' }}
                       onMouseLeave={(e) => { if (sessionId !== s.id) e.currentTarget.style.opacity = '0.5' }}
                     >
-                      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: 'rgba(255,230,180,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>{s.title}</span>
-                      <span style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(255,208,96,0.5)', whiteSpace: 'nowrap' }}>{new Date(s.updatedAt).toLocaleDateString()}</span>
+                      <span style={{ fontFamily: isModern ? "'Inter', sans-serif" : "'Cormorant Garamond', serif", fontSize: isModern ? 13 : 14, color: isModern ? '#1A1A1A' : 'rgba(255,230,180,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>{s.title}</span>
+                      <span style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: isModern ? '#888' : 'rgba(255,208,96,0.5)', whiteSpace: 'nowrap' }}>{new Date(s.updatedAt).toLocaleDateString()}</span>
                     </button>
                   ))}
                 </div>
@@ -456,12 +464,12 @@ function StudyPageInner() {
           <div ref={scrollRef} style={{ maxHeight: 600, overflowY: 'auto', paddingBottom: '1rem' }}>
             {messages.length === 0 ? (
               <div style={{ padding: '2.5rem 0', textAlign: 'center' }}>
-                <div style={{ color: 'rgba(255,208,96,0.8)' }}><OilLampIcon className="w-16 h-16 mx-auto mb-5" /></div>
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, color: '#FFFFFF', lineHeight: 1.6, textShadow: '0 1px 8px rgba(0,0,0,0.3)' }}>
+                {!isModern && <div style={{ color: 'rgba(255,208,96,0.8)' }}><OilLampIcon className="w-16 h-16 mx-auto mb-5" /></div>}
+                <p style={{ fontFamily: isModern ? "'Inter', sans-serif" : "'Cormorant Garamond', serif", fontSize: isModern ? 18 : 24, color: isModern ? '#1A1A1A' : '#FFFFFF', lineHeight: 1.6, textShadow: isModern ? 'none' : '0 1px 8px rgba(0,0,0,0.3)' }}>
                   {getGreeting(firstName)}
                 </p>
                 {memoryEnabled && lastTopic && (
-                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, fontStyle: 'italic', color: 'rgba(255,208,96,0.7)', marginTop: 12 }}>
+                  <p style={{ fontFamily: isModern ? "'Inter', sans-serif" : "'Cormorant Garamond', serif", fontSize: isModern ? 13 : 15, fontStyle: 'italic', color: isModern ? '#888' : 'rgba(255,208,96,0.7)', marginTop: 12 }}>
                     Last time we were in <em>&ldquo;{lastTopic.slice(0, 60)}&rdquo;</em>.
                   </p>
                 )}
@@ -472,18 +480,18 @@ function StudyPageInner() {
                   <div key={i}>
                     {msg.role === 'user' ? (
                       <div style={{ marginBottom: 20, marginTop: i > 0 ? 20 : 0 }}>
-                        <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,208,96,0.6)', marginBottom: 4 }}>{firstName}</p>
-                        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: 'rgba(255,230,180,0.95)', lineHeight: 1.7 }}>{msg.content}</p>
+                        <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: isModern ? '#888' : 'rgba(255,208,96,0.6)', marginBottom: 4 }}>{firstName}</p>
+                        <p style={{ fontFamily: isModern ? "'Inter', sans-serif" : "'Cormorant Garamond', serif", fontSize: isModern ? 15 : 17, color: isModern ? '#1A1A1A' : 'rgba(255,230,180,0.95)', lineHeight: 1.7 }}>{msg.content}</p>
                       </div>
                     ) : (
-                      <div style={{ marginBottom: 20, paddingLeft: '1rem', borderLeft: '2px solid rgba(255,200,100,0.3)' }}>
-                        <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,208,96,0.85)', marginBottom: 6 }}>Pastor</p>
+                      <div style={{ marginBottom: 20, paddingLeft: '1rem', borderLeft: isModern ? '2px solid #ECEAE6' : '2px solid rgba(255,200,100,0.3)' }}>
+                        <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: isModern ? '#0F3460' : 'rgba(255,208,96,0.85)', marginBottom: 6 }}>Pastor</p>
                         {msg.routedToQueue && (
                           <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 13, color: 'rgba(255,208,96,0.5)', fontStyle: 'italic', marginBottom: 8 }}>
                             This question has been routed to pastoral review. Below is a preliminary response.
                           </p>
                         )}
-                        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, color: 'rgba(255,230,180,0.95)', lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>
+                        <div style={{ fontFamily: isModern ? "'Inter', sans-serif" : "'Cormorant Garamond', serif", fontSize: isModern ? 15 : 17, color: isModern ? '#1A1A1A' : 'rgba(255,230,180,0.95)', lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>
                           {msg.content}
                           {loading && i === messages.length - 1 && (
                             <span className="inline-block w-1.5 h-5 animate-pulse ml-0.5 align-text-bottom" style={{ borderRadius: 1, background: 'rgba(255,208,96,0.6)' }} />
@@ -492,7 +500,7 @@ function StudyPageInner() {
                         {msg.references && msg.references.length > 0 && (
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
                             {msg.references.map((ref, j) => (
-                              <span key={j} style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(255,208,96,0.65)', letterSpacing: '0.5px' }}>{ref}</span>
+                              <span key={j} style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: isModern ? '#0F3460' : 'rgba(255,208,96,0.65)', letterSpacing: '0.5px' }}>{ref}</span>
                             ))}
                           </div>
                         )}
@@ -526,20 +534,20 @@ function StudyPageInner() {
                 style={{
                   minHeight: 36,
                   maxHeight: 100,
-                  background: 'transparent',
-                  color: 'rgba(255,230,180,0.95)',
-                  border: 'none',
-                  borderBottom: '1px solid rgba(255,200,100,0.3)',
-                  borderRadius: 0,
-                  padding: '8px 0',
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: 17,
+                  background: isModern ? '#F8F9FA' : 'transparent',
+                  color: isModern ? '#1A1A1A' : 'rgba(255,230,180,0.95)',
+                  border: isModern ? '1px solid #ECEAE6' : 'none',
+                  borderBottom: isModern ? '1px solid #ECEAE6' : '1px solid rgba(255,200,100,0.3)',
+                  borderRadius: isModern ? 8 : 0,
+                  padding: isModern ? '10px 12px' : '8px 0',
+                  fontFamily: isModern ? "'Inter', sans-serif" : "'Cormorant Garamond', serif",
+                  fontSize: isModern ? 15 : 17,
                   outline: 'none',
-                  caretColor: '#FFD060',
+                  caretColor: isModern ? '#2563EB' : '#FFD060',
                 }}
                 onInput={(e) => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 100) + 'px' }}
-                onFocus={(e) => { e.currentTarget.style.borderBottomColor = 'rgba(255,208,96,0.5)' }}
-                onBlur={(e) => { e.currentTarget.style.borderBottomColor = 'rgba(200,160,40,0.25)' }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = isModern ? '#2563EB' : 'rgba(255,208,96,0.5)' }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = isModern ? '#ECEAE6' : 'rgba(200,160,40,0.25)' }}
               />
             </div>
             <button
@@ -547,16 +555,17 @@ function StudyPageInner() {
               disabled={!input.trim() || loading}
               className="shrink-0 disabled:opacity-30 transition-opacity"
               style={{
-                padding: '6px 0',
-                background: 'none',
+                padding: isModern ? '8px 16px' : '6px 0',
+                background: isModern ? '#2563EB' : 'none',
                 border: 'none',
+                borderRadius: isModern ? 8 : 0,
                 fontFamily: 'var(--font-ui)',
-                fontSize: 10,
-                letterSpacing: '3px',
-                textTransform: 'uppercase',
-                color: '#FFD060',
+                fontSize: isModern ? 13 : 10,
+                letterSpacing: isModern ? '0' : '3px',
+                textTransform: isModern ? 'none' : 'uppercase',
+                color: isModern ? '#FFFFFF' : '#FFD060',
                 cursor: 'pointer',
-                fontWeight: 500,
+                fontWeight: isModern ? 600 : 500,
               }}
             >
               {loading ? '...' : 'Ask'}
@@ -566,8 +575,8 @@ function StudyPageInner() {
 
         {/* Footer inscription */}
         <div style={{ textAlign: 'center', marginTop: '3rem', paddingTop: '1.5rem' }}>
-          <div style={{ width: 40, height: 1, background: 'linear-gradient(to right, transparent, rgba(200,160,40,0.25), transparent)', margin: '0 auto 1rem' }} />
-          <p style={{ fontSize: 10, color: 'rgba(200,160,40,0.25)', fontFamily: 'var(--font-ui)', letterSpacing: '3px' }}>
+          {!isModern && <div style={{ width: 40, height: 1, background: 'linear-gradient(to right, transparent, rgba(200,160,40,0.25), transparent)', margin: '0 auto 1rem' }} />}
+          <p style={{ fontSize: 10, color: isModern ? '#CCCCCC' : 'rgba(200,160,40,0.25)', fontFamily: 'var(--font-ui)', letterSpacing: '3px' }}>
             LOGOS BY KAI&apos;ROS &middot; YOUR STUDY. HIS WORD.
           </p>
         </div>
