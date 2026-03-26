@@ -5,14 +5,15 @@
 @tailwind utilities;
 
 body {
-  background-color: #6B3515;
+  background-color: var(--bg-primary);
   background-image: var(--leather-texture);
   background-attachment: fixed;
   color: var(--text-primary);
   font-family: var(--font-ui);
 }
 
-body::before {
+/* Leather wear overlay — Classic theme only */
+[data-theme="classic"] body::before {
   content: '';
   position: fixed;
   inset: 0;
@@ -42,6 +43,11 @@ body::before {
     linear-gradient(88deg, transparent 0%, transparent 74%, rgba(0,0,0,0.06) 74.5%, rgba(0,0,0,0.06) 75%, transparent 75.5%, transparent 100%),
     /* Fine horizontal stress lines across the grain */
     repeating-linear-gradient(0deg, transparent 0px, transparent 18px, rgba(0,0,0,0.025) 18px, rgba(0,0,0,0.025) 19px);
+}
+
+/* Modern theme — clean background, no leather texture overlay */
+[data-theme="modern"] body::before {
+  display: none;
 }
 
 @layer utilities {
