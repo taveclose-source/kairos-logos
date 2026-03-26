@@ -31,7 +31,7 @@ export default async function AdminPage() {
   ])
 
   return (
-    <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <main className="admin-panel max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <h1 className="text-3xl font-bold mb-1">Admin Panel</h1>
       <p className="text-gray-500 text-sm mb-6">Logos by Kai&rsquo;Ros — Pastor Tave only</p>
       <AdminTabs

@@ -58,3 +58,24 @@ body {
 
 [data-theme="classic"] .modern-only { display: none !important; }
 [data-theme="modern"] .classic-only { display: none !important; }
+
+/* Classic theme — Admin panel needs a light surface so Tailwind gray utilities remain legible */
+[data-theme="classic"] .admin-panel {
+  background: #F8F2E2;
+  color: #1A0A04;
+  border-radius: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme="classic"] .admin-panel select,
+[data-theme="classic"] .admin-panel input[type="text"],
+[data-theme="classic"] .admin-panel input[type="number"],
+[data-theme="classic"] .admin-panel textarea {
+  color: #1A0A04;
+}
+
+[data-theme="classic"] .admin-panel select option {
+  color: #1A0A04;
+  background: #FFFFFF;
+}
