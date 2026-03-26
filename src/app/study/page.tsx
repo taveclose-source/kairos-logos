@@ -391,7 +391,7 @@ function StudyPageInner() {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,6,2,0.75)', pointerEvents: 'none', zIndex: -1 }} />
 
     <main style={{ position: 'relative', minHeight: 'calc(100vh - 56px)' }} className="px-4 sm:px-6 py-10 sm:py-16">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-5xl mx-auto">
 
         {/* ── NAMEPLATE ── */}
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -419,6 +419,12 @@ function StudyPageInner() {
           {/* Ornamental rule */}
           <div style={{ width: 60, height: 1, background: 'linear-gradient(to right, transparent, rgba(200,160,40,0.4), transparent)', margin: '1.25rem auto 0' }} />
         </div>
+
+        {/* ── Two-column layout on desktop, stacked on mobile ── */}
+        <div className="lg:flex lg:gap-8 lg:items-start">
+
+        {/* ── LEFT COLUMN: Reading + Topics ── */}
+        <div className="lg:w-[60%]">
 
         {/* ── 1. CONTINUE READING — bookmark style ── */}
         <section style={{ marginBottom: '2.5rem' }}>
@@ -513,11 +519,14 @@ function StudyPageInner() {
           )}
         </section>
 
-        {/* Divider before Pastor */}
-        <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(200,160,40,0.2), transparent)', marginBottom: '2.5rem' }} />
+        </div>{/* end LEFT COLUMN */}
 
-        {/* ── 4. THE PASTOR ── */}
-        <section ref={pastorRef} id="pastor" style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(15,6,2,0.6)', border: '1px solid rgba(255,200,100,0.15)', borderRadius: 4 }}>
+        {/* Divider before Pastor — mobile only */}
+        <div className="lg:hidden" style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(200,160,40,0.2), transparent)', marginBottom: '2.5rem' }} />
+
+        {/* ── RIGHT COLUMN: The Pastor ── */}
+        <div className="lg:w-[40%] lg:sticky lg:top-4" style={{ alignSelf: 'flex-start' }}>
+        <section ref={pastorRef} id="pastor" className="pastor-section-desktop" style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(15,6,2,0.6)', border: '1px solid rgba(255,200,100,0.15)', borderRadius: 4 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1.25rem' }}>
             <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(255,208,96,0.8)' }}>The Pastor</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -579,7 +588,7 @@ function StudyPageInner() {
           )}
 
           {/* Conversation area */}
-          <div ref={scrollRef} onScroll={handleChatScroll} style={{ maxHeight: 600, overflowY: 'auto', paddingBottom: '1rem', position: 'relative' }}>
+          <div ref={scrollRef} onScroll={handleChatScroll} className="pastor-chat-scroll lg:flex-1 lg:min-h-0" style={{ maxHeight: 600, overflowY: 'auto', paddingBottom: '1rem', position: 'relative' }}>
             {messages.length === 0 ? (
               <div style={{ padding: '2.5rem 0', textAlign: 'center' }}>
                 <div style={{ color: 'rgba(255,208,96,0.8)' }}><OilLampIcon className="w-16 h-16 mx-auto mb-5" /></div>
@@ -715,6 +724,9 @@ function StudyPageInner() {
             </button>
           </form>
         </section>
+        </div>{/* end RIGHT COLUMN */}
+
+        </div>{/* end two-column wrapper */}
 
         {/* Footer inscription */}
         <div style={{ textAlign: 'center', marginTop: '3rem', paddingTop: '1.5rem' }}>

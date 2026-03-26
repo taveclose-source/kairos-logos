@@ -59,6 +59,18 @@ body {
 [data-theme="classic"] .modern-only { display: none !important; }
 [data-theme="modern"] .classic-only { display: none !important; }
 
+/* Desktop: pastor section fills viewport height as sticky sidebar */
+@media (min-width: 1024px) {
+  .pastor-chat-scroll {
+    max-height: none !important;
+  }
+  .pastor-section-desktop {
+    max-height: calc(100vh - 2rem);
+    display: flex;
+    flex-direction: column;
+  }
+}
+
 /* Classic theme — form controls in admin panel need dark text on their native light backgrounds */
 [data-theme="classic"] .admin-panel select,
 [data-theme="classic"] .admin-panel input[type="text"],
