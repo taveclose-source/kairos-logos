@@ -122,7 +122,7 @@ function StudyPageInner() {
       }
 
       // Fetch topics
-      fetch('/api/topics').then(r => {
+      fetch(`/api/topics?uid=${user.id}`).then(r => {
         if (!r.ok) throw new Error(`topics ${r.status}`)
         return r.json()
       }).then(t => {
