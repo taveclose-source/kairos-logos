@@ -73,6 +73,12 @@ body {
 
 /* ── Classic theme — Admin panel on leather background ── */
 
+/* Lift admin content above the leather wear overlay (body::before z-index:0) */
+[data-theme="classic"] .admin-panel {
+  position: relative;
+  z-index: 1;
+}
+
 /* Form controls: dark text on native white/light backgrounds */
 [data-theme="classic"] .admin-panel select,
 [data-theme="classic"] .admin-panel input[type="text"],

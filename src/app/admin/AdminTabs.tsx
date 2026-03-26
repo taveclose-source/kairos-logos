@@ -109,16 +109,20 @@ export default function AdminTabs({
   useEffect(() => {
     fetch('/api/admin/feedback').then(r => r.json()).then(d => { if (Array.isArray(d)) setFeedback(d) }).catch(() => {})
     fetch('/api/admin/feedback-submissions').then(r => r.json()).then(d => { if (Array.isArray(d)) setSubmissions(d) }).catch(() => {})
-    // Fetch credits for all users
+    // Fetch credits for all users in parallel
     async function loadCredits() {
-      for (const u of initialUsers) {
-        fetch(`/api/admin/users/${u.id}/credits`)
-          .then(r => r.json())
-          .then(d => {
-            setUserCredits(prev => ({ ...prev, [u.id]: d.credits_remaining ?? 0 }))
-          })
-          .catch(() => {})
+      const results = await Promise.allSettled(
+        initialUsers.map(u =>
+          fetch(`/api/admin/users/${u.id}/credits`)
+            .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json() })
+            .then(d => ({ userId: u.id, credits: d.credits_remaining ?? 0 }))
+        )
+      )
+      const creditsMap: Record<string, number> = {}
+      for (const r of results) {
+        if (r.status === 'fulfilled') creditsMap[r.value.userId] = r.value.credits
       }
+      setUserCredits(creditsMap)
     }
     loadCredits()
   }, [initialUsers])
