@@ -159,11 +159,55 @@ export async function POST(req: NextRequest) {
     }
     const model = (userIsAdmin || userTierLocal !== 'free') ? AGENT_MODEL : 'claude-haiku-4-5-20251001'
 
+    // Creation Witness trigger detection — check if the message touches creation/design/origins
+    let creationWitnessContext = ''
+    const creationTriggers = /\b(creat|design|origin|evolut|genesis|fearfully|wonderfully|made|formed|heaven.*declare|firmament|beginning.*God|flood|dinosaur|behemoth|leviathan|dragon|age.*earth|young.*earth|big.*bang|dna|human.*eye|consciousness|irreducible|fossil|cambrian)\b/i
+    if (creationTriggers.test(lastUserMessage)) {
+      try {
+        // Extract topic hints from the message
+        const topicMap: Record<string, string> = {
+          eye: 'human_eye', dna: 'dna_complexity', brain: 'human_brain', body: 'human_body',
+          flood: 'noahs_flood', dinosaur: 'dinosaurs_bible', behemoth: 'behemoth_leviathan',
+          leviathan: 'behemoth_leviathan', dragon: 'dragons', fossil: 'flood_geology',
+          canyon: 'grand_canyon', cambrian: 'cambrian_explosion', evolut: 'evolution_fraud',
+          mutation: 'mutation_limits', genesis: 'genesis_creation', age: 'age_of_earth',
+          bang: 'big_bang_problems', star: 'starlight', moon: 'moon_recession',
+          consciousness: 'human_brain', irreducible: 'irreducible_complexity',
+          clot: 'blood_clotting', immune: 'immune_system', adam: 'adam_and_eve',
+          eden: 'garden_of_eden', exodus: 'exodus_evidence', archaeol: 'biblical_archaeology',
+        }
+        const hints: string[] = []
+        const lower = lastUserMessage.toLowerCase()
+        for (const [key, tag] of Object.entries(topicMap)) {
+          if (lower.includes(key)) hints.push(tag)
+        }
+
+        const cwRes = await fetch(new URL('/api/creation-witness/lookup', process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            verse_text: lastUserMessage,
+            question: lastUserMessage,
+            topic_hints: hints.length > 0 ? hints : ['genesis_creation', 'human_body'],
+          }),
+        })
+        if (cwRes.ok) {
+          const cwData = await cwRes.json()
+          if (cwData.results && cwData.results.length > 0) {
+            const excerpts = cwData.results.slice(0, 3).map((r: { source: string; title: string; excerpt: string }) =>
+              `[${r.source}] ${r.title}: ${r.excerpt}`
+            ).join('\n\n')
+            creationWitnessContext = `\n\nCREATION WITNESS CONTENT (use with [Creation Witness] badge and verbal flag "Creation itself bears witness —"):\n${excerpts}`
+          }
+        }
+      } catch { /* creation witness lookup failed — proceed without it */ }
+    }
+
     // Stream from Claude API
     const stream = anthropic.messages.stream({
       model,
       max_tokens: 2048,
-      system: AGENT_SYSTEM_PROMPT + memoryContext,
+      system: AGENT_SYSTEM_PROMPT + memoryContext + creationWitnessContext,
       messages,
     })
 

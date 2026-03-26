@@ -125,8 +125,8 @@ export default function PastorResponsePanel({ verse, context, onClose, onGoDeepe
 
   // Render response text with inline source badge highlighting
   const renderResponse = useCallback((text: string) => {
-    // Split on source tags like [Strong's], [Historical Context], etc.
-    const tagPattern = /(\[(?:Strong's|Gesenius|Hitchcock's|Smith's|Nave's|Historical Context)\])/gi
+    // Split on source tags like [Strong's], [Historical Context], [Creation Witness], etc.
+    const tagPattern = /(\[(?:Strong's|Gesenius|Hitchcock's|Smith's|Nave's|Historical Context|Creation Witness)\])/gi
     const parts = text.split(tagPattern)
 
     return parts.map((part, i) => {
@@ -134,25 +134,38 @@ export default function PastorResponsePanel({ verse, context, onClose, onGoDeepe
       if (tagPattern.test(part)) {
         const label = part.replace(/[\[\]]/g, '')
         const isHistorical = label.toLowerCase() === 'historical context'
+        const isCreation = label.toLowerCase() === 'creation witness'
+        const badgeColor = isCreation ? '#C8960A' : isHistorical ? '#8B4513' : accentColor
+        const badgeBg = isCreation ? 'rgba(200,150,10,0.08)' : isHistorical ? 'rgba(139,69,19,0.08)' : 'rgba(139,107,20,0.08)'
+        const badgeBorder = isCreation ? 'rgba(200,150,10,0.3)' : isHistorical ? 'rgba(139,69,19,0.25)' : 'rgba(139,107,20,0.2)'
         return (
           <span
             key={i}
             style={{
-              display: 'inline-block',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: isCreation ? 3 : 0,
               fontFamily: 'var(--font-ui)',
               fontSize: 8,
               letterSpacing: '1.5px',
               textTransform: 'uppercase',
-              color: isHistorical ? '#8B4513' : accentColor,
-              background: isHistorical ? 'rgba(139,69,19,0.08)' : 'rgba(139,107,20,0.08)',
-              border: `1px solid ${isHistorical ? 'rgba(139,69,19,0.25)' : 'rgba(139,107,20,0.2)'}`,
+              color: badgeColor,
+              background: badgeBg,
+              border: `1px solid ${badgeBorder}`,
               borderRadius: 3,
               padding: '1px 5px',
               marginLeft: 2,
               marginRight: 2,
               verticalAlign: 'middle',
+              fontWeight: isCreation ? 600 : 400,
             }}
           >
+            {isCreation && (
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#C8960A" strokeWidth="1.5" strokeLinecap="round">
+                <line x1="8" y1="2" x2="8" y2="14" />
+                <line x1="3" y1="6" x2="13" y2="6" />
+              </svg>
+            )}
             {label}
           </span>
         )
@@ -168,18 +181,19 @@ export default function PastorResponsePanel({ verse, context, onClose, onGoDeepe
       const trimmed = para.trim()
       if (!trimmed) return null
 
-      // Detect Historical Context paragraphs
+      // Detect Historical Context and Creation Witness paragraphs
       const isHistorical = /^\[Historical Context\]|^Historically speaking/i.test(trimmed)
+      const isCreation = /^\[Creation Witness\]|^Creation itself bears witness/i.test(trimmed)
 
       return (
         <div
           key={i}
           style={{
             marginBottom: '0.85rem',
-            padding: isHistorical ? '10px 12px' : 0,
-            background: isHistorical ? 'rgba(139,69,19,0.04)' : 'transparent',
-            borderLeft: isHistorical ? '3px solid rgba(139,69,19,0.3)' : 'none',
-            borderRadius: isHistorical ? '0 4px 4px 0' : 0,
+            padding: (isHistorical || isCreation) ? '10px 12px' : 0,
+            background: isCreation ? 'rgba(200,150,10,0.04)' : isHistorical ? 'rgba(139,69,19,0.04)' : 'transparent',
+            borderLeft: isCreation ? '3px solid rgba(200,150,10,0.3)' : isHistorical ? '3px solid rgba(139,69,19,0.3)' : 'none',
+            borderRadius: (isHistorical || isCreation) ? '0 4px 4px 0' : 0,
           }}
         >
           <p style={{ fontFamily: 'var(--font-reading)', fontSize: 15, color: textMain, lineHeight: 1.85, margin: 0 }}>
