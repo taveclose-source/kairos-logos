@@ -85,17 +85,29 @@ export async function POST(req: NextRequest) {
             }).eq('id', applicantId)
           }
         } else {
-          const tier = session.metadata?.tier ?? 'scholar'
+          const VALID_TIERS = ['free', 'scholar', 'ministry', 'missions']
+          const rawTier = session.metadata?.tier
           const subscriptionId = session.subscription as string | null
           const expiresAt = subscriptionId ? await getSubscriptionPeriodEnd(subscriptionId) : null
 
-          await db.from('users').update({
-            subscription_tier: tier,
-            subscription_status: 'active',
-            stripe_customer_id: session.customer as string,
-            stripe_subscription_id: subscriptionId,
-            subscription_expires_at: expiresAt,
-          }).eq('id', userId)
+          if (!rawTier || !VALID_TIERS.includes(rawTier)) {
+            console.warn(`[Stripe webhook] checkout.session.completed missing or invalid metadata.tier: "${rawTier}" for user ${userId}. Skipping tier update.`)
+            // Still update Stripe IDs and status, but do NOT overwrite tier
+            await db.from('users').update({
+              subscription_status: 'active',
+              stripe_customer_id: session.customer as string,
+              stripe_subscription_id: subscriptionId,
+              subscription_expires_at: expiresAt,
+            }).eq('id', userId)
+          } else {
+            await db.from('users').update({
+              subscription_tier: rawTier,
+              subscription_status: 'active',
+              stripe_customer_id: session.customer as string,
+              stripe_subscription_id: subscriptionId,
+              subscription_expires_at: expiresAt,
+            }).eq('id', userId)
+          }
         }
 
         // Memory credit purchase
