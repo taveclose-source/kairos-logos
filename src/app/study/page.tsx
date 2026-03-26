@@ -127,8 +127,7 @@ function StudyPageInner() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10)
-        .then(({ data: topicData, error: topicErr }) => {
-          console.log('[Study] topics query:', { userId: user.id, data: topicData, error: topicErr })
+        .then(({ data: topicData }) => {
           if (topicData && Array.isArray(topicData) && topicData.length > 0) {
             setTopics(topicData)
           }
