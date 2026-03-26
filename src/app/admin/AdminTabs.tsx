@@ -341,7 +341,7 @@ export default function AdminTabs({
                     <td className="py-2.5 pr-3">
                       <div className="flex items-center gap-1">
                         <span className="text-xs font-medium text-gray-700 min-w-[3rem]">
-                          {u.id === ADMIN_UUID ? '∞' : (userCredits[u.id] ?? '—')}
+                          {u.id === ADMIN_UUID ? '∞' : (userCredits[u.id] != null ? Math.round(userCredits[u.id]) : '—')}
                         </span>
                         {u.id !== ADMIN_UUID && (
                           <>

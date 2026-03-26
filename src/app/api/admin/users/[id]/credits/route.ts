@@ -20,7 +20,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (!await verifyAdmin()) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   const { id } = await params
   const { data } = await db().from('memory_credits').select('credits_remaining').eq('user_id', id).maybeSingle()
-  return NextResponse.json({ credits_remaining: data?.credits_remaining ?? 0 })
+  // PostgreSQL numeric type returns as string — parse to number for JSON response
+  return NextResponse.json({ credits_remaining: Number(data?.credits_remaining ?? 0) })
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -32,9 +33,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   let newBalance: number
   if (typeof body.add_credits === 'number') {
     const { data: existing } = await db().from('memory_credits').select('credits_remaining').eq('user_id', id).maybeSingle()
-    newBalance = (existing?.credits_remaining ?? 0) + body.add_credits
+    // PostgreSQL numeric type returns as string — must parse before arithmetic
+    newBalance = Number(existing?.credits_remaining ?? 0) + body.add_credits
   } else {
-    newBalance = body.credits
+    newBalance = Number(body.credits)
   }
 
   const { error } = await db().from('memory_credits').upsert({
