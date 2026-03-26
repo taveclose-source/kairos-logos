@@ -35,5 +35,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     .eq('id', id).select('id, subscription_tier').single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Sync memory credits to tier allocation: free=0, scholar=1000, ministry=2100, missions=1000
+  const TIER_CREDITS: Record<string, number> = { free: 0, scholar: 1000, ministry: 2100, missions: 1000 }
+  const allocation = TIER_CREDITS[tier] ?? 0
+  await db().from('memory_credits').upsert({
+    user_id: id,
+    credits_remaining: allocation,
+  }, { onConflict: 'user_id' })
+
   return NextResponse.json(data)
 }
