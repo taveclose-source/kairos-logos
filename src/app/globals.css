@@ -71,15 +71,42 @@ body {
   }
 }
 
-/* Classic theme — form controls in admin panel need dark text on their native light backgrounds */
+/* ── Classic theme — Admin panel on leather background ── */
+
+/* Form controls: dark text on native white/light backgrounds */
 [data-theme="classic"] .admin-panel select,
 [data-theme="classic"] .admin-panel input[type="text"],
 [data-theme="classic"] .admin-panel input[type="number"],
 [data-theme="classic"] .admin-panel textarea {
   color: #1A0A04;
 }
-
 [data-theme="classic"] .admin-panel select option {
   color: #1A0A04;
   background: #FFFFFF;
 }
+
+/* All Tailwind gray text utilities → cream/gold for leather readability */
+[data-theme="classic"] .admin-panel .text-gray-900 { color: #F5E6C8 !important; }
+[data-theme="classic"] .admin-panel .text-gray-700 { color: #E8D5B0 !important; }
+[data-theme="classic"] .admin-panel .text-gray-600 { color: #D4C098 !important; }
+[data-theme="classic"] .admin-panel .text-gray-500 { color: #C9A84C !important; }
+[data-theme="classic"] .admin-panel .text-gray-400 { color: rgba(201,168,76,0.65) !important; }
+
+/* Borders: visible gold on leather */
+[data-theme="classic"] .admin-panel > .border-b { border-color: rgba(201,168,76,0.25) !important; }
+[data-theme="classic"] .admin-panel .divide-gray-50 > * + * { border-color: rgba(201,168,76,0.12) !important; }
+
+/* Restore dark text INSIDE white/light card backgrounds (higher specificity) */
+[data-theme="classic"] .admin-panel .bg-white .text-gray-900 { color: #111827 !important; }
+[data-theme="classic"] .admin-panel .bg-white .text-gray-700 { color: #374151 !important; }
+[data-theme="classic"] .admin-panel .bg-white .text-gray-600 { color: #4B5563 !important; }
+[data-theme="classic"] .admin-panel .bg-white .text-gray-500 { color: #6B7280 !important; }
+[data-theme="classic"] .admin-panel .bg-white .text-gray-400 { color: #9CA3AF !important; }
+
+/* Also restore inside colored-bg cards (Revenue stats, badges) */
+[data-theme="classic"] .admin-panel [class*="bg-blue-50"] .text-gray-900,
+[data-theme="classic"] .admin-panel [class*="bg-emerald-50"] .text-gray-900,
+[data-theme="classic"] .admin-panel [class*="bg-amber-50"] .text-gray-900 { color: #111827 !important; }
+[data-theme="classic"] .admin-panel [class*="bg-blue-50"] .text-gray-400,
+[data-theme="classic"] .admin-panel [class*="bg-emerald-50"] .text-gray-400,
+[data-theme="classic"] .admin-panel [class*="bg-amber-50"] .text-gray-400 { color: #9CA3AF !important; }
