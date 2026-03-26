@@ -31,15 +31,26 @@ export async function GET() {
   const tier = userRes.data?.subscription_tier ?? 'free'
   const isScholarPlus = ['scholar', 'ministry', 'missions'].includes(tier)
 
-  // Reset free conversations if past reset date
+  // Auto-provision: Scholar+ user with no row or no free conversations yet
+  const nextReset = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString().slice(0, 10)
   let freeConvos = Number(credRes.data?.free_conversations ?? 0)
   const resetDate = credRes.data?.free_conversations_reset_date
-  if (isScholarPlus && resetDate && new Date(resetDate) <= new Date()) {
+
+  if (isScholarPlus && (!credRes.data || freeConvos === 0 && !resetDate)) {
+    // First-time provisioning — no row or never provisioned
     freeConvos = FREE_MONTHLY_CONVERSATIONS
     await supabase.from('memory_credits').upsert({
       user_id: userId,
       free_conversations: FREE_MONTHLY_CONVERSATIONS,
-      free_conversations_reset_date: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString().slice(0, 10),
+      free_conversations_reset_date: nextReset,
+    }, { onConflict: 'user_id' })
+  } else if (isScholarPlus && resetDate && new Date(resetDate) <= new Date()) {
+    // Monthly reset — past the reset date
+    freeConvos = FREE_MONTHLY_CONVERSATIONS
+    await supabase.from('memory_credits').upsert({
+      user_id: userId,
+      free_conversations: FREE_MONTHLY_CONVERSATIONS,
+      free_conversations_reset_date: nextReset,
     }, { onConflict: 'user_id' })
   }
 

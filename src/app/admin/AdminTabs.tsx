@@ -103,25 +103,25 @@ export default function AdminTabs({
     ai_triage: Array<{ summary: string; suggested_action: string; priority: string }> | null
   }>>([])
   const [submissionFilter, setSubmissionFilter] = useState('new')
-  const [userCredits, setUserCredits] = useState<Record<string, number>>({})
+  const [userCredits, setUserCredits] = useState<Record<string, { free: number; purchased: number }>>({})
   const [creditInputs, setCreditInputs] = useState<Record<string, string>>({})
 
   // Fetch feedback and user credits on mount
   useEffect(() => {
     fetch('/api/admin/feedback').then(r => r.json()).then(d => { if (Array.isArray(d)) setFeedback(d) }).catch(() => {})
     fetch('/api/admin/feedback-submissions').then(r => r.json()).then(d => { if (Array.isArray(d)) setSubmissions(d) }).catch(() => {})
-    // Fetch credits for all users in parallel
+    // Fetch conversation balances for all users in parallel
     async function loadCredits() {
       const results = await Promise.allSettled(
         initialUsers.map(u =>
           fetch(`/api/admin/users/${u.id}/credits`)
             .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json() })
-            .then(d => ({ userId: u.id, credits: d.credits_remaining ?? 0 }))
+            .then(d => ({ userId: u.id, free: d.free_conversations ?? 0, purchased: d.purchased_conversations ?? 0 }))
         )
       )
-      const creditsMap: Record<string, number> = {}
+      const creditsMap: Record<string, { free: number; purchased: number }> = {}
       for (const r of results) {
-        if (r.status === 'fulfilled') creditsMap[r.value.userId] = r.value.credits
+        if (r.status === 'fulfilled') creditsMap[r.value.userId] = { free: r.value.free, purchased: r.value.purchased }
       }
       setUserCredits(creditsMap)
     }
@@ -225,8 +225,12 @@ export default function AdminTabs({
       body: JSON.stringify({ add_credits: amount }),
     })
     if (res.ok) {
-      const d = await res.json()
-      setUserCredits(prev => ({ ...prev, [userId]: d.credits_remaining }))
+      // Re-fetch to get updated split balance
+      const balRes = await fetch(`/api/admin/users/${userId}/credits`)
+      if (balRes.ok) {
+        const d = await balRes.json()
+        setUserCredits(prev => ({ ...prev, [userId]: { free: d.free_conversations ?? 0, purchased: d.purchased_conversations ?? 0 } }))
+      }
       setCreditInputs(prev => ({ ...prev, [userId]: '' }))
     }
   }
@@ -241,8 +245,11 @@ export default function AdminTabs({
       body: JSON.stringify({ credits: allocation }),
     })
     if (res.ok) {
-      const d = await res.json()
-      setUserCredits(prev => ({ ...prev, [userId]: d.credits_remaining }))
+      const balRes = await fetch(`/api/admin/users/${userId}/credits`)
+      if (balRes.ok) {
+        const d = await balRes.json()
+        setUserCredits(prev => ({ ...prev, [userId]: { free: d.free_conversations ?? 0, purchased: d.purchased_conversations ?? 0 } }))
+      }
     }
   }
 
@@ -366,7 +373,7 @@ export default function AdminTabs({
                     <td className="py-2.5 pr-3">
                       <div className="flex items-center gap-1">
                         <span className="text-xs font-medium text-gray-700 min-w-[3rem]">
-                          {u.id === ADMIN_UUID ? '∞' : (userCredits[u.id] != null ? Math.round(userCredits[u.id]) : '—')}
+                          {u.id === ADMIN_UUID ? '∞' : (userCredits[u.id] != null ? `${userCredits[u.id].free}f + ${userCredits[u.id].purchased}p` : '—')}
                         </span>
                         {u.id !== ADMIN_UUID && (
                           <>

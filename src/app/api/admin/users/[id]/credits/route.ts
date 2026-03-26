@@ -19,9 +19,14 @@ async function verifyAdmin() {
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await verifyAdmin()) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   const { id } = await params
-  const { data } = await db().from('memory_credits').select('credits_remaining').eq('user_id', id).maybeSingle()
-  // PostgreSQL numeric type returns as string — parse to number for JSON response
-  return NextResponse.json({ credits_remaining: Number(data?.credits_remaining ?? 0) })
+  const supabase = db()
+  const [credRes, txnRes] = await Promise.all([
+    supabase.from('memory_credits').select('credits_remaining, free_conversations').eq('user_id', id).maybeSingle(),
+    supabase.from('memory_credit_transactions').select('remaining').eq('user_id', id).gt('remaining', 0).gte('expires_at', new Date().toISOString()),
+  ])
+  const free = Number(credRes.data?.free_conversations ?? 0)
+  const purchased = (txnRes.data ?? []).reduce((sum: number, t: { remaining: number }) => sum + Number(t.remaining), 0)
+  return NextResponse.json({ credits_remaining: free + purchased, free_conversations: free, purchased_conversations: purchased })
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
