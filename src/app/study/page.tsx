@@ -21,6 +21,8 @@ interface UserTopic {
   topic: string
   source_session_id: string | null
   created_at: string
+  mention_count: number
+  last_mentioned_at: string
 }
 
 interface PastSession {
@@ -427,18 +429,23 @@ function StudyPageInner() {
                   border: '1px solid rgba(255,200,100,0.2)',
                   borderRadius: 3,
                   padding: '10px 16px',
-                  display: 'flex', alignItems: 'center', gap: 10,
+                  display: 'flex', flexDirection: 'column', gap: 4,
                 }}>
-                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: 'rgba(255,230,180,0.95)', textTransform: 'capitalize' }}>{t.topic}</span>
-                  <button
-                    onClick={() => {
-                      setInput(`Tell me more about ${t.topic}`)
-                      setTimeout(() => pastorRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-                    }}
-                    style={{ fontFamily: 'var(--font-ui)', fontSize: 8, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#FFD060', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                  >
-                    Go Deeper &rarr;
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: 'rgba(255,230,180,0.95)', textTransform: 'capitalize' }}>{t.topic}</span>
+                    <button
+                      onClick={() => {
+                        setInput(`Tell me more about ${t.topic}`)
+                        setTimeout(() => pastorRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+                      }}
+                      style={{ fontFamily: 'var(--font-ui)', fontSize: 8, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#FFD060', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    >
+                      Go Deeper &rarr;
+                    </button>
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 8, color: 'rgba(255,208,96,0.4)', letterSpacing: '0.5px' }}>
+                    {t.mention_count} conversation{t.mention_count !== 1 ? 's' : ''}
+                  </span>
                 </div>
               ))}
             </div>

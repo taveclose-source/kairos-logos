@@ -54,13 +54,31 @@ export async function POST(req: NextRequest) {
 
     const topics: string[] = JSON.parse(match[0])
 
-    // Upsert topics — deduplicate by (user_id, topic)
+    // Upsert topics — increment mention_count on existing, create new with count 1
     for (const topic of topics) {
       if (typeof topic !== 'string' || topic.length < 2) continue
-      await supabase.from('user_topics').upsert(
-        { user_id: userId, topic: topic.toLowerCase(), source_session_id: session_id },
-        { onConflict: 'user_id,topic' }
-      )
+      const lower = topic.toLowerCase()
+      const { data: existing } = await supabase
+        .from('user_topics')
+        .select('id, mention_count')
+        .eq('user_id', userId)
+        .eq('topic', lower)
+        .maybeSingle()
+      if (existing) {
+        await supabase.from('user_topics').update({
+          mention_count: (existing.mention_count || 1) + 1,
+          last_mentioned_at: new Date().toISOString(),
+          source_session_id: session_id,
+        }).eq('id', existing.id)
+      } else {
+        await supabase.from('user_topics').insert({
+          user_id: userId,
+          topic: lower,
+          source_session_id: session_id,
+          mention_count: 1,
+          last_mentioned_at: new Date().toISOString(),
+        })
+      }
     }
 
     return NextResponse.json({ ok: true, topics })
