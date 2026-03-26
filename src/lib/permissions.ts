@@ -1,4 +1,4 @@
-export const ADMIN_USER_ID = process.env.NEXT_PUBLIC_ADMIN_USER_ID ?? ''
+export const ADMIN_USER_ID = process.env.NEXT_PUBLIC_ADMIN_USER_ID || '2f4cc459-6fdd-4f41-be4b-754770b28529'
 
 export function isAdmin(userId: string | null): boolean {
   return !!userId && userId === ADMIN_USER_ID
