@@ -37,9 +37,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Set data-theme on documentElement (html) so CSS var overrides
+  // apply to body and all descendants — not just children of a wrapper div
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
+
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
-      <div data-theme={theme}>{children}</div>
+      {children}
     </ThemeContext.Provider>
   )
 }
