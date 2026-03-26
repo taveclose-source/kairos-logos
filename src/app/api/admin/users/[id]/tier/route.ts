@@ -36,12 +36,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Sync memory credits to tier allocation: free=0, scholar=1000, ministry=2100, missions=1000
-  const TIER_CREDITS: Record<string, number> = { free: 0, scholar: 1000, ministry: 2100, missions: 1000 }
-  const allocation = TIER_CREDITS[tier] ?? 0
+  // Sync free monthly conversations to tier allocation
+  const TIER_CONVOS: Record<string, number> = { free: 0, scholar: 30, ministry: 60, missions: 30 }
+  const allocation = TIER_CONVOS[tier] ?? 0
+  const nextMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString().slice(0, 10)
   await db().from('memory_credits').upsert({
     user_id: id,
-    credits_remaining: allocation,
+    credits_remaining: 0,
+    free_conversations: allocation,
+    free_conversations_reset_date: nextMonth,
   }, { onConflict: 'user_id' })
 
   return NextResponse.json(data)

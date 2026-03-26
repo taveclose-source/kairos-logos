@@ -233,14 +233,44 @@ export async function POST(req: NextRequest) {
           )
           controller.close()
 
-          // Deduct memory credits if enabled — admin is exempt
-          if (memoryEnabled && userId && !userIsAdmin) {
+          // Deduct 1 conversation — free first, then FIFO purchased. Admin exempt.
+          if (userId && !userIsAdmin) {
             try {
-              const { calculateCreditsUsed } = await import('@/lib/memoryCredits')
-              const creditsUsed = calculateCreditsUsed(2500, fullAnswer.length / 4)
-              await serviceDb.from('memory_credits').update({
-                credits_remaining: Math.max(0, (await serviceDb.from('memory_credits').select('credits_remaining').eq('user_id', userId).single()).data?.credits_remaining - creditsUsed)
-              }).eq('user_id', userId)
+              // Try free conversations first
+              const { data: mc } = await serviceDb.from('memory_credits').select('free_conversations').eq('user_id', userId).maybeSingle()
+              const freeLeft = Number(mc?.free_conversations ?? 0)
+              if (freeLeft > 0) {
+                await serviceDb.from('memory_credits').update({
+                  free_conversations: freeLeft - 1,
+                }).eq('user_id', userId)
+              } else {
+                // Deduct from oldest purchased transaction (FIFO by expires_at)
+                const { data: txn } = await serviceDb.from('memory_credit_transactions')
+                  .select('id, remaining')
+                  .eq('user_id', userId)
+                  .gt('remaining', 0)
+                  .gte('expires_at', new Date().toISOString())
+                  .order('expires_at', { ascending: true })
+                  .limit(1)
+                  .maybeSingle()
+                if (txn) {
+                  await serviceDb.from('memory_credit_transactions').update({
+                    remaining: Number(txn.remaining) - 1,
+                  }).eq('id', txn.id)
+                }
+              }
+
+              // Update study streak
+              const today = new Date().toISOString().slice(0, 10)
+              const { data: user } = await serviceDb.from('users').select('last_study_date, study_streak').eq('id', userId).single()
+              if (user) {
+                const last = user.last_study_date
+                if (last !== today) {
+                  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+                  const newStreak = last === yesterday ? (user.study_streak ?? 0) + 1 : 1
+                  await serviceDb.from('users').update({ study_streak: newStreak, last_study_date: today }).eq('id', userId)
+                }
+              }
             } catch {}
           }
 

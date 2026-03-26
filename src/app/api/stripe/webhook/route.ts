@@ -110,16 +110,18 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Memory credit purchase
+        // Conversation purchase — create a transaction with 12-month expiry
         const priceId = session.metadata?.price_id
         if (priceId && MEMORY_CREDIT_BUNDLES[priceId] && session.metadata?.type === 'memory_credits') {
           const bundle = MEMORY_CREDIT_BUNDLES[priceId]
-          // Upsert credits
-          const { data: existing } = await db.from('memory_credits').select('credits_remaining').eq('user_id', userId).maybeSingle()
-          await db.from('memory_credits').upsert({
+          const convos = bundle.conversations ?? 0
+          await db.from('memory_credit_transactions').insert({
             user_id: userId,
-            credits_remaining: (existing?.credits_remaining ?? 0) + bundle.credits,
-          }, { onConflict: 'user_id' })
+            amount: convos,
+            remaining: convos,
+            purchased_at: new Date().toISOString(),
+            expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+          })
           // Enable memory
           await db.from('user_memories').upsert({ user_id: userId, memory_enabled: true }, { onConflict: 'user_id' })
         }

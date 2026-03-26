@@ -68,12 +68,13 @@ export default function MemorySettingsPage() {
           </div>
         </div>
 
-        {/* Credits */}
+        {/* Study Sessions */}
         <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 4, padding: '1.25rem', marginBottom: '1rem' }}>
-          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 4 }}>Credits Remaining</p>
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 4 }}>Study Sessions</p>
           <p style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'var(--gold)' }}>{credits}</p>
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>30 free each month + purchased sessions</p>
           <button onClick={() => setShowPurchase(true)} style={{ marginTop: 8, padding: '8px 20px', borderRadius: 3, background: 'var(--gold)', color: '#2C1810', fontFamily: 'var(--font-ui)', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', border: 'none', cursor: 'pointer' }}>
-            Add Credits
+            Add Sessions
           </button>
         </div>
 

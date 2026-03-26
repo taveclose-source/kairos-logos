@@ -127,9 +127,12 @@ function StudyPageInner() {
   const [error, setError] = useState('')
   const [queryCount, setQueryCount] = useState(0)
   const [showLimitModal, setShowLimitModal] = useState(false)
-  const [memoryCredits, setMemoryCredits] = useState<number | null>(null)
+  const [freeConvos, setFreeConvos] = useState<number>(0)
+  const [purchasedConvos, setPurchasedConvos] = useState<number>(0)
   const [memoryEnabled, setMemoryEnabled] = useState(false)
   const [showCreditModal, setShowCreditModal] = useState(false)
+  const [showInlineTopUp, setShowInlineTopUp] = useState(false)
+  const [studyStreak, setStudyStreak] = useState(0)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [pastSessions, setPastSessions] = useState<PastSession[]>([])
   const [showSessions, setShowSessions] = useState(false)
@@ -162,13 +165,18 @@ function StudyPageInner() {
       setLastBook(profile?.last_read_book ?? null)
       setLastChapter(profile?.last_read_chapter ?? null)
 
-      // Fetch memory
+      // Fetch memory + conversation balance
       if (isAdmin(user.id) || ['scholar', 'ministry', 'missions'].includes(profile?.subscription_tier ?? '')) {
         fetch('/api/memory').then(r => r.json()).then(m => {
           setMemoryEnabled(m.memory_enabled)
-          setMemoryCredits(m.credits_remaining)
+          setFreeConvos(m.free_conversations ?? 0)
+          setPurchasedConvos(m.purchased_conversations ?? 0)
         }).catch(() => {})
       }
+
+      // Fetch study streak
+      supabase.from('users').select('study_streak').eq('id', user.id).single()
+        .then(({ data: d }) => { if (d?.study_streak) setStudyStreak(d.study_streak) })
 
       // Fetch topics directly from Supabase
       supabase.from('user_topics')
@@ -244,11 +252,32 @@ function StudyPageInner() {
     }
   }, [loading])
 
+  // Refresh conversation balance
+  function refreshBalance() {
+    fetch('/api/memory').then(r => r.json()).then(m => {
+      setFreeConvos(m.free_conversations ?? 0)
+      setPurchasedConvos(m.purchased_conversations ?? 0)
+    }).catch(() => {})
+    // Refresh streak
+    const supabase = createSupabaseBrowser()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) supabase.from('users').select('study_streak').eq('id', user.id).single()
+        .then(({ data: d }) => { if (d?.study_streak) setStudyStreak(d.study_streak) })
+    })
+  }
+
   // ── Pastor chat logic ──
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const trimmed = input.trim()
     if (!trimmed || loading) return
+
+    // Check balance for non-admin, non-free-tier users
+    if (!isAdmin(userId) && ['scholar', 'ministry', 'missions'].includes(userTier) && totalConvos <= 0) {
+      setShowInlineTopUp(true)
+      return
+    }
+
     // Reset scroll tracking for new response
     userScrolledUp.current = false
     setShowJumpPill(false)
@@ -316,7 +345,7 @@ function StudyPageInner() {
                 c[assistantIdx] = { ...c[assistantIdx], references: event.references || [], routedToQueue: event.routed_to_queue }
                 return c
               })
-              // Fire-and-forget topic extraction
+              // Fire-and-forget topic extraction + refresh balance
               if (event.sessionId) {
                 fetch('/api/topics/extract', {
                   method: 'POST',
@@ -324,6 +353,7 @@ function StudyPageInner() {
                   body: JSON.stringify({ session_id: event.sessionId }),
                 }).catch(() => {})
               }
+              refreshBalance()
             } else if (event.type === 'error') {
               setError('The agent encountered an error. Please try again.')
             }
@@ -369,7 +399,8 @@ function StudyPageInner() {
     ? topics
     : topics.slice(0, 3)
 
-  const showCredits = memoryEnabled && memoryCredits !== null && !isAdmin(userId)
+  const totalConvos = freeConvos + purchasedConvos
+  const showConvoBalance = !isAdmin(userId) && ['scholar', 'ministry', 'missions'].includes(userTier)
 
   return (
     <>
@@ -528,7 +559,15 @@ function StudyPageInner() {
         <div className="lg:w-[40%] lg:sticky lg:top-4" style={{ alignSelf: 'flex-start' }}>
         <section ref={pastorRef} id="pastor" className="pastor-section-desktop" style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(15,6,2,0.6)', border: '1px solid rgba(255,200,100,0.15)', borderRadius: 4 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1.25rem' }}>
-            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(255,208,96,0.8)' }}>The Pastor</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(255,208,96,0.8)' }}>The Pastor</p>
+              {studyStreak > 0 && (
+                <span style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: '#FFD060', display: 'flex', alignItems: 'center', gap: 3 }}>
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="#FFD060" stroke="none"><path d="M8 1c-.5 2.5-2.5 3.5-2.5 6a2.5 2.5 0 0 0 5 0c0-2.5-2-3.5-2.5-6z"/><path d="M8 8c-.3 1.2-1.2 1.8-1.2 3a1.2 1.2 0 0 0 2.4 0c0-1.2-.9-1.8-1.2-3z" fill="#FF9020"/></svg>
+                  {studyStreak} day streak
+                </span>
+              )}
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {isAdmin(userId) && (
                 <>
@@ -545,8 +584,10 @@ function StudyPageInner() {
                   &#8681; Save
                 </button>
               )}
-              {showCredits && (
-                <a href="/settings/memory" style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(200,160,40,0.35)', textDecoration: 'none' }}>{memoryCredits} credits</a>
+              {showConvoBalance && (
+                <span style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(200,160,40,0.5)' }}>
+                  {freeConvos} free{purchasedConvos > 0 ? ` + ${purchasedConvos} purchased` : ''}
+                </span>
               )}
             </div>
           </div>
@@ -637,6 +678,11 @@ function StudyPageInner() {
                 ))}
                 {messages.length >= 2 && !memoryEnabled && ['scholar', 'ministry', 'missions'].includes(userTier) && (
                   <MemoryBanner onEnable={() => setShowCreditModal(true)} />
+                )}
+                {showInlineTopUp && (
+                  <div style={{ marginTop: 16, padding: '1rem', border: '1px solid rgba(255,200,100,0.2)', borderRadius: 6, background: 'rgba(15,6,2,0.4)' }}>
+                    <CreditPurchaseModal onClose={() => setShowInlineTopUp(false)} inline />
+                  </div>
                 )}
                 {error && (
                   <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'rgba(220,100,80,0.8)', fontStyle: 'italic', marginTop: 8 }}>{error}</p>

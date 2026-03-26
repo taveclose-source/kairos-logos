@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import Stripe from 'stripe'
-import { MEMORY_CREDIT_BUNDLES } from '@/lib/memoryCredits'
+import { CONVERSATION_BUNDLES, FREE_MONTHLY_CONVERSATIONS } from '@/lib/memoryCredits'
 import { isAdmin } from '@/lib/permissions'
 
 function db() { return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!) }
@@ -22,13 +22,36 @@ export async function GET() {
   const userId = await getUserId()
   if (!userId) return NextResponse.json({ error: 'auth_required' }, { status: 401 })
 
-  // Admin gets unlimited credits — never prompted to purchase
   if (isAdmin(userId)) {
-    return NextResponse.json({ credits_remaining: 999999, auto_reload: false, is_admin: true })
+    return NextResponse.json({ free_conversations: 999999, purchased_conversations: 0, total: 999999, auto_reload: false, is_admin: true })
   }
 
-  const { data } = await db().from('memory_credits').select('credits_remaining, auto_reload').eq('user_id', userId).maybeSingle()
-  return NextResponse.json({ credits_remaining: data?.credits_remaining ?? 0, auto_reload: data?.auto_reload ?? false })
+  const supabase = db()
+  const [credRes, txnRes] = await Promise.all([
+    supabase.from('memory_credits').select('free_conversations, free_conversations_reset_date, auto_reload').eq('user_id', userId).maybeSingle(),
+    supabase.from('memory_credit_transactions').select('remaining').eq('user_id', userId).gt('remaining', 0).gte('expires_at', new Date().toISOString()),
+  ])
+
+  // Check monthly reset
+  let freeConvos = Number(credRes.data?.free_conversations ?? 0)
+  const resetDate = credRes.data?.free_conversations_reset_date
+  if (resetDate && new Date(resetDate) <= new Date()) {
+    freeConvos = FREE_MONTHLY_CONVERSATIONS
+    await supabase.from('memory_credits').upsert({
+      user_id: userId,
+      free_conversations: FREE_MONTHLY_CONVERSATIONS,
+      free_conversations_reset_date: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString().slice(0, 10),
+    }, { onConflict: 'user_id' })
+  }
+
+  const purchasedConvos = (txnRes.data ?? []).reduce((sum: number, t: { remaining: number }) => sum + Number(t.remaining), 0)
+
+  return NextResponse.json({
+    free_conversations: freeConvos,
+    purchased_conversations: purchasedConvos,
+    total: freeConvos + purchasedConvos,
+    auto_reload: credRes.data?.auto_reload ?? false,
+  })
 }
 
 export async function POST(req: NextRequest) {
@@ -36,13 +59,11 @@ export async function POST(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: 'auth_required' }, { status: 401 })
 
   const { priceId } = await req.json()
-  if (!priceId || !MEMORY_CREDIT_BUNDLES[priceId]) {
+  if (!priceId || !CONVERSATION_BUNDLES[priceId]) {
     return NextResponse.json({ error: 'Invalid price' }, { status: 400 })
   }
 
-  // Admin bypasses tier check (though admin should never need to purchase)
   if (!isAdmin(userId)) {
-    // Verify Scholar+ tier
     const { data: user } = await db().from('users').select('subscription_tier').eq('id', userId).single()
     const tier = user?.subscription_tier ?? 'free'
     if (!['scholar', 'ministry', 'missions'].includes(tier)) {

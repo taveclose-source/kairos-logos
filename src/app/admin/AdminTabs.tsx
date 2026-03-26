@@ -23,11 +23,12 @@ interface UserRow {
 }
 
 // Full credit allocation per tier (for Restore button)
+// Monthly free conversations per tier (for Restore button)
 const TIER_CREDIT_ALLOCATION: Record<string, number> = {
   free: 0,
-  scholar: 1000,
-  ministry: 2100,
-  missions: 1000,
+  scholar: 30,
+  ministry: 60,
+  missions: 30,
 }
 
 interface Sponsorship {
@@ -348,7 +349,7 @@ export default function AdminTabs({
                   <th className="pb-2 pr-3 font-medium cursor-pointer hover:text-gray-600" onClick={() => toggleSort('created_at')}>
                     Joined {sortField === 'created_at' && (sortDir === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="pb-2 pr-3 font-medium">Credits</th>
+                  <th className="pb-2 pr-3 font-medium">Sessions</th>
                   <th className="pb-2 font-medium">Override</th>
                 </tr>
               </thead>
