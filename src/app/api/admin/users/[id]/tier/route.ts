@@ -22,9 +22,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const body = await req.json()
   const { tier } = body
 
-  const updates: Record<string, string | null> = {
+  const updates: Record<string, string> = {
     subscription_tier: tier,
-    subscription_status: tier === 'free' ? null : 'active',
+    subscription_status: tier === 'free' ? 'none' : 'active',
   }
   // Support missions_status for approve/deny actions
   if (typeof body.missions_status === 'string') {
