@@ -121,13 +121,19 @@ function StudyPageInner() {
         }).catch(() => {})
       }
 
-      // Fetch topics
-      fetch(`/api/topics?uid=${user.id}`).then(r => {
-        if (!r.ok) throw new Error(`topics ${r.status}`)
-        return r.json()
-      }).then(t => {
-        if (Array.isArray(t)) setTopics(t)
-      }).catch(() => {})
+      // Fetch topics directly from Supabase (bypasses API route auth issues)
+      const minMentions = isAdmin(user.id) ? 1 : 3
+      const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+      supabase.from('user_topics')
+        .select('id, topic, source_session_id, created_at, mention_count, last_mentioned_at')
+        .eq('user_id', user.id)
+        .gte('mention_count', minMentions)
+        .gte('last_mentioned_at', ninetyDaysAgo)
+        .order('mention_count', { ascending: false })
+        .limit(10)
+        .then(({ data: topicData }) => {
+          if (topicData && Array.isArray(topicData)) setTopics(topicData)
+        })
 
       // Admin: load past sessions
       if (isAdmin(user.id)) {
