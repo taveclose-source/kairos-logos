@@ -89,6 +89,8 @@ function StudyPageInner() {
   const abortRef = useRef<AbortController | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const pastorRef = useRef<HTMLDivElement>(null)
+  const userScrolledUp = useRef(false)
+  const [showJumpPill, setShowJumpPill] = useState(false)
 
   // Auth + data loading
   useEffect(() => {
@@ -145,16 +147,53 @@ function StudyPageInner() {
     }
   }, [searchParams, messages.length, authChecked])
 
-  // Auto-scroll chat area
+  // Smart auto-scroll — follows stream unless user scrolls up
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    if (!scrollRef.current || userScrolledUp.current) return
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [messages])
+
+  // Detect user scroll: if they scroll up, stop auto-scroll; if near bottom, re-enable
+  function handleChatScroll() {
+    const el = scrollRef.current
+    if (!el) return
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+    if (distFromBottom > 100) {
+      userScrolledUp.current = true
+      if (loading) setShowJumpPill(true)
+    } else {
+      userScrolledUp.current = false
+      setShowJumpPill(false)
+    }
+  }
+
+  function jumpToLatest() {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      userScrolledUp.current = false
+      setShowJumpPill(false)
+    }
+  }
+
+  // Hide pill when streaming ends and user is near bottom
+  useEffect(() => {
+    if (!loading) {
+      const el = scrollRef.current
+      if (el) {
+        const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+        if (distFromBottom <= 100) setShowJumpPill(false)
+      }
+    }
+  }, [loading])
 
   // ── Pastor chat logic ──
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const trimmed = input.trim()
     if (!trimmed || loading) return
+    // Reset scroll tracking for new response
+    userScrolledUp.current = false
+    setShowJumpPill(false)
 
     if (!canUseUnlimitedAsk(userTier, userId)) {
       const newCount = queryCount + 1
@@ -453,7 +492,7 @@ function StudyPageInner() {
           )}
 
           {/* Conversation area */}
-          <div ref={scrollRef} style={{ maxHeight: 600, overflowY: 'auto', paddingBottom: '1rem' }}>
+          <div ref={scrollRef} onScroll={handleChatScroll} style={{ maxHeight: 600, overflowY: 'auto', paddingBottom: '1rem', position: 'relative' }}>
             {messages.length === 0 ? (
               <div style={{ padding: '2.5rem 0', textAlign: 'center' }}>
                 <div style={{ color: 'rgba(255,208,96,0.8)' }}><OilLampIcon className="w-16 h-16 mx-auto mb-5" /></div>
@@ -509,6 +548,32 @@ function StudyPageInner() {
               </div>
             )}
           </div>
+
+          {/* Jump to latest pill — appears when user scrolls up during streaming */}
+          {showJumpPill && (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '6px 0' }}>
+              <button
+                onClick={jumpToLatest}
+                style={{
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: 9,
+                  letterSpacing: '1px',
+                  color: '#FFD060',
+                  background: 'rgba(30,14,3,0.7)',
+                  border: '1px solid rgba(255,208,96,0.3)',
+                  borderRadius: 12,
+                  padding: '4px 14px',
+                  cursor: 'pointer',
+                  backdropFilter: 'blur(4px)',
+                  transition: 'background 150ms',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(30,14,3,0.9)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(30,14,3,0.7)' }}
+              >
+                Jump to latest &darr;
+              </button>
+            </div>
+          )}
 
           {/* Input — journal line style against dark bg */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', marginTop: '0.5rem' }}>
