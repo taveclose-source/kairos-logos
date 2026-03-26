@@ -32,6 +32,55 @@ interface PastSession {
   updatedAt: string
 }
 
+function formatChatForDownload(msgs: Message[]): string {
+  const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  const lines: string[] = [
+    `Pastor Chat — ${date}`,
+    '═'.repeat(40),
+    '',
+  ]
+  for (const msg of msgs) {
+    if (!msg.content) continue
+    const label = msg.role === 'user' ? 'You' : 'The Pastor'
+    lines.push(`${label}:`)
+
+    // For assistant messages, convert inline badges to text labels
+    let content = msg.content
+    if (msg.role === 'assistant') {
+      content = content.replace(/\[Historical Context\]/gi, '[HISTORICAL CONTEXT]')
+      content = content.replace(/\[Creation Witness\]/gi, '[CREATION WITNESS]')
+    }
+    lines.push(content)
+
+    // Append references if present
+    if (msg.references && msg.references.length > 0) {
+      lines.push(`  Scripture: ${msg.references.join(', ')}`)
+    }
+    if (msg.routedToQueue) {
+      lines.push('  [Routed to pastoral review]')
+    }
+    lines.push('')
+  }
+  lines.push('─'.repeat(40))
+  lines.push('Logos by Kai\'Ros · Your Study. His Word.')
+  return lines.join('\n')
+}
+
+function downloadChat(msgs: Message[]) {
+  const text = formatChatForDownload(msgs)
+  const dateStr = new Date().toISOString().slice(0, 10)
+  const filename = `Pastor-Chat-${dateStr}.txt`
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
 function getGreeting(firstName: string) {
   const h = new Date().getHours()
   const time = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening'
@@ -478,6 +527,15 @@ function StudyPageInner() {
                   <button onClick={() => setShowSessions(!showSessions)} style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(255,208,96,0.7)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '1px', textDecoration: 'underline', textDecorationColor: 'rgba(255,208,96,0.3)', textUnderlineOffset: '2px' }}>Past conversations</button>
                 </>
               )}
+              {messages.length >= 2 && (
+                <button
+                  onClick={() => downloadChat(messages)}
+                  style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(255,208,96,0.7)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '1px' }}
+                  title="Download this conversation"
+                >
+                  &#8681; Save
+                </button>
+              )}
               {showCredits && (
                 <a href="/settings/memory" style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(200,160,40,0.35)', textDecoration: 'none' }}>{memoryCredits} credits</a>
               )}
@@ -492,13 +550,28 @@ function StudyPageInner() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {pastSessions.map(s => (
-                    <button key={s.id} onClick={() => resumeSession(s.id)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', cursor: 'pointer', background: 'none', border: 'none', textAlign: 'left', width: '100%', opacity: sessionId === s.id ? 1 : 0.5, transition: 'opacity 150ms' }}
+                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 6, opacity: sessionId === s.id ? 1 : 0.5, transition: 'opacity 150ms' }}
                       onMouseEnter={(e) => { e.currentTarget.style.opacity = '1' }}
                       onMouseLeave={(e) => { if (sessionId !== s.id) e.currentTarget.style.opacity = '0.5' }}
                     >
-                      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: 'rgba(255,230,180,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>{s.title}</span>
-                      <span style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(255,208,96,0.5)', whiteSpace: 'nowrap' }}>{new Date(s.updatedAt).toLocaleDateString()}</span>
-                    </button>
+                      <button onClick={() => resumeSession(s.id)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', cursor: 'pointer', background: 'none', border: 'none', textAlign: 'left', flex: 1, minWidth: 0 }}>
+                        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: 'rgba(255,230,180,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '65%' }}>{s.title}</span>
+                        <span style={{ fontFamily: 'var(--font-ui)', fontSize: 9, color: 'rgba(255,208,96,0.5)', whiteSpace: 'nowrap' }}>{new Date(s.updatedAt).toLocaleDateString()}</span>
+                      </button>
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation()
+                          const res = await fetch(`/api/ask/sessions/${s.id}`)
+                          if (!res.ok) return
+                          const data = await res.json()
+                          downloadChat(data.messages || [])
+                        }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,208,96,0.5)', fontSize: 12, padding: '2px 4px', flexShrink: 0 }}
+                        title="Download this conversation"
+                      >
+                        &#8681;
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}

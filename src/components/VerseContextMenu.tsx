@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTheme } from '@/contexts/ThemeContext'
 
 interface VerseInfo {
@@ -13,16 +13,28 @@ interface VerseInfo {
 
 interface VerseContextMenuProps {
   verse: VerseInfo
+  twiText?: string | null
   position: { x: number; y: number }
   onClose: () => void
   onAskPastor: (verse: VerseInfo) => void
   onKingsKingdoms: (verse: VerseInfo) => void
 }
 
-export default function VerseContextMenu({ verse, position, onClose, onAskPastor, onKingsKingdoms }: VerseContextMenuProps) {
+export default function VerseContextMenu({ verse, twiText, position, onClose, onAskPastor, onKingsKingdoms }: VerseContextMenuProps) {
   const { theme } = useTheme()
   const m = theme === 'modern'
   const menuRef = useRef<HTMLDivElement>(null)
+  const [copied, setCopied] = useState<'kjv' | 'twi' | null>(null)
+
+  function copyVerse(type: 'kjv' | 'twi') {
+    const text = type === 'kjv' ? verse.text : (twiText || '')
+    const label = type === 'kjv' ? 'KJV' : 'Twi'
+    const formatted = `${text} (${verse.reference} ${label})`
+    navigator.clipboard.writeText(formatted).then(() => {
+      setCopied(type)
+      setTimeout(() => onClose(), 800)
+    }).catch(() => {})
+  }
 
   // Dismiss on outside click
   useEffect(() => {
@@ -114,6 +126,33 @@ export default function VerseContextMenu({ verse, position, onClose, onAskPastor
           <span style={{ fontSize: 16, lineHeight: 1 }}>&#127760;</span>
           <span>What was happening in the world?</span>
         </button>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: 'rgba(139,107,20,0.15)', margin: '2px 16px' }} />
+
+        {/* Option 3 — Copy KJV */}
+        <button
+          onClick={() => copyVerse('kjv')}
+          style={btnStyle}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(139,107,20,0.06)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}
+        >
+          <span style={{ fontSize: 16, lineHeight: 1 }}>&#128203;</span>
+          <span>{copied === 'kjv' ? 'Copied!' : 'Copy verse (KJV)'}</span>
+        </button>
+
+        {/* Option 4 — Copy Twi (only if Twi text exists) */}
+        {twiText && (
+          <button
+            onClick={() => copyVerse('twi')}
+            style={btnStyle}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(139,107,20,0.06)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'none' }}
+          >
+            <span style={{ fontSize: 16, lineHeight: 1 }}>&#128203;</span>
+            <span>{copied === 'twi' ? 'Copied!' : 'Copy verse (Twi)'}</span>
+          </button>
+        )}
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `

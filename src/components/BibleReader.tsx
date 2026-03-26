@@ -76,7 +76,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const [resourcesPanel, setResourcesPanel] = useState<{ word: string; strongsNumber?: string | null; isName?: boolean } | null>(null)
   const [twiPanel, setTwiPanel] = useState<{ word: string; verseReference: string; strongsNumber?: string; glossaryTerm?: string } | null>(null)
   const [kingsPanel, setKingsPanel] = useState(false)
-  const [ctxMenu, setCtxMenu] = useState<{ verse: { reference: string; text: string; book: string; chapter: number; verse_number: number }; position: { x: number; y: number } } | null>(null)
+  const [ctxMenu, setCtxMenu] = useState<{ verse: { reference: string; text: string; book: string; chapter: number; verse_number: number }; twiText: string | null; position: { x: number; y: number } } | null>(null)
   const [pastorPanel, setPastorPanel] = useState<{ verse: { reference: string; text: string; book: string; chapter: number; verse_number: number }; context: { before: string[]; after: string[] } } | null>(null)
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressTriggered = useRef(false)
@@ -230,7 +230,8 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
 
   // Context menu handler — shared between long press and right click
   function openContextMenu(verseNum: number, x: number, y: number) {
-    setCtxMenu({ verse: getVerseInfo(verseNum), position: { x, y } })
+    const v = verses.find(v => v.verse === verseNum)
+    setCtxMenu({ verse: getVerseInfo(verseNum), twiText: v?.twi_text || null, position: { x, y } })
   }
 
   // Right click on desktop — scoped to reader container
@@ -709,6 +710,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
       {ctxMenu && (
         <VerseContextMenu
           verse={ctxMenu.verse}
+          twiText={ctxMenu.twiText}
           position={ctxMenu.position}
           onClose={() => setCtxMenu(null)}
           onAskPastor={(v) => {
