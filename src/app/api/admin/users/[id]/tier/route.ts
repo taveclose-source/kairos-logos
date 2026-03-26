@@ -19,12 +19,20 @@ async function verifyAdmin() {
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await verifyAdmin()) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   const { id } = await params
-  const { tier } = await req.json()
+  const body = await req.json()
+  const { tier } = body
 
-  const { data, error } = await db().from('users').update({
+  const updates: Record<string, string | null> = {
     subscription_tier: tier,
     subscription_status: tier === 'free' ? null : 'active',
-  }).eq('id', id).select('id, subscription_tier').single()
+  }
+  // Support missions_status for approve/deny actions
+  if (typeof body.missions_status === 'string') {
+    updates.missions_status = body.missions_status
+  }
+
+  const { data, error } = await db().from('users').update(updates)
+    .eq('id', id).select('id, subscription_tier').single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)

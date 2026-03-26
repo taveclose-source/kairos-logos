@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { createSupabaseBrowser } from '@/lib/supabase-browser'
+// All data operations use admin API routes (service role) to bypass RLS
 
 const ADMIN_UUID = '2f4cc459-6fdd-4f41-be4b-754770b28529'
 
@@ -132,13 +132,13 @@ export default function AdminTabs({
   const [page, setPage] = useState(0)
 
   async function reloadUsers() {
-    const sb = createSupabaseBrowser()
-    const { data } = await sb
-      .from('users')
-      .select('id, email, display_name, username, subscription_tier, subscription_status, missions_status, missions_application, country, created_at')
-      .order('created_at', { ascending: false })
-    if (data) setUsers(data as UserRow[])
-    // Load feedback
+    // Use admin API route (service role) — NOT browser client which is subject to RLS
+    const res = await fetch('/api/admin/users')
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data)) setUsers(data as UserRow[])
+    }
+    // Reload feedback
     fetch('/api/admin/feedback').then(r => r.json()).then(d => { if (Array.isArray(d)) setFeedback(d) }).catch(() => {})
   }
 
@@ -237,18 +237,21 @@ export default function AdminTabs({
   }
 
   async function approveMission(userId: string) {
-    const sb = createSupabaseBrowser()
-    await sb.from('users').update({
-      missions_status: 'active',
-      subscription_tier: 'missions',
-      subscription_status: 'active',
-    }).eq('id', userId)
+    // Use tier API (service role) — browser client is blocked by RLS
+    await fetch(`/api/admin/users/${userId}/tier`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier: 'missions', missions_status: 'active' }),
+    })
     reloadUsers()
   }
 
   async function denyMission(userId: string) {
-    const sb = createSupabaseBrowser()
-    await sb.from('users').update({ missions_status: 'none' }).eq('id', userId)
+    await fetch(`/api/admin/users/${userId}/tier`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier: 'free', missions_status: 'none' }),
+    })
     reloadUsers()
   }
 
