@@ -122,7 +122,10 @@ function StudyPageInner() {
       }
 
       // Fetch topics
-      fetch('/api/topics').then(r => r.json()).then(t => {
+      fetch('/api/topics').then(r => {
+        if (!r.ok) throw new Error(`topics ${r.status}`)
+        return r.json()
+      }).then(t => {
         if (Array.isArray(t)) setTopics(t)
       }).catch(() => {})
 
