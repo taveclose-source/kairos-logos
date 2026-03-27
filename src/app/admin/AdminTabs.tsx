@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 // All data operations use admin API routes (service role) to bypass RLS
 
 const ADMIN_UUID = '2f4cc459-6fdd-4f41-be4b-754770b28529'
@@ -109,6 +109,25 @@ export default function AdminTabs({
     } | null
   }>>([])
   const [submissionFilter, setSubmissionFilter] = useState('pending')
+  const [toast, setToast] = useState<string | null>(null)
+  const [fallbackPrompt, setFallbackPrompt] = useState<string | null>(null)
+
+  const showToast = useCallback((msg: string) => {
+    setToast(msg)
+    setTimeout(() => setToast(null), 4000)
+  }, [])
+
+  async function approveWithCopy(id: string, bubbyPrompt: string | undefined) {
+    setSubmissions(prev => prev.map(x => x.id === id ? { ...x, admin_action: 'approved' } : x))
+    fetch(`/api/admin/feedback-submissions/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ admin_action: 'approved' }) })
+    if (!bubbyPrompt) { showToast('Approved — no Bubby prompt available.'); return }
+    try {
+      await navigator.clipboard.writeText(bubbyPrompt)
+      showToast('Approved — Bubby prompt copied to clipboard. Open your terminal and paste.')
+    } catch {
+      setFallbackPrompt(bubbyPrompt)
+    }
+  }
   const [userCredits, setUserCredits] = useState<Record<string, { free: number; purchased: number }>>({})
   const [creditInputs, setCreditInputs] = useState<Record<string, string>>({})
 
@@ -684,7 +703,7 @@ export default function AdminTabs({
                     <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
                       {action === 'pending' ? (
                         <>
-                          <button onClick={() => setAction('approved')} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">Approve</button>
+                          <button onClick={() => approveWithCopy(s.id, rpt?.bubby_prompt)} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">Approve</button>
                           <button onClick={() => setAction('queued')} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-500 text-white hover:bg-amber-600 transition-colors">Queue</button>
                           <button onClick={() => { const note = prompt('Decline reason:'); if (note) setAction('declined', note) }} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">Decline</button>
                         </>
@@ -735,6 +754,54 @@ export default function AdminTabs({
           )}
         </div>
       )}
+
+      {/* Toast notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 100, display: 'flex', alignItems: 'center', gap: 8,
+          background: '#C9A84C', color: '#1A0A04', padding: '10px 20px',
+          borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+          fontFamily: 'var(--font-ui)', fontSize: 13, fontWeight: 500,
+          animation: 'toastIn 200ms ease-out',
+          maxWidth: 'calc(100vw - 40px)',
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          {toast}
+        </div>
+      )}
+
+      {/* Fallback modal for clipboard failure */}
+      {fallbackPrompt && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 99, background: 'rgba(0,0,0,0.5)' }} onClick={() => setFallbackPrompt(null)} />
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+            zIndex: 100, background: '#fff', borderRadius: 12, padding: 24,
+            maxWidth: 600, width: 'calc(100vw - 40px)', maxHeight: '80vh', overflow: 'auto',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.3)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h3 style={{ fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>Bubby Prompt — Copy Manually</h3>
+              <button onClick={() => setFallbackPrompt(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#888' }}>&times;</button>
+            </div>
+            <pre style={{ background: '#1a1a2e', color: '#e0e0e0', padding: 16, borderRadius: 8, fontSize: 11, whiteSpace: 'pre-wrap', fontFamily: 'monospace', maxHeight: '50vh', overflow: 'auto' }}>{fallbackPrompt}</pre>
+            <button
+              onClick={() => {
+                try { navigator.clipboard.writeText(fallbackPrompt); showToast('Copied!'); setFallbackPrompt(null) } catch { /* select all as last resort */ }
+              }}
+              style={{ marginTop: 12, padding: '8px 20px', background: '#C9A84C', color: '#1A0A04', border: 'none', borderRadius: 6, fontFamily: 'var(--font-ui)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
+            >Copy to Clipboard</button>
+          </div>
+        </>
+      )}
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+      `}} />
     </>
   )
 }
