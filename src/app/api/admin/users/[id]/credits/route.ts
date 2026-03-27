@@ -33,22 +33,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!await verifyAdmin()) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   const { id } = await params
   const body = await req.json()
+  const supabase = db()
 
-  // Support both absolute set (credits) and increment (add_credits)
-  let newBalance: number
-  if (typeof body.add_credits === 'number') {
-    const { data: existing } = await db().from('memory_credits').select('credits_remaining').eq('user_id', id).maybeSingle()
-    // PostgreSQL numeric type returns as string — must parse before arithmetic
-    newBalance = Number(existing?.credits_remaining ?? 0) + body.add_credits
-  } else {
-    newBalance = Number(body.credits)
-  }
+  const amount = typeof body.add_credits === 'number' ? body.add_credits : Number(body.credits ?? 0)
+  if (amount <= 0) return NextResponse.json({ error: 'Amount must be positive' }, { status: 400 })
 
-  const { error } = await db().from('memory_credits').upsert({
+  // Create a purchased conversation transaction (12-month expiry)
+  const { error } = await supabase.from('memory_credit_transactions').insert({
     user_id: id,
-    credits_remaining: newBalance,
-  }, { onConflict: 'user_id' })
+    amount,
+    remaining: amount,
+    purchased_at: new Date().toISOString(),
+    expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+  })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ ok: true, credits_remaining: newBalance })
+  return NextResponse.json({ ok: true })
 }
