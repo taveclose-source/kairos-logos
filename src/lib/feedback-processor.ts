@@ -7,6 +7,10 @@ import * as path from 'path'
 
 const ADMIN_EMAIL = 'pastortave@summitbiblecenter.com'
 
+function stripFences(text: string): string {
+  return text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
+}
+
 function db() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
@@ -32,7 +36,7 @@ export async function processSubmission(
       messages: [{ role: 'user', content: `Category: ${category}\nPage: ${page || 'unknown'}\nMessage: ${message}` }],
     })
     const text = res.content[0]?.type === 'text' ? res.content[0].text : ''
-    const parsed = JSON.parse(text)
+    const parsed = JSON.parse(stripFences(text))
     summary = parsed.summary || message.slice(0, 120)
     suggestedAction = parsed.suggested_action || ''
     priority = parsed.priority || 'medium'
@@ -64,7 +68,7 @@ export async function processSubmission(
       messages: [{ role: 'user', content: `Feedback category: ${category}\nPage: ${page || 'unknown'}\nMessage: ${message}\n\nCodebase index:\n${indexSummary}` }],
     })
     const filePickText = filePickRes.content[0]?.type === 'text' ? filePickRes.content[0].text : '[]'
-    const relevantFiles: string[] = JSON.parse(filePickText)
+    const relevantFiles: string[] = JSON.parse(stripFences(filePickText))
 
     const fileContents = await fetchMultipleFiles(relevantFiles)
     const fileContext = Object.entries(fileContents)
@@ -90,7 +94,7 @@ export async function processSubmission(
       messages: [{ role: 'user', content: `Category: ${category}\nPage: ${page || 'unknown'}\nUser message: ${message}\n\nTriage summary: ${summary}\nPriority: ${priority}\n\nRelevant source files:\n${fileContext || 'No files fetched — GITHUB_PAT may not be configured. Base report on codebase index.\n' + indexSummary.slice(0, 2000)}` }],
     })
     const reportText = reportRes.content[0]?.type === 'text' ? reportRes.content[0].text : ''
-    report = JSON.parse(reportText)
+    report = JSON.parse(stripFences(reportText))
 
     await supabase.from('feedback_submissions').update({ engineering_report: report }).eq('id', feedbackId)
   } catch (e) {
