@@ -23,6 +23,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const updates: Record<string, string> = {}
   if (body.status) updates.status = body.status
   if (typeof body.admin_notes === 'string') updates.admin_notes = body.admin_notes
+  if (body.admin_action) updates.admin_action = body.admin_action
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: 'No fields to update' }, { status: 400 })

@@ -95,14 +95,20 @@ export default function AdminTabs({
   const [sponsorships] = useState(initialSponsorships)
   const [search, setSearch] = useState('')
   const [feedback, setFeedback] = useState<Array<{ id: string; user_name: string; user_email: string; type: string; subject: string; message: string; page_context: string; status: string; admin_notes: string; created_at: string }>>([])
-  const [feedbackFilter, setFeedbackFilter] = useState('new')
-  // New feedback submissions with AI triage
+  // feedbackFilter removed — legacy section shows all
+  // New feedback submissions with AI triage + engineering report
   const [submissions, setSubmissions] = useState<Array<{
     id: string; user_name: string; user_email: string; page: string; category: string
-    message: string; status: string; admin_notes: string; created_at: string
+    message: string; status: string; admin_notes: string; admin_action: string; created_at: string
     ai_triage: Array<{ summary: string; suggested_action: string; priority: string }> | null
+    engineering_report: {
+      plain_english_summary?: string; affected_files?: Array<{ path: string; reason: string }>
+      complexity?: string; complexity_note?: string; build_cost_estimate?: string
+      ongoing_cost_per_user?: string; recommendation?: string; recommendation_reason?: string
+      bubby_prompt?: string
+    } | null
   }>>([])
-  const [submissionFilter, setSubmissionFilter] = useState('new')
+  const [submissionFilter, setSubmissionFilter] = useState('pending')
   const [userCredits, setUserCredits] = useState<Record<string, { free: number; purchased: number }>>({})
   const [creditInputs, setCreditInputs] = useState<Record<string, string>>({})
 
@@ -302,9 +308,9 @@ export default function AdminTabs({
                 {pendingCount}
               </span>
             )}
-            {t.id === 'feedback' && (submissions.filter(s => s.status !== 'resolved').length + feedback.filter(f => f.status === 'new').length) > 0 && (
+            {t.id === 'feedback' && submissions.filter(s => (s.admin_action || 'pending') === 'pending').length > 0 && (
               <span className="ml-1.5 inline-block w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold leading-5 text-center">
-                {submissions.filter(s => s.status !== 'resolved').length + feedback.filter(f => f.status === 'new').length}
+                {submissions.filter(s => (s.admin_action || 'pending') === 'pending').length}
               </span>
             )}
             {tab === t.id && (
@@ -581,92 +587,133 @@ export default function AdminTabs({
         </div>
       )}
 
-      {/* ── TAB 5: FEEDBACK ── */}
+      {/* ── TAB 5: FEEDBACK — Engineering Reports ── */}
       {tab === 'feedback' && (
         <div>
-          {/* New submissions (Make Us Better) */}
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Make Us Better Submissions</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-700">Make Us Better — Engineering Reports</h3>
+            <button
+              onClick={async () => { const r = await fetch('/api/admin/feedback-submissions/reprocess', { method: 'POST' }); const d = await r.json(); alert(d.message); }}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-500 hover:bg-gray-50"
+            >Reprocess Missing Reports</button>
+          </div>
           <div className="flex gap-2 mb-4 flex-wrap">
-            {['all', 'new', 'reviewed', 'resolved'].map((f) => (
+            {['all', 'pending', 'approved', 'queued', 'declined'].map((f) => (
               <button key={f} onClick={() => setSubmissionFilter(f)} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${submissionFilter === f ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
                 {f.charAt(0).toUpperCase() + f.slice(1)}
-                {f !== 'all' && (() => { const c = submissions.filter(s => s.status === f).length; return c > 0 ? ` (${c})` : '' })()}
+                {f !== 'all' && (() => { const c = submissions.filter(s => (s.admin_action || 'pending') === f).length; return c > 0 ? ` (${c})` : '' })()}
               </button>
             ))}
           </div>
-          {submissions.filter(s => submissionFilter === 'all' || s.status === submissionFilter).length === 0 ? (
+          {submissions.filter(s => submissionFilter === 'all' || (s.admin_action || 'pending') === submissionFilter).length === 0 ? (
             <p className="text-gray-400 text-sm mb-8">No submissions matching this filter.</p>
           ) : (
-            <div className="space-y-3 mb-8">
-              {submissions.filter(s => submissionFilter === 'all' || s.status === submissionFilter).map((s) => {
+            <div className="space-y-4 mb-8">
+              {submissions.filter(s => submissionFilter === 'all' || (s.admin_action || 'pending') === submissionFilter).map((s) => {
                 const catColors: Record<string, string> = { bug: 'bg-red-50 text-red-700', suggestion: 'bg-blue-50 text-blue-700', content: 'bg-gray-100 text-gray-600', praise: 'bg-amber-50 text-amber-700' }
                 const priColors: Record<string, string> = { critical: 'bg-red-100 text-red-800 border-red-300', high: 'bg-orange-50 text-orange-700 border-orange-200', medium: 'bg-yellow-50 text-yellow-700 border-yellow-200', low: 'bg-green-50 text-green-700 border-green-200' }
+                const compColors: Record<string, string> = { Simple: 'bg-green-100 text-green-800', Medium: 'bg-yellow-100 text-yellow-800', Complex: 'bg-red-100 text-red-800' }
+                const recColors: Record<string, string> = { 'Build Now': 'bg-green-100 text-green-800 border-green-300', Queue: 'bg-yellow-100 text-yellow-800 border-yellow-300', Decline: 'bg-red-100 text-red-800 border-red-300' }
                 const triage = s.ai_triage?.[0]
+                const rpt = s.engineering_report
                 const ago = Math.round((Date.now() - new Date(s.created_at).getTime()) / 3600000)
+                const action = s.admin_action || 'pending'
+
+                async function setAction(newAction: string, note?: string) {
+                  setSubmissions(prev => prev.map(x => x.id === s.id ? { ...x, admin_action: newAction } : x))
+                  await fetch(`/api/admin/feedback-submissions/${s.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ admin_action: newAction, ...(note ? { admin_notes: note } : {}) }) })
+                }
+
                 return (
-                  <div key={s.id} className="rounded-xl border border-gray-200 bg-white p-4">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-medium ${catColors[s.category] ?? catColors.content}`}>{s.category}</span>
-                        {triage?.priority && (
-                          <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${priColors[triage.priority] ?? priColors.medium}`}>{triage.priority.toUpperCase()}</span>
-                        )}
-                        <span className="text-xs text-gray-400">{s.user_name || s.user_email}</span>
-                      </div>
-                      <select
-                        value={s.status}
-                        onChange={async (e) => {
-                          const newStatus = e.target.value
-                          setSubmissions(prev => prev.map(x => x.id === s.id ? { ...x, status: newStatus } : x))
-                          await fetch(`/api/admin/feedback-submissions/${s.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus }) })
-                        }}
-                        className="text-xs rounded border border-gray-200 px-2 py-1 bg-white"
-                      >
-                        <option value="new">New</option>
-                        <option value="reviewed">Reviewed</option>
-                        <option value="resolved">Resolved</option>
-                      </select>
+                  <div key={s.id} className="rounded-xl border border-gray-200 bg-white p-5">
+                    {/* Header */}
+                    <div className="flex items-center gap-2 flex-wrap mb-3">
+                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-medium ${catColors[s.category] ?? catColors.content}`}>{s.category}</span>
+                      {triage?.priority && <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${priColors[triage.priority] ?? priColors.medium}`}>{triage.priority.toUpperCase()}</span>}
+                      {rpt?.complexity && <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${compColors[rpt.complexity] ?? compColors.Medium}`}>{rpt.complexity}</span>}
+                      {rpt?.recommendation && <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${recColors[rpt.recommendation] ?? ''}`}>{rpt.recommendation}</span>}
+                      <span className="text-xs text-gray-400 ml-auto">{s.user_name || s.user_email} &middot; {ago < 1 ? 'Just now' : ago < 24 ? `${ago}h ago` : `${Math.round(ago / 24)}d ago`}</span>
                     </div>
-                    {triage && (
-                      <div className="mb-2 p-2.5 rounded-lg bg-blue-50/50 border border-blue-100">
-                        <p className="text-xs font-medium text-blue-800 mb-0.5">AI Summary</p>
-                        <p className="text-sm text-blue-900">{triage.summary}</p>
-                        {triage.suggested_action && (
-                          <p className="text-xs text-blue-700 mt-1"><strong>Action:</strong> {triage.suggested_action}</p>
+
+                    {/* User message */}
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap mb-3">{s.message}</p>
+                    {s.page && <p className="text-xs text-gray-400 mb-3">Page: {s.page}</p>}
+
+                    {/* Engineering report */}
+                    {rpt ? (
+                      <div className="border border-blue-100 rounded-lg p-4 bg-blue-50/30 space-y-3">
+                        <p className="text-xs font-semibold text-blue-800 uppercase tracking-wider">Engineering Report</p>
+                        <p className="text-sm text-gray-800">{rpt.plain_english_summary}</p>
+
+                        {rpt.affected_files && rpt.affected_files.length > 0 && (
+                          <div>
+                            <p className="text-xs font-medium text-gray-600 mb-1">Affected Files</p>
+                            <ul className="text-xs text-gray-700 space-y-0.5">
+                              {rpt.affected_files.map((f, i) => (
+                                <li key={i}><code className="text-blue-700">{f.path}</code> — {f.reason}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        <div className="flex gap-4 text-xs text-gray-600">
+                          <span><strong>Build:</strong> {rpt.build_cost_estimate}</span>
+                          <span><strong>Ongoing:</strong> {rpt.ongoing_cost_per_user || 'None'}</span>
+                        </div>
+
+                        {rpt.recommendation_reason && <p className="text-xs text-gray-600"><strong>Recommendation:</strong> {rpt.recommendation_reason}</p>}
+
+                        {rpt.bubby_prompt && (
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-xs font-medium text-gray-600">Bubby Prompt</p>
+                              <button
+                                onClick={() => { navigator.clipboard.writeText(rpt.bubby_prompt || ''); }}
+                                className="px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                              >Copy Prompt</button>
+                            </div>
+                            <pre className="text-[11px] bg-gray-900 text-gray-200 p-3 rounded-lg overflow-x-auto whitespace-pre-wrap max-h-48">{rpt.bubby_prompt}</pre>
+                          </div>
                         )}
                       </div>
+                    ) : (
+                      <p className="text-xs text-gray-400 italic">Engineering report pending...</p>
                     )}
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{s.message}</p>
-                    {s.page && <p className="text-xs text-gray-400 mt-1">Page: {s.page}</p>}
-                    <p className="text-xs text-gray-400 mt-1">{ago < 1 ? 'Just now' : ago < 24 ? `${ago}h ago` : `${Math.round(ago / 24)}d ago`}</p>
-                    <textarea
-                      placeholder="Add internal notes..."
-                      defaultValue={s.admin_notes ?? ''}
-                      onBlur={async (e) => {
-                        await fetch(`/api/admin/feedback-submissions/${s.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ admin_notes: e.target.value }) })
-                      }}
-                      className="mt-2 w-full text-xs border border-gray-100 rounded px-2 py-1.5 bg-gray-50 resize-none"
-                      rows={2}
-                    />
+
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
+                      {action === 'pending' ? (
+                        <>
+                          <button onClick={() => setAction('approved')} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">Approve</button>
+                          <button onClick={() => setAction('queued')} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-500 text-white hover:bg-amber-600 transition-colors">Queue</button>
+                          <button onClick={() => { const note = prompt('Decline reason:'); if (note) setAction('declined', note) }} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">Decline</button>
+                        </>
+                      ) : (
+                        <span className={`inline-block px-3 py-1 rounded text-xs font-bold ${action === 'approved' ? 'bg-emerald-100 text-emerald-800' : action === 'queued' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-600'}`}>
+                          {action.charAt(0).toUpperCase() + action.slice(1)}
+                        </span>
+                      )}
+                      <textarea
+                        placeholder="Internal notes..."
+                        defaultValue={s.admin_notes ?? ''}
+                        onBlur={async (e) => { await fetch(`/api/admin/feedback-submissions/${s.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ admin_notes: e.target.value }) }) }}
+                        className="ml-auto flex-1 text-xs border border-gray-100 rounded px-2 py-1.5 bg-gray-50 resize-none max-w-xs"
+                        rows={1}
+                      />
+                    </div>
                   </div>
                 )
               })}
             </div>
           )}
 
-          {/* Legacy feedback (from /contact page) */}
+          {/* Legacy feedback */}
           {feedback.length > 0 && (
             <>
               <h3 className="text-sm font-semibold text-gray-700 mb-3 pt-4 border-t border-gray-100">Contact Page Feedback (Legacy)</h3>
-              <div className="flex gap-2 mb-4 flex-wrap">
-                {['all', 'new', 'reviewing', 'resolved', 'dismissed'].map((f) => (
-                  <button key={f} onClick={() => setFeedbackFilter(f)} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${feedbackFilter === f ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>{f.charAt(0).toUpperCase() + f.slice(1)}</button>
-                ))}
-              </div>
               <div className="space-y-3">
-                {feedback.filter(f => feedbackFilter === 'all' || f.status === feedbackFilter).map((f) => {
+                {feedback.map((f) => {
                   const typeColors: Record<string, string> = { bug: 'bg-red-50 text-red-700', feature: 'bg-blue-50 text-blue-700', general: 'bg-gray-100 text-gray-600', praise: 'bg-amber-50 text-amber-700' }
-                  const ago = Math.round((Date.now() - new Date(f.created_at).getTime()) / 3600000)
                   return (
                     <div key={f.id} className="rounded-xl border border-gray-200 bg-white p-4">
                       <div className="flex items-start justify-between gap-3 mb-2">
@@ -674,34 +721,12 @@ export default function AdminTabs({
                           <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-medium ${typeColors[f.type] ?? typeColors.general}`}>{f.type}</span>
                           <span className="ml-2 text-xs text-gray-400">{f.user_name} ({f.user_email})</span>
                         </div>
-                        <select
-                          value={f.status}
-                          onChange={async (e) => {
-                            const newStatus = e.target.value
-                            setFeedback(prev => prev.map(x => x.id === f.id ? { ...x, status: newStatus } : x))
-                            await fetch(`/api/admin/feedback/${f.id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus }) })
-                          }}
-                          className="text-xs rounded border border-gray-200 px-2 py-1 bg-white"
-                        >
-                          <option value="new">New</option>
-                          <option value="reviewing">Reviewing</option>
-                          <option value="resolved">Resolved</option>
-                          <option value="dismissed">Dismissed</option>
+                        <select value={f.status} onChange={async (e) => { setFeedback(prev => prev.map(x => x.id === f.id ? { ...x, status: e.target.value } : x)); await fetch(`/api/admin/feedback/${f.id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: e.target.value }) }) }} className="text-xs rounded border border-gray-200 px-2 py-1 bg-white">
+                          <option value="new">New</option><option value="reviewing">Reviewing</option><option value="resolved">Resolved</option><option value="dismissed">Dismissed</option>
                         </select>
                       </div>
                       <p className="text-sm font-medium text-gray-900 mb-1">{f.subject}</p>
                       <p className="text-sm text-gray-700 whitespace-pre-wrap">{f.message}</p>
-                      {f.page_context && <p className="text-xs text-gray-400 mt-1">Page: {f.page_context}</p>}
-                      <p className="text-xs text-gray-400 mt-1">{ago < 1 ? 'Just now' : ago < 24 ? `${ago}h ago` : `${Math.round(ago / 24)}d ago`}</p>
-                      <textarea
-                        placeholder="Add internal notes..."
-                        defaultValue={f.admin_notes ?? ''}
-                        onBlur={async (e) => {
-                          await fetch(`/api/admin/feedback/${f.id}/notes`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes: e.target.value }) })
-                        }}
-                        className="mt-2 w-full text-xs border border-gray-100 rounded px-2 py-1.5 bg-gray-50 resize-none"
-                        rows={2}
-                      />
                     </div>
                   )
                 })}
