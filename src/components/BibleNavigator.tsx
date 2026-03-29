@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { KJV_BOOKS } from '@/lib/verseCounts'
+import { getChapterSummary } from '@/lib/chapterSummaries'
 import { useTheme } from '@/contexts/ThemeContext'
 
 type RangeFilter = 'All' | 'OT' | 'NT'
@@ -209,8 +210,22 @@ export default function BibleNavigator() {
         </div>
       </div>
 
+      {/* Chapter summary blurb */}
+      <div style={{
+        height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '0 1.5rem', textAlign: 'center',
+      }}>
+        <p style={{
+          fontFamily: "'Cormorant Garamond', serif", fontSize: 13, fontStyle: 'italic',
+          color: m ? '#888888' : 'rgba(201,168,76,0.7)',
+          lineHeight: 1.5, maxWidth: 600,
+        }}>
+          {getChapterSummary(selectedBook, selectedChapter) || `${selectedBook} ${selectedChapter}`}
+        </p>
+      </div>
+
       {/* Cancel button */}
-      <div style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
+      <div style={{ padding: '0.5rem 1rem', textAlign: 'center' }}>
         <button
           onClick={() => {
             const pos = getLastPosition()
