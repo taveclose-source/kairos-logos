@@ -4,7 +4,7 @@ import { useEffect, useCallback, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import PageTurn from '@/components/PageTurn'
-import { playPageTurn } from '@/lib/paperSound'
+// Sound effects removed — silent navigation
 import type { PageTurnHandle } from '@/components/PageTurn'
 import GlossaryModal from '@/components/GlossaryModal'
 import type { GlossaryTerm } from '@/components/GlossaryModal'
@@ -64,8 +64,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const textColor = isModern ? '#1A1A1A' : '#1A0A04'
   const verseNumColor = isModern ? '#0F3460' : '#C8960A'
   // dropCapColor uses textColor directly
-  const navColor = isModern ? 'rgba(15,52,96,0.6)' : 'rgba(139,107,20,0.5)'
-  const navHoverColor = isModern ? 'rgba(15,52,96,1)' : 'rgba(139,107,20,0.9)'
+  // navColor/navHoverColor removed — header uses reference chip now
   const chapterHasTwi = verses.some((v) => v.twi_text !== null)
   const progress = totalChapters > 0 ? (chapter / totalChapters) * 100 : 0
   const [glossaryTerms, setGlossaryTerms] = useState<GlossaryTerm[]>([])
@@ -119,12 +118,16 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
     return () => window.removeEventListener('keydown', handleKey)
   }, [turnNext, turnPrev])
 
-  // Save last read position
+  // Active verse tracking for reference chip
+  const [activeVerse, setActiveVerse] = useState(1)
+
+  // Save last read position (both legacy key and new navigator key)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('logos_last_read', JSON.stringify({ book: bookName, chapter }))
+      localStorage.setItem('logos_last_position', JSON.stringify({ book: bookName, chapter, verse: activeVerse }))
     }
-  }, [bookName, chapter])
+  }, [bookName, chapter, activeVerse])
 
   // Keyboard font size: Ctrl+Plus, Ctrl+Minus, Ctrl+0
   useEffect(() => {
@@ -231,6 +234,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   // Context menu handler — shared between long press and right click
   function openContextMenu(verseNum: number, x: number, y: number) {
     const v = verses.find(v => v.verse === verseNum)
+    setActiveVerse(verseNum)
     setCtxMenu({ verse: getVerseInfo(verseNum), twiText: v?.twi_text || null, position: { x, y } })
   }
 
@@ -615,23 +619,20 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
           />
 
           <div className="px-6 py-8 sm:px-10 sm:py-12 lg:px-12 lg:py-14">
-            {/* Top nav — All Books / All Chapters */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+            {/* Reference chip — tappable, opens Navigator */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
               <button
-                onClick={() => { playPageTurn('back'); setBookSheetOpen(true) }}
-                style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: navColor, background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px 0 8px 4px', transition: 'color 150ms' }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = navHoverColor)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.5)')}
+                onClick={() => router.push('/bible')}
+                style={{
+                  fontFamily: 'var(--font-ui)', fontSize: 12, letterSpacing: '1px',
+                  color: verseNumColor, background: 'transparent', border: 'none',
+                  cursor: 'pointer', padding: '8px 12px',
+                  textDecoration: 'underline', textDecorationStyle: 'dotted',
+                  textUnderlineOffset: '3px', textDecorationColor: isModern ? 'rgba(15,52,96,0.3)' : 'rgba(200,160,40,0.4)',
+                  transition: 'color 150ms',
+                }}
               >
-                &lsaquo; All Books
-              </button>
-              <button
-                onClick={() => { playPageTurn('forward'); setChapterSheetBook(bookName); setChapterSheetOpen(true) }}
-                style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: navColor, background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px 4px 8px 0', transition: 'color 150ms' }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = navHoverColor)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(139,107,20,0.5)')}
-              >
-                All Chapters &rsaquo;
+                {bookName} {chapter}:{activeVerse}
               </button>
             </div>
             {/* Chapter heading */}
@@ -775,29 +776,23 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         />
       )}
 
-      {/* Mobile bottom nav bar */}
+      {/* Mobile bottom nav bar — single navigator button */}
       <div
         className="md:hidden"
         style={{
           position: 'fixed', bottom: 0, left: 0, right: 0,
           height: 44, zIndex: 20,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
           background: 'rgba(30,14,3,0.85)',
           backdropFilter: 'blur(4px)',
           borderTop: '1px solid rgba(200,150,80,0.15)',
         }}
       >
         <button
-          onClick={() => { playPageTurn('back'); setBookSheetOpen(true) }}
-          style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,208,64,0.85)', background: 'transparent', border: 'none', padding: '0 20px', height: 44, cursor: 'pointer' }}
+          onClick={() => router.push('/bible')}
+          style={{ fontFamily: 'var(--font-ui)', fontSize: 11, letterSpacing: '1.5px', color: 'rgba(255,208,64,0.85)', background: 'transparent', border: 'none', padding: '0 20px', height: 44, cursor: 'pointer' }}
         >
-          &lsaquo; All Books
-        </button>
-        <button
-          onClick={() => { playPageTurn('forward'); setChapterSheetBook(bookName); setChapterSheetOpen(true) }}
-          style={{ fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,208,64,0.85)', background: 'transparent', border: 'none', padding: '0 20px', height: 44, cursor: 'pointer' }}
-        >
-          All Chapters &rsaquo;
+          {bookName} {chapter} &middot; Navigate
         </button>
       </div>
 
