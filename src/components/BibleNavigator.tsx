@@ -116,7 +116,7 @@ export default function BibleNavigator() {
   }
 
   return (
-    <div style={{ background: bg, minHeight: '100vh', position: 'relative' }}>
+    <div style={{ background: bg, minHeight: '100vh', position: 'relative', paddingLeft: m ? 64 : 0, paddingBottom: m ? 56 : 0 }}>
       {/* Header */}
       <div style={{ padding: '1.5rem 1rem 0.75rem', textAlign: 'center' }}>
         <p style={{ fontFamily: 'var(--font-display)', fontSize: 13, letterSpacing: '4px', textTransform: 'uppercase', color: accent, marginBottom: 4 }}>
@@ -147,7 +147,7 @@ export default function BibleNavigator() {
       </div>
 
       {/* Four columns */}
-      <div style={{ display: 'flex', gap: 6, padding: '0 0.75rem', height: 'calc(100vh - 200px)' }}
+      <div style={{ display: 'flex', gap: 6, padding: '0 0.75rem', height: m ? 'calc(100vh - 256px)' : 'calc(100vh - 200px)' }}
         className="flex-col sm:flex-row"
       >
         {/* Column 1: Books */}
