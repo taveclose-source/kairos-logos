@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useLanguage } from '@/context/LanguageContext'
+import { useLanguage, BPS_LANGUAGES } from '@/context/LanguageContext'
 import PageTurn from '@/components/PageTurn'
 // Sound effects removed — silent navigation
 import type { PageTurnHandle } from '@/components/PageTurn'
@@ -65,7 +65,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const verseNumColor = isModern ? '#0F3460' : '#C8960A'
   // dropCapColor uses textColor directly
   // navColor/navHoverColor removed — header uses reference chip now
-  const chapterHasTwi = verses.some((v) => v.twi_text !== null)
+  const chapterHasTwiData = verses.some((v) => v.twi_text !== null)
   const progress = totalChapters > 0 ? (chapter / totalChapters) * 100 : 0
   const [glossaryTerms, setGlossaryTerms] = useState<GlossaryTerm[]>([])
   const [selectedGlossary, setSelectedGlossary] = useState<GlossaryTerm | null>(null)
@@ -82,6 +82,9 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   const [knownNames, setKnownNames] = useState<Set<string>>(new Set())
   const [twiWordClasses, setTwiWordClasses] = useState<Record<string, string>>({})
   const [chapterSheetOpen, setChapterSheetOpen] = useState(false)
+  const [showStrongs, setShowStrongs] = useState(true)
+  const [showCompanion, setShowCompanion] = useState(true)
+  const chapterHasTwi = chapterHasTwiData && showCompanion
   const [chapterSheetBook, setChapterSheetBook] = useState(bookName)
   const [bookSheetOpen, setBookSheetOpen] = useState(false)
   const sizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -480,7 +483,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
               </span>
             )
           }
-          const hasStrongs = w.strongs_number && strongsLookup?.[w.strongs_number]
+          const hasStrongs = showStrongs && w.strongs_number && strongsLookup?.[w.strongs_number]
           const isName = isProperNoun(w.word_text)
           const isClickable = hasStrongs || isName
           // Modern: solid blue hyperlink style; Traditional: dashed/dotted amber
@@ -633,6 +636,41 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
                 }}
               >
                 {bookName} {chapter}:{activeVerse}
+              </button>
+            </div>
+            {/* Reader toolbar — companion language + Strong's toggle */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+              {/* Companion translation dropdown */}
+              <select
+                value={showCompanion ? languageName : ''}
+                onChange={(e) => {
+                  if (e.target.value === '') { setShowCompanion(false) } else { setShowCompanion(true) }
+                }}
+                style={{
+                  fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '1px',
+                  color: verseNumColor, background: 'transparent',
+                  border: `1px solid ${isModern ? 'rgba(15,52,96,0.2)' : 'rgba(200,160,40,0.3)'}`,
+                  borderRadius: 3, padding: '4px 8px', cursor: 'pointer', outline: 'none',
+                }}
+              >
+                <option value="">No companion</option>
+                {BPS_LANGUAGES.map(l => (
+                  <option key={l.code} value={l.name} disabled={!l.active}>
+                    {l.name}{!l.active ? ' — Coming soon' : ''}
+                  </option>
+                ))}
+              </select>
+              {/* Strong's toggle */}
+              <button
+                onClick={() => setShowStrongs(s => !s)}
+                style={{
+                  fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '1px',
+                  color: verseNumColor, background: 'transparent',
+                  border: `1px solid ${isModern ? 'rgba(15,52,96,0.2)' : 'rgba(200,160,40,0.3)'}`,
+                  borderRadius: 3, padding: '4px 10px', cursor: 'pointer',
+                }}
+              >
+                Strong&apos;s: {showStrongs ? 'ON' : 'OFF'}
               </button>
             </div>
             {/* Chapter heading */}
