@@ -92,8 +92,9 @@ export async function GET(req: NextRequest) {
       .not('date_range_start', 'is', null)
       .lte('date_range_start', endDate)
       .gte('date_range_end', startDate)
+      .order('source_tier', { ascending: true })
       .order('date_range_start', { ascending: true })
-      .limit(15),
+      .limit(25),
   ])
 
   if (herodotusRes.error) {

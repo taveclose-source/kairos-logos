@@ -109,7 +109,8 @@ export async function POST(req: NextRequest) {
           .not('date_range_start', 'is', null)
           .lte('date_range_start', dates[1])
           .gte('date_range_end', dates[0])
-          .limit(6)
+          .order('source_tier', { ascending: true })
+          .limit(10)
       : Promise.resolve({ data: [] })
 
     // 5. Nave's Topical for key terms
@@ -226,10 +227,10 @@ DESIGN DOCTRINE — you MUST follow these rules:
 1. Scripture leads every response. Quote the KJV text first, then explain.
 2. When you use Strong's or Gesenius data, mention the original word naturally: "The word here is [original] ([transliteration], [Strong's number])..."
 3. When you mention a name's meaning from Hitchcock's or Smith's, weave it in: "The name [Name] means '[meaning]'..."
-4. When you include historical context from Herodotus or secular sources, you MUST:
-   - Prefix with "Historically speaking..."
-   - Mark it with [Historical Context] at the start of that paragraph
-   - Never present it as theological authority
+4. Historical context from Josephus, Edersheim, Maccabees, Herodotus, Tacitus, Philo:
+   - Weave historical facts into your answer in your pastoral voice — do NOT badge every historical fact
+   - Example: "Caiaphas served at Rome's pleasure — that is why the Sanhedrin needed Pilate." Not: "According to historical sources..."
+   - Use [Historical Context] badge ONLY for substantial standalone history sections
    - The Bible interprets history, not the other way around
 5. Never present inference as confirmation. If you're reasoning beyond the text, say so.
 6. Close with ONE question or thought that sends the reader back to prayer or further reading. Never a conclusion. Always an opening. Direct them toward the Lord, not toward you.
