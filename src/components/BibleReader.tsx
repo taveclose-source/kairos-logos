@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useLanguage, BPS_LANGUAGES } from '@/context/LanguageContext'
+import { useLanguage } from '@/context/LanguageContext'
 import PageTurn from '@/components/PageTurn'
 // Sound effects removed — silent navigation
 import type { PageTurnHandle } from '@/components/PageTurn'
@@ -565,21 +565,37 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   }
 
   return (
-    <div style={{ background: 'var(--bg-primary)', padding: '2rem 1rem', paddingTop: 'calc(2rem + 36px)', paddingBottom: 'calc(2rem + 60px)' }} className="relative">
-      {/* Fixed reference chip — always visible */}
+    <div style={{ background: 'var(--bg-primary)', padding: '2rem 1rem', paddingTop: 'calc(2rem + 44px)', paddingBottom: 'calc(2rem + 60px)' }} className="relative">
+      {/* Fixed reader bar — Strong's + Reference chip + Translation */}
       <div style={{
-        position: 'fixed', top: 56, left: 0, right: 0, zIndex: 15,
-        display: 'flex', justifyContent: 'center', padding: '6px 0',
-        background: isModern ? 'rgba(250,250,249,0.9)' : 'rgba(107,53,21,0.85)',
+        position: 'fixed', top: 56, left: 0, right: 0, zIndex: 15, height: 44,
+        display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8,
+        background: isModern ? 'rgba(255,255,255,0.9)' : 'rgba(30,14,3,0.85)',
         backdropFilter: 'blur(6px)',
         borderBottom: isModern ? '1px solid #ECEAE6' : '1px solid rgba(200,150,80,0.15)',
       }}>
+        {/* Strong's toggle */}
+        <button
+          onClick={() => setShowStrongs(s => !s)}
+          style={{
+            fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '1px',
+            color: showStrongs ? (isModern ? '#FFFFFF' : '#1A0A04') : (isModern ? '#0F3460' : 'rgba(255,208,96,0.7)'),
+            background: showStrongs ? (isModern ? '#0F3460' : '#C8960A') : 'transparent',
+            border: `1px solid ${isModern ? 'rgba(15,52,96,0.3)' : 'rgba(200,160,40,0.4)'}`,
+            borderRadius: 4, padding: '4px 10px', cursor: 'pointer',
+            transition: 'all 150ms',
+          }}
+        >
+          Strong&apos;s
+        </button>
+
+        {/* Reference chip */}
         <button
           onClick={() => router.push('/bible')}
           style={{
             fontFamily: 'var(--font-ui)', fontSize: 12, letterSpacing: '1px',
             color: verseNumColor, background: 'transparent', border: 'none',
-            cursor: 'pointer', padding: '2px 12px',
+            cursor: 'pointer', padding: '2px 8px',
             textDecoration: 'underline', textDecorationStyle: 'dotted',
             textUnderlineOffset: '3px',
             textDecorationColor: isModern ? 'rgba(15,52,96,0.3)' : 'rgba(200,160,40,0.4)',
@@ -587,6 +603,23 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
         >
           {bookName} {chapter}:{activeVerse}
         </button>
+
+        {/* Translation toggle */}
+        {chapterHasTwiData && (
+          <button
+            onClick={() => setShowCompanion(c => !c)}
+            style={{
+              fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '1px',
+              color: showCompanion ? (isModern ? '#FFFFFF' : '#1A0A04') : (isModern ? '#0F3460' : 'rgba(255,208,96,0.7)'),
+              background: showCompanion ? (isModern ? '#0F3460' : '#C8960A') : 'transparent',
+              border: `1px solid ${isModern ? 'rgba(15,52,96,0.3)' : 'rgba(200,160,40,0.4)'}`,
+              borderRadius: 4, padding: '4px 10px', cursor: 'pointer',
+              transition: 'all 150ms',
+            }}
+          >
+            Twi
+          </button>
+        )}
       </div>
 
       {/* Fixed side arrows — desktop only */}
@@ -673,42 +706,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
           />
 
           <div className="px-6 py-8 sm:px-10 sm:py-12 lg:px-12 lg:py-14">
-            {/* Reference chip moved to fixed position above */}
-            {/* Reader toolbar — companion language + Strong's toggle */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-              {/* Companion translation dropdown */}
-              <select
-                value={showCompanion ? languageName : ''}
-                onChange={(e) => {
-                  if (e.target.value === '') { setShowCompanion(false) } else { setShowCompanion(true) }
-                }}
-                style={{
-                  fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '1px',
-                  color: verseNumColor, background: 'transparent',
-                  border: `1px solid ${isModern ? 'rgba(15,52,96,0.2)' : 'rgba(200,160,40,0.3)'}`,
-                  borderRadius: 3, padding: '4px 8px', cursor: 'pointer', outline: 'none',
-                }}
-              >
-                <option value="">No companion</option>
-                {BPS_LANGUAGES.map(l => (
-                  <option key={l.code} value={l.name} disabled={!l.active}>
-                    {l.name}{!l.active ? ' — Coming soon' : ''}
-                  </option>
-                ))}
-              </select>
-              {/* Strong's toggle */}
-              <button
-                onClick={() => setShowStrongs(s => !s)}
-                style={{
-                  fontFamily: 'var(--font-ui)', fontSize: 10, letterSpacing: '1px',
-                  color: verseNumColor, background: 'transparent',
-                  border: `1px solid ${isModern ? 'rgba(15,52,96,0.2)' : 'rgba(200,160,40,0.3)'}`,
-                  borderRadius: 3, padding: '4px 10px', cursor: 'pointer',
-                }}
-              >
-                Strong&apos;s: {showStrongs ? 'ON' : 'OFF'}
-              </button>
-            </div>
+            {/* Toolbar controls moved to fixed bar above */}
             {/* Chapter heading */}
             <p style={{ fontFamily: 'var(--font-display)', fontSize: '13px', letterSpacing: '4px', color: 'rgba(200,160,40,0.9)', textTransform: 'uppercase', textAlign: 'center', marginBottom: '0.5rem' }}>
               {bookName}
