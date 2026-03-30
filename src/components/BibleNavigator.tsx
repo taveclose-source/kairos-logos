@@ -188,7 +188,7 @@ export default function BibleNavigator() {
               style={{ ...(ch === selectedChapter ? selectedStyle : itemBase), padding: '8px 14px 10px' }}
             >
               <span style={{ display: 'block', fontSize: 13 }}>{ch}</span>
-              <span style={{ display: 'block', fontSize: 13, fontStyle: 'italic', color: textSecondary, opacity: 0.8, lineHeight: 1.5, marginTop: 3, fontFamily: "'Cormorant Garamond', serif", whiteSpace: 'normal' }}>
+              <span style={{ display: 'block', fontSize: 11, fontWeight: 400, color: textSecondary, opacity: 0.85, lineHeight: 1.45, marginTop: 3, fontFamily: 'var(--font-ui)', whiteSpace: 'normal' }}>
                 {getChapterSummary(selectedBook, ch) || ''}
               </span>
             </button>
