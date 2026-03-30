@@ -58,7 +58,8 @@ export default function BibleNavigator() {
   const navigate = useCallback((book: string, chapter: number, verse?: number) => {
     const pos = { book, chapter, verse: verse ?? 1 }
     localStorage.setItem('logos_last_position', JSON.stringify(pos))
-    router.push(`/bible/${encodeURIComponent(book)}/${chapter}`)
+    const verseParam = verse && verse > 1 ? `?verse=${verse}` : ''
+    router.push(`/bible/${encodeURIComponent(book)}/${chapter}${verseParam}`)
   }, [router])
 
   // Double-click / long-press detection
