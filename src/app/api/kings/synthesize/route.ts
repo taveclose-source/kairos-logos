@@ -1,8 +1,24 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import Anthropic from '@anthropic-ai/sdk'
+import { isAdmin } from '@/lib/permissions'
 
 function db() { return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!) }
+
+async function getSessionUserId(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies()
+    const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      cookies: { getAll() { return cookieStore.getAll() }, setAll() {} },
+    })
+    const { data: { user } } = await supabase.auth.getUser()
+    return user?.id ?? null
+  } catch { return null }
+}
+
+const DAILY_LIMIT = 10
 
 const BOOK_DATES: Record<string, [number, number]> = {
   'Genesis':[-2000,-1500],'Exodus':[-1500,-1400],'Leviticus':[-1400,-1400],
@@ -39,6 +55,32 @@ export async function POST(req: NextRequest) {
 
   const supabase = db()
   const [startDate, endDate] = dates
+  const userId = await getSessionUserId()
+
+  // Tier gate + rate limit — free users get legacy entries only
+  let canSynthesize = false
+  if (userId) {
+    if (isAdmin(userId)) {
+      canSynthesize = true
+    } else {
+      const { data: user } = await supabase.from('users')
+        .select('subscription_tier, daily_kings_requests, daily_kings_reset_date')
+        .eq('id', userId).single()
+      const tier = user?.subscription_tier ?? 'free'
+      if (['scholar', 'ministry', 'missions'].includes(tier)) {
+        const today = new Date().toISOString().slice(0, 10)
+        let requests = Number(user?.daily_kings_requests ?? 0)
+        if (user?.daily_kings_reset_date !== today) {
+          requests = 0
+          await supabase.from('users').update({ daily_kings_requests: 0, daily_kings_reset_date: today }).eq('id', userId)
+        }
+        canSynthesize = requests < DAILY_LIMIT
+        if (canSynthesize) {
+          await supabase.from('users').update({ daily_kings_requests: requests + 1 }).eq('id', userId)
+        }
+      }
+    }
+  }
 
   async function fetchEntries(s: number, e: number) {
     const [hRes, hsRes] = await Promise.all([
@@ -91,6 +133,28 @@ export async function POST(req: NextRequest) {
     sourceNames.add(display[name] || name)
   }
   const sources = Array.from(sourceNames)
+
+  // If free tier or rate limited — return legacy formatted entries
+  if (!canSynthesize) {
+    const encoder = new TextEncoder()
+    const legacyText = allEntries.slice(0, 8).map(e => {
+      const src = (e as { source_name?: string }).source_name || 'herodotus'
+      const srcDisplay: Record<string, string> = { herodotus: 'Herodotus', josephus_antiquities: 'Josephus', josephus_wars: 'Josephus', edersheim_life_times: 'Edersheim', edersheim_temple: 'Edersheim', edersheim_ot_history: 'Edersheim', maccabees: 'Maccabees', strabo: 'Strabo', philo: 'Philo', tacitus_annals: 'Tacitus', tacitus_histories: 'Tacitus', eusebius: 'Eusebius', thucydides: 'Thucydides' }
+      return `**${srcDisplay[src] || src}:** ${e.content.length > 300 ? e.content.slice(0, 300) + '...' : e.content}`
+    }).join('\n\n')
+
+    return new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'sources', sources })}\n\n`))
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', text: `[Historical Context]\n\n${legacyText}\n\n---\n*Synthesized narratives are available with a Scholar subscription.*` })}\n\n`))
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', sources })}\n\n`))
+          controller.close()
+        }
+      }),
+      { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' } }
+    )
+  }
 
   // Build context for Sonnet
   const entriesText = allEntries.map(e => e.content).join('\n\n')
