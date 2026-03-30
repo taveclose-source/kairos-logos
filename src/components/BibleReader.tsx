@@ -565,7 +565,30 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
   }
 
   return (
-    <div style={{ background: 'var(--bg-primary)', padding: '2rem 1rem', paddingBottom: 'calc(2rem + 60px)' }} className="relative">
+    <div style={{ background: 'var(--bg-primary)', padding: '2rem 1rem', paddingTop: 'calc(2rem + 36px)', paddingBottom: 'calc(2rem + 60px)' }} className="relative">
+      {/* Fixed reference chip — always visible */}
+      <div style={{
+        position: 'fixed', top: 56, left: 0, right: 0, zIndex: 15,
+        display: 'flex', justifyContent: 'center', padding: '6px 0',
+        background: isModern ? 'rgba(250,250,249,0.9)' : 'rgba(107,53,21,0.85)',
+        backdropFilter: 'blur(6px)',
+        borderBottom: isModern ? '1px solid #ECEAE6' : '1px solid rgba(200,150,80,0.15)',
+      }}>
+        <button
+          onClick={() => router.push('/bible')}
+          style={{
+            fontFamily: 'var(--font-ui)', fontSize: 12, letterSpacing: '1px',
+            color: verseNumColor, background: 'transparent', border: 'none',
+            cursor: 'pointer', padding: '2px 12px',
+            textDecoration: 'underline', textDecorationStyle: 'dotted',
+            textUnderlineOffset: '3px',
+            textDecorationColor: isModern ? 'rgba(15,52,96,0.3)' : 'rgba(200,160,40,0.4)',
+          }}
+        >
+          {bookName} {chapter}:{activeVerse}
+        </button>
+      </div>
+
       {/* Fixed side arrows — desktop only */}
       <button
         onClick={turnPrev}
@@ -650,22 +673,7 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
           />
 
           <div className="px-6 py-8 sm:px-10 sm:py-12 lg:px-12 lg:py-14">
-            {/* Reference chip — tappable, opens Navigator */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-              <button
-                onClick={() => router.push('/bible')}
-                style={{
-                  fontFamily: 'var(--font-ui)', fontSize: 12, letterSpacing: '1px',
-                  color: verseNumColor, background: 'transparent', border: 'none',
-                  cursor: 'pointer', padding: '8px 12px',
-                  textDecoration: 'underline', textDecorationStyle: 'dotted',
-                  textUnderlineOffset: '3px', textDecorationColor: isModern ? 'rgba(15,52,96,0.3)' : 'rgba(200,160,40,0.4)',
-                  transition: 'color 150ms',
-                }}
-              >
-                {bookName} {chapter}:{activeVerse}
-              </button>
-            </div>
+            {/* Reference chip moved to fixed position above */}
             {/* Reader toolbar — companion language + Strong's toggle */}
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: '0.75rem', flexWrap: 'wrap' }}>
               {/* Companion translation dropdown */}
