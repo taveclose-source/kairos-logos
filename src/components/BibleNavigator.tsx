@@ -185,9 +185,12 @@ export default function BibleNavigator() {
               onTouchStart={() => startLongPress(() => navigate(selectedBook, ch))}
               onTouchEnd={cancelLongPress}
               onTouchMove={cancelLongPress}
-              style={ch === selectedChapter ? selectedStyle : itemBase}
+              style={{ ...(ch === selectedChapter ? selectedStyle : itemBase), padding: '8px 14px 10px' }}
             >
-              {ch}
+              <span style={{ display: 'block', fontSize: 13 }}>{ch}</span>
+              <span style={{ display: 'block', fontSize: 10, fontStyle: 'italic', color: textSecondary, opacity: 0.75, lineHeight: 1.4, marginTop: 2, fontFamily: "'Cormorant Garamond', serif", whiteSpace: 'normal' }}>
+                {getChapterSummary(selectedBook, ch) || ''}
+              </span>
             </button>
           ))}
         </div>
