@@ -1,32 +1,25 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { createSupabaseBrowser } from '@/lib/supabase-browser'
-import { playPageTurn } from '@/lib/paperSound'
+import { getChapterCount } from '@/lib/verseCounts'
+import { getChapterSummary } from '@/lib/chapterSummaries'
 
 interface ChapterEntry { chapter: number; summary: string }
 
 export default function ChapterSheet({ bookName, onClose }: { bookName: string; onClose: () => void }) {
-  const [chapters, setChapters] = useState<ChapterEntry[]>([])
-  const [loading, setLoading] = useState(true)
+  const chapters = useMemo<ChapterEntry[]>(() => {
+    const count = getChapterCount(bookName)
+    return Array.from({ length: count }, (_, i) => ({
+      chapter: i + 1,
+      summary: getChapterSummary(bookName, i + 1) || `${bookName} ${i + 1}`,
+    }))
+  }, [bookName])
+  const loading = false
   const [fading, setFading] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    const sb = createSupabaseBrowser()
-    sb.from('chapter_summaries')
-      .select('chapter, summary')
-      .eq('book_name', bookName)
-      .order('chapter', { ascending: true })
-      .then(({ data }) => {
-        setChapters((data as ChapterEntry[]) ?? [])
-        setLoading(false)
-      })
-  }, [bookName])
-
   function handleChapterSelect(chapter: number) {
-    playPageTurn('forward')
     router.prefetch(`/bible/${encodeURIComponent(bookName)}/${chapter}`)
     setFading(true)
     setTimeout(() => {
