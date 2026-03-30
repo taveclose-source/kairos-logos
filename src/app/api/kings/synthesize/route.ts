@@ -40,34 +40,36 @@ export async function POST(req: NextRequest) {
   const supabase = db()
   const [startDate, endDate] = dates
 
-  // Fetch historical entries
-  const [herodotusRes, historicalRes] = await Promise.all([
-    supabase.from('herodotus_histories')
-      .select('book_name, chapter, content, kingdoms, source_tier')
-      .not('date_range_start', 'is', null)
-      .lte('date_range_start', endDate)
-      .gte('date_range_end', startDate)
-      .order('source_tier', { ascending: true })
-      .limit(8),
-    supabase.from('historical_sources')
-      .select('source_name, content, kingdoms, geographic_region, source_tier')
-      .not('date_range_start', 'is', null)
-      .lte('date_range_start', endDate)
-      .gte('date_range_end', startDate)
-      .order('source_tier', { ascending: true })
-      .limit(12),
-  ])
+  async function fetchEntries(s: number, e: number) {
+    const [hRes, hsRes] = await Promise.all([
+      supabase.from('herodotus_histories')
+        .select('book_name, chapter, content, kingdoms, source_tier')
+        .not('date_range_start', 'is', null)
+        .lte('date_range_start', e).gte('date_range_end', s)
+        .order('source_tier', { ascending: true }).limit(8),
+      supabase.from('historical_sources')
+        .select('source_name, content, kingdoms, geographic_region, source_tier')
+        .not('date_range_start', 'is', null)
+        .lte('date_range_start', e).gte('date_range_end', s)
+        .order('source_tier', { ascending: true }).limit(12),
+    ])
+    const hData = (hRes.data ?? []).map(r => ({ ...r, source_name: 'herodotus' }))
+    return [...hData, ...(hsRes.data ?? [])]
+  }
 
-  const herodotusData = (herodotusRes.data ?? []).map(r => ({ ...r, source_name: 'herodotus' }))
-  const historicalData = historicalRes.data ?? []
-  const allEntries = [...herodotusData, ...historicalData]
+  // Try exact range first, then widen by 200 years if zero
+  let allEntries = await fetchEntries(startDate, endDate)
+  if (allEntries.length === 0) {
+    allEntries = await fetchEntries(startDate - 200, endDate + 200)
+  }
 
+  // If still zero after widened range — return legacy formatted entries as fallback
   if (allEntries.length === 0) {
     const encoder = new TextEncoder()
     return new Response(
       new ReadableStream({
         start(controller) {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', text: 'No historical records overlap with this passage\'s time period. As the corpus grows, more context will become available here.' })}\n\n`))
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', text: `[Historical Context]\n\nThe historical records in our current corpus do not yet cover the exact period of ${book} ${chapter || ''}. As this library grows — Josephus, Edersheim, Herodotus, Tacitus, and others — the coverage for this passage will expand.\n\nWhat we do know: ${book} was written during a period when Israel's story was unfolding against the backdrop of ancient Near Eastern empires. The God who moved through that history is the same God who speaks through this text today. Read it with that confidence.` })}\n\n`))
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', sources: [] })}\n\n`))
           controller.close()
         }
