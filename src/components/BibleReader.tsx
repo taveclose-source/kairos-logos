@@ -135,7 +135,10 @@ export default function BibleReader({ verses, bookName, chapter, totalChapters, 
       setHighlightVerse(v)
       setTimeout(() => {
         const el = document.getElementById(`verse-${v}`)
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        if (el) {
+          const y = el.getBoundingClientRect().top + window.scrollY - 80
+          window.scrollTo({ top: y, behavior: 'smooth' })
+        }
       }, 300)
       setTimeout(() => setHighlightVerse(null), 2500)
     }
