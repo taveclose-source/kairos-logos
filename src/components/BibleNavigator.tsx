@@ -148,11 +148,11 @@ export default function BibleNavigator() {
       </div>
 
       {/* Four columns */}
-      <div style={{ display: 'flex', gap: 6, padding: '0 0.75rem', height: m ? 'calc(100vh - 256px)' : 'calc(100vh - 200px)' }}
+      <div style={{ display: 'flex', gap: 6, padding: '0 0.75rem', height: m ? 'calc(100vh - 320px)' : 'calc(100vh - 260px)' }}
         className="flex-col sm:flex-row"
       >
         {/* Column 1: Books */}
-        <div ref={bookRef} style={colStyle} className="!max-h-[35vh] sm:!max-h-[calc(100vh-200px)]">
+        <div ref={bookRef} style={colStyle} className="!max-h-[28vh] sm:!max-h-[calc(100vh-260px)]">
           <div style={{ padding: '8px 14px', fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: textSecondary, borderBottom: `1px solid ${colBorder}` }}>
             Book
           </div>
@@ -173,7 +173,7 @@ export default function BibleNavigator() {
         </div>
 
         {/* Column 2: Chapters */}
-        <div ref={chapterRef} style={colStyle} className="!max-h-[20vh] sm:!max-h-[calc(100vh-200px)]">
+        <div ref={chapterRef} style={colStyle} className="!max-h-[18vh] sm:!max-h-[calc(100vh-260px)]">
           <div style={{ padding: '8px 14px', fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: textSecondary, borderBottom: `1px solid ${colBorder}` }}>
             Chapter
           </div>
@@ -193,7 +193,7 @@ export default function BibleNavigator() {
         </div>
 
         {/* Column 3: Verses */}
-        <div ref={verseRef} style={colStyle} className="!max-h-[20vh] sm:!max-h-[calc(100vh-200px)]">
+        <div ref={verseRef} style={colStyle} className="!max-h-[18vh] sm:!max-h-[calc(100vh-260px)]">
           <div style={{ padding: '8px 14px', fontFamily: 'var(--font-ui)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: textSecondary, borderBottom: `1px solid ${colBorder}` }}>
             Verse
           </div>
