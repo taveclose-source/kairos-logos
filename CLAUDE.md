@@ -1,182 +1,131 @@
-## Critical Build Rules
+# Logos by Kai'Ros — CLAUDE.md
 
-### Before modifying any existing file:
-1. Read the current file completely first
-2. Run: git log --oneline -- <filename> to see its history
-3. RESTORE working code from git history � do not rebuild from scratch
-
-### Never overwrite working features � verify before every push:
-- Strong's concordance (3-tab: Lexicon, Strong's Concordance, English Concordance)
-- Glossary term highlighting with popups in Twi text
-- Pinch-to-zoom font scaling in Bible reader
-- Swipe left/right chapter navigation with page turn animation and sound
-- Twi parallel column, drop caps, progress bar
-- Bible cover home page with swipe-to-open
-- Table of Contents with book and chapter selection
-- Admin panel 4-tab layout, Dashboard personal study hub
-
-### When building new features:
-- Create NEW component files rather than modifying existing ones where possible
-- Import new components INTO existing files rather than replacing file contents
-- Always run: npx next build before committing
+Claude Code reads this file automatically when this repo is opened.
+Read this fully before executing any task.
 
 ---
 
-# CLAUDE.md — Logos by Kai'Ros
-## Bubby Briefing File | Read this at the start of every session
+## What Logos Is
+
+A KJV-based Bible study platform with Twi translation, Strong's concordance, morphological tagging,
+and a Pastor AI agent. Built for Summit Bible Center and ultimately for offline-first deployment
+in Ghana for Kai'Ros International ministry.
+
+**The KJV is the final authority. The Textus Receptus (TR) is the manuscript foundation.**
+This is a confessional platform — never suggest alternative translations or undermining the TR basis.
 
 ---
 
-## Project Identity
+## Entity Context
 
-| Field | Value |
-|---|---|
-| Project | Logos by Kai'Ros |
-| Type | Bible platform — KJV + Asante Twi, AI Theological Agent, Twi Learning App |
-| Owner | Tave Close Sr. (Kai'Ros International / Summit Bible Center) |
-| File Root | C:\Dev\Logos\ |
-| Master Chat | Logos by Kai'Ros master chat on claude.ai |
-| Coding Agent | Bubby (Claude Code) |
+- **Owner:** Tave Sr. / KAIR
+- **Hosted at:** logos.summitbiblecenter.com
+- **Ministry context:** Summit Bible Center (501c3), Kai'Ros International (Ghana, 26 children)
 
 ---
 
-## Supabase Projects
+## Technical Stack
 
-| Project | Details |
-|---|---|
-| logos-by-kairos | ID: xafzgucdwmiwjsupbjbx — URL: https://xafzgucdwmiwjsupbjbx.supabase.co — ACTIVE |
-| kairos-fundraising | ID: oynuryauuglbxjunzcrj — donor data, Stripe, 3D fundraising platform. DO NOT MODIFY DESTRUCTIVELY. |
-| EdenPro (reference only) | ID: mzvonofxmqnanyuebudg — Genesis commercial. Completely separate. |
-
----
-
-## Tech Stack
-
-| Layer | Decision |
-|---|---|
-| Frontend | Next.js (App Router) — mirrors EdenPro architecture |
-| Database | Supabase — typed clients, RLS on all tables, pgvector for AI embeddings |
-| Styling | Tailwind CSS |
-| Deployment | Vercel — env vars in dashboard, never hardcoded |
-| AI | Claude API (claude-sonnet-4-20250514) — confessional system prompts required |
-| Translation | TR/KJV-anchored Asante Twi — locked glossary governs all AI outputs |
+- **Framework:** Next.js 14 (App Router)
+- **Database:** Supabase — project ID: `xafzgucdwmiwjsupbjbx`
+- **Hosting:** Vercel
+- **Styling:** Tailwind CSS, dual Classic/Modern theme
 
 ---
 
-## THEOLOGICAL CONSTRAINTS — CRITICAL
-
-Logos is NOT a neutral Bible tool. It has a confessional identity. The AI agent must NEVER
-default to presenting "multiple perspectives" on TR/CT manuscript questions or locked doctrines.
-
-- KJV is the final authority. The agent defends this position — it does not hedge it.
-- Textus Receptus / Received Text is the manuscript foundation. Present the TR evidence, not "both sides."
-- Locked Twi terms — NEVER alter these without explicit Tave approval:
-    Onyankopɔn, Awurade, ɔsoro ahennie, Onipa Ba, amumuyɛ, Gergesefoɔ
-- THEOLOGICAL_BRIEF.md (in _MASTER\ folder) governs all system prompts. Read it before writing any agent prompt.
-- All agent prompts must pass destabilization testing before deployment.
-
----
-
-## Ecosystem Map
+## Local Paths
 
 ```
-KAI'ROS INTERNATIONAL
-├── LOGOS by Kai'Ros                ← this project
-│   ├── Bible Reader (KJV + Twi parallel)
-│   ├── AI Theological Agent
-│   ├── Asante Twi Translation Module
-│   ├── Twi Learning App (prototype: twi-learn.html)
-│   ├── Why KJV? / Apologetics Module
-│   └── API layer → exposes content to FORMED
-│
-├── FORMED                          ← separate brand, API consumer
-│   ├── Children's AI Claymation Series
-│   └── Kids Bible interface (pulls from Logos API)
-│
-└── Kai'Ros Campus (Ghana)
-    ├── On-campus Logos deployment
-    └── Twi-primary interface
+Project root:    C:\Dev\Logos
+Repo:            taveclose-source/kairos-logos
+Session handoff: C:\Dev\Logos\SESSION_HANDOFF.md
 ```
 
 ---
 
-## Translation Status
+## Bubby Session
 
-| Book | Status |
-|---|---|
-| Romans | ✅ Complete — 433 verses, TR-audited |
-| Matthew Ch. 1–8 | 🔄 In Progress — 865 verses remaining |
-| Matthew Ch. 9 | ⬜ Next chapter |
-| Glossary | Locked — enforced in all translation and AI outputs |
-| Deliverables | JSON + DOCX + PDF per book |
-| Source Text | Scrivener 1894 Textus Receptus (KJV as English benchmark) |
+**Session ID:** 60410248-c626-44d9-bb56-d13291cc21d6  
+Resume with: `claude --resume 60410248-c626-44d9-bb56-d13291cc21d6`  
+**ALWAYS use `/exit` (with slash) to end session.**
 
 ---
 
-## File Structure
+## Database Scale
+
+- Strong's concordance: 14,197 entries (~41% coverage)
+- Morphological tagging: 444,787 words
+- Matthew Twi translation: Ch.1–14 complete; Ch.2 v.1 gap noted; Ch.15–28 not started
+
+---
+
+## What Is Live
+
+- KJV parallel reader
+- Matthew Twi translation (partial)
+- Strong's concordance
+- Morphological tagging
+- Pastor AI agent with voice layer
+- PWA
+- Stripe credit bundles (3 tiers)
+- Admin panel
+- Scripture memorization
+- Communities infrastructure
+- Make Us Better ✅ (built March 29, 2026)
+
+---
+
+## Pending Builds (priority order)
+
+1. Chapter summary blurbs restoration (final item from last session — complete first)
+2. OT concordance fix
+3. Scripture Geography Module Phase 3 (Leaflet.js, scripture_locations/scripture_journeys tables)
+4. Luke Twi translation (0/1,151 verses)
+5. reMarkable sermon extraction
+6. Networking module
+7. Pastor voice refinement
+
+---
+
+## Translation Pipeline
+
+- Watcher script: `C:\Dev\Logos\scripts\watch-translations.mjs`
+- Launcher: `C:\Dev\Logos\Watch Translations.bat`
+- Drop translated JSON into `translation-inbox/`
+- Watcher validates glossary terms, imports to Supabase, moves to `processed/`
+- Locked glossary: Onyankopɔn, Awurade, ɔsoro ahennie, Onipa Ba, amumuyɛ, Gergesefoɔ
+
+## Watcher Known Issues
+
+- Case-insensitive phrase check — patched
+- isPhrase guard — patched  
+- Windows double-fire race protection — patched
+- **Always kill zombie node processes before starting:** `taskkill /F /IM node.exe`
+
+---
+
+## Design Doctrine
+
+**Offline-first.** Local LLM deployment is the end goal for Ghana distribution.
+Every architectural decision should consider: "Does this work without internet in Kumasi?"
+
+---
+
+## Environment Variables
 
 ```
-C:\Dev\Logos\                       ← Platform root (this project)
-├── CLAUDE.md                       ← this file
-├── CLAUDE.md.docx                  ← formatted version
-├── MASTER_TASK_LIST.docx           ← full task list with status
-├── THEOLOGICAL_BRIEF_FINAL.docx    ← theological brief
-├── src\                            ← Next.js app source
-├── scripts\                        ← import scripts + data
-└── Start Bubby - Logos.bat         ← launcher
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+STRIPE_SECRET_KEY=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 ```
 
 ---
 
-## Phase Summary
+## Session Start Checklist
 
-| Phase | Focus | Gate |
-|---|---|---|
-| Phase 0 | Theological Brief + infrastructure | Must complete before Phase 2 |
-| Phase 1 | Twi Learning App + Parallel Bible Reader + Translation | No gate — start now |
-| Phase 2 | AI Theological Agent | Theological Brief must be complete |
-| Phase 3 | FORMED API integration + Children's series | Phase 1 substantially complete |
-| Phase 4 | Ghana campus deployment + offline mode | Phase 2 complete |
-
----
-
-## Deployment Rules
-
-- Make all changes and commit locally throughout the session
-- At the end of every session, automatically run git push once as the final action
-- Never push mid-session for any reason
-- One push, end of session, automatic — no instruction needed from Tave
-
----
-
-## What NOT To Do
-
-- Do NOT make the AI agent theologically neutral — it has a confessional identity
-- Do NOT use kairos-fundraising Supabase (oynuryauuglbxjunzcrj) for Logos platform data
-- Do NOT modify locked Twi glossary terms without explicit Tave approval
-- Do NOT deploy any AI agent feature before the Theological Brief is written and destabilization tested
-- Do NOT use base64 for photo/file storage — known scalability failure
-- Do NOT hardcode API keys — Vercel env vars only
-
----
-
-## Owner Context
-
-Tave Close Sr. is a former missionary to Ghana (2007–2010), owner of Genesis Sprinklers &
-Water Management, founder of Summit Bible Center (zero-overhead church, all giving to missions),
-and founder of Kai'Ros International (26 children, Kumasi Ghana — 160-child campus vision).
-His wife Heather is a published author and Gospel evangelist. Logos by Kai'Ros is a Kingdom
-tool, not a commercial product. Build accordingly — this matters beyond the code.
-
-"Work like it depends on me, pray like it depends on Him."
-
----
-
-## Resuming Bubby
-
-To start a new Claude Code session on this project:
-1. Navigate to: C:\Dev\Logos\
-2. Run: claude (or double-click "Start Bubby - Logos.bat")
-3. Bubby reads this file automatically and has full context.
-
-
+1. `taskkill /F /IM node.exe` — kill zombie node processes
+2. Read `SESSION_HANDOFF.md`
+3. Check `C:\Dev\_CONTEXT\OPEN_DECISIONS.md` for Logos items
+4. Confirm current translation chapter status before touching translation tables
